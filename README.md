@@ -33,6 +33,7 @@ Catatan: model impor hanya bisa dilihat dan ditempatkan di editor. Agar muncul d
 ## Changelog
 
 ### 1.5.0
+- Perbaikan: grid tidak lagi crash saat dinyalakan.
 - Grid tanah dan penggaris: tombol Grid di toolbar. Pilih 2 objek di mode Pilih banyak untuk melihat jaraknya.
 - Kunci objek: objek terkunci tidak bisa digeser, diputar, atau diubah posisinya. Kunci hanya berlaku di sesi aplikasi dan tidak ditulis ke IPL.
 - Pencarian model lengkap di picker "Tambah objek": daftar dari IDE, gta3.img, dan model impor.

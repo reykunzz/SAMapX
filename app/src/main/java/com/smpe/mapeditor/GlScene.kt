@@ -104,7 +104,7 @@ class GlScene(private val game: GameData) : GLSurfaceView.Renderer {
     private val requested = HashSet<String>()
     private val bounds = ConcurrentHashMap<String, FloatArray>()
     private val ready = ConcurrentLinkedQueue<Pair<String, ModelData?>>()
-    private val lineBuf: FloatBuffer = ByteBuffer.allocateDirect(512 * 4).order(ByteOrder.nativeOrder()).asFloatBuffer()
+    private var lineBuf: FloatBuffer = ByteBuffer.allocateDirect(512 * 4).order(ByteOrder.nativeOrder()).asFloatBuffer()
     private val proj = FloatArray(16); private val vm4 = FloatArray(16); private val vp = FloatArray(16); private val mm = FloatArray(16)
 
     fun requestRender() { view?.requestRender() }
@@ -242,6 +242,8 @@ class GlScene(private val game: GameData) : GLSurfaceView.Renderer {
     }
 
     private fun lines(pts: FloatArray, r: Float, g: Float, b: Float) {
+        // Buffer dibesarkan otomatis; grid bisa butuh lebih dari 512 float.
+        if (pts.size > lineBuf.capacity()) lineBuf = ByteBuffer.allocateDirect(pts.size * 4).order(ByteOrder.nativeOrder()).asFloatBuffer()
         lineBuf.clear(); lineBuf.put(pts); lineBuf.position(0)
         GLES20.glVertexAttribPointer(0, 3, GLES20.GL_FLOAT, false, 0, lineBuf)
         GLES20.glUniform4f(luCol, r, g, b, 1f)

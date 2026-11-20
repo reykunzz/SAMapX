@@ -805,6 +805,7 @@ fun ChangelogCard() {
         "Pilih banyak objek: ketuk beberapa objek, lalu geser, putar, atau hapus sekaligus.",
         "Grid tanah dan penggaris: tombol Grid di toolbar. Pilih 2 objek untuk melihat jaraknya.",
         "Kunci objek: objek terkunci tidak bisa digeser, diputar, atau diubah posisinya.",
+        "Perbaikan: grid tidak lagi crash saat dinyalakan.",
         "Pencarian model lengkap: daftar dari IDE, gta3.img, dan model impor.",
         "Ganti model: ganti semua objek bernama tertentu dalam satu langkah.",
         "Draf otomatis: perubahan yang belum disimpan bisa dipulihkan saat aplikasi dibuka lagi.",
