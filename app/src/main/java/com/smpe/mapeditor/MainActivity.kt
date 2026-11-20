@@ -32,6 +32,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
@@ -569,15 +570,20 @@ fun AppHeader(
 @Composable
 private fun HeaderTab(label: String, selected: Boolean, onClick: () -> Unit) {
     val cs = MaterialTheme.colorScheme
+    val line = cs.primary
     Box(
-        Modifier.fillMaxHeight().clickable(onClick = onClick).padding(horizontal = 12.dp),
+        Modifier.fillMaxHeight().clickable(onClick = onClick)
+            .drawBehind {
+                if (selected) {
+                    val h = 2.dp.toPx()
+                    drawRect(line, topLeft = Offset(0f, size.height - h), size = Size(size.width, h))
+                }
+            }
+            .padding(horizontal = 12.dp),
         contentAlignment = Alignment.Center
     ) {
         Text(label, fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
-            color = if (selected) cs.primary else cs.onSurfaceVariant)
-        if (selected) Box(
-            Modifier.align(Alignment.BottomCenter).fillMaxWidth().height(2.dp).background(cs.primary, RoundedCornerShape(2.dp))
-        )
+            color = if (selected) cs.primary else cs.onSurfaceVariant, maxLines = 1)
     }
 }
 
