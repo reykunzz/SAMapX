@@ -7,11 +7,3 @@ Catatan: IPL biner (bnry) belum didukung. Ini bukan port Ariane; terinspirasi da
 ## Developer
 
 **ReyyXSA**
-
-## UI V3
-
-- Inspector dikunci di sisi kiri dan hanya dapat diminimalkan/dibuka kembali.
-- Toolbar kontrol 3D diringkas dan diposisikan di kanan atas.
-- Navigasi Objek dan 3D dipindahkan ke bagian atas.
-- Tab Peta dihapus dari navigasi utama.
-- Kredit developer **ReyyXSA** tetap dipertahankan.

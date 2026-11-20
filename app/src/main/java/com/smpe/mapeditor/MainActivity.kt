@@ -314,8 +314,10 @@ fun App(vm: EditorVM = viewModel()) {
         if (u != null) try {
             try { ctx.contentResolver.takePersistableUriPermission(u, 3) } catch (_: Exception) {}
             val txt = ctx.contentResolver.openInputStream(u)!!.bufferedReader().readText()
-            if (vm.load(txt, nameOf(ctx, u), u)) say("${vm.count} objek dimuat")
-            else say("IPL biner belum didukung. Gunakan IPL teks.")
+            if (vm.load(txt, nameOf(ctx, u), u)) {
+                tab = 2
+                say("${vm.count} objek dimuat · membuka 3D")
+            } else say("IPL biner belum didukung. Gunakan IPL teks.")
         } catch (e: Exception) { say("Gagal membuka file: ${e.message}") }
     }
     fun write(u: Uri) {
@@ -360,7 +362,6 @@ fun App(vm: EditorVM = viewModel()) {
         containerColor = MaterialTheme.colorScheme.background,
         snackbarHost = { SnackbarHost(snack) },
         topBar = {
-            Column {
             TopAppBar(
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background),
                 title = {
@@ -402,28 +403,19 @@ fun App(vm: EditorVM = viewModel()) {
                     }
                 }
             )
-            if (vm.entries.isNotEmpty()) {
-                Row(
-                    Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.surface)
-                        .padding(horizontal = 12.dp, vertical = 2.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    TextButton(onClick = { tab = 0 }) {
-                        Icon(Icons.Default.List, null, Modifier.size(18.dp))
-                        Spacer(Modifier.width(6.dp))
-                        Text("Objek", color = if (tab == 0) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant)
-                    }
-                    TextButton(onClick = { tab = 1 }) {
-                        Icon(Icons.Default.Home, null, Modifier.size(18.dp))
-                        Spacer(Modifier.width(6.dp))
-                        Text("3D", color = if (tab == 1) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant)
-                    }
-                }
-            }
+        },
+        bottomBar = {
+            if (vm.entries.isNotEmpty()) NavigationBar(containerColor = MaterialTheme.colorScheme.surface) {
+                NavigationBarItem(selected = tab == 0, onClick = { tab = 0 },
+                    icon = { Icon(Icons.Default.Place, null) }, label = { Text("Peta") })
+                NavigationBarItem(selected = tab == 1, onClick = { tab = 1 },
+                    icon = { Icon(Icons.Default.List, null) }, label = { Text("Objek") })
+                NavigationBarItem(selected = tab == 2, onClick = { tab = 2 },
+                    icon = { Icon(Icons.Default.Home, null) }, label = { Text("3D") })
             }
         },
         floatingActionButton = {
-            if (vm.entries.isNotEmpty() && tab == 0) ExtendedFloatingActionButton(
+            if (vm.entries.isNotEmpty() && !(tab == 2 && vm.game != null)) ExtendedFloatingActionButton(
                 onClick = { vm.sel = vm.add() },
                 containerColor = MaterialTheme.colorScheme.primary,
                 contentColor = MaterialTheme.colorScheme.onPrimary,
@@ -433,32 +425,51 @@ fun App(vm: EditorVM = viewModel()) {
     ) { pad ->
         Box(Modifier.padding(pad).fillMaxSize()) {
             when {
-                vm.entries.isEmpty() -> Empty { open.launch(arrayOf("*/*")) }
-                tab == 0 -> ListView(vm)
+                vm.entries.isEmpty() -> Empty(
+                    onOpen = { open.launch(arrayOf("*/*")) },
+                    onPickGame = { pickTree.launch(null) },
+                    gameStatus = vm.gameStatus,
+                    onDiagnose = { vm.diag = GameData.lastReport.ifEmpty { "Belum ada laporan. Pilih folder GTA SA dulu." } }
+                )
+                tab == 0 -> MapView(vm)
+                tab == 1 -> ListView(vm)
                 else -> {
                     val g = vm.game
                     if (g != null) GlEditor(vm, g)
-                    else Box(Modifier.fillMaxSize()) { View3D(vm); GamePrompt(vm) { pickTree.launch(null) } }
+                    else View3D(vm)
                 }
             }
         }
-        if (vm.sel in vm.entries.indices && vm.entries[vm.sel] is Obj && !(tab == 1 && vm.game != null)) EditSheet(vm)
+        if (vm.sel in vm.entries.indices && vm.entries[vm.sel] is Obj && !(tab == 2 && vm.game != null)) EditSheet(vm)
         if (vm.picker) ModelPicker(vm)
         vm.diag?.let { DiagDialog(vm, it) }
     }
 }
 
 @Composable
-fun Empty(onOpen: () -> Unit) {
+fun Empty(
+    onOpen: () -> Unit,
+    onPickGame: () -> Unit,
+    gameStatus: String,
+    onDiagnose: () -> Unit
+) {
     Column(Modifier.fillMaxSize().padding(32.dp), Arrangement.Center, Alignment.CenterHorizontally) {
         Image(painterResource(R.drawable.logo), null, Modifier.size(180.dp))
         Spacer(Modifier.height(24.dp))
-        Text("Buka file IPL untuk mulai", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+        Text("Mulai SAMapX", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
         Spacer(Modifier.height(8.dp))
-        Text("Pilih file .ipl teks dari GTA San Andreas. Objek akan muncul di peta dan bisa kamu ubah, tambah, atau hapus.",
+        Text("Pilih folder GTA San Andreas untuk menampilkan model asli, lalu buka file IPL untuk mulai mengedit map.",
             textAlign = TextAlign.Center, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        Spacer(Modifier.height(24.dp))
-        Button(onClick = onOpen, shape = RoundedCornerShape(16.dp)) { Text("Buka file IPL") }
+        Spacer(Modifier.height(20.dp))
+        Button(onClick = onPickGame, shape = RoundedCornerShape(16.dp)) { Text("Pilih folder GTA SA") }
+        if (gameStatus.isNotBlank()) {
+            Spacer(Modifier.height(8.dp))
+            Text(gameStatus, style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = TextAlign.Center)
+        }
+        TextButton(onClick = onDiagnose) { Text("Diagnosa folder game") }
+        Spacer(Modifier.height(8.dp))
+        OutlinedButton(onClick = onOpen, shape = RoundedCornerShape(16.dp)) { Text("Buka file IPL") }
         Spacer(Modifier.height(18.dp))
         Text(
             "Developed by ReyyXSA",

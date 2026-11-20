@@ -1,4 +1,4 @@
-@file:OptIn(ExperimentalMaterial3Api::class)
+@file:OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
 
 package com.smpe.mapeditor
 
@@ -7,6 +7,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.horizontalScroll
@@ -21,11 +22,15 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.unit.IntOffset
+import kotlin.math.roundToInt
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.AnnotatedString
@@ -47,33 +52,49 @@ fun GlEditor(vm: EditorVM, game: GameData) {
         GlScene(game).also { s -> s.tx = st[0]; s.ty = st[1]; s.tz = st[2]; s.dist = 150f; vm.gl = s }
     }
     var panMode by remember { mutableStateOf(false) }
+    var showPanel by remember { mutableStateOf(true) }
     var panelExpanded by remember { mutableStateOf(true) }
-
+    var panelX by remember { mutableFloatStateOf(-1f) }
+    var panelY by remember { mutableFloatStateOf(64f) }
+    val density = LocalDensity.current.density
     BoxWithConstraints(Modifier.fillMaxSize()) {
+        val containerWidth = this.maxWidth
         val containerHeight = this.maxHeight
-        val panelWidth = minOf(300.dp, this.maxWidth * 0.42f)
-        Viewport(vm, gl, st, panMode, { panMode = it }, Modifier.fillMaxSize())
-
-        // Inspector stays anchored to the left; it is intentionally not draggable.
-        Column(
-            Modifier.align(Alignment.TopStart)
-                .width(panelWidth)
-                .heightIn(max = maxHeight)
-                .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.98f), RoundedCornerShape(topEnd = 14.dp, bottomEnd = 14.dp))
-        ) {
-            Row(
-                Modifier.fillMaxWidth().padding(start = 12.dp, end = 6.dp, top = 6.dp, bottom = 6.dp),
-                verticalAlignment = Alignment.CenterVertically
+        val panelWidth = if (containerWidth < 420.dp) (containerWidth - 24.dp).coerceAtLeast(220.dp) else 320.dp
+        if (panelX < 0f) panelX = with(LocalDensity.current) { (containerWidth - panelWidth - 12.dp).toPx() }
+        Viewport(vm, gl, st, panMode, { panMode = it }, showPanel, { showPanel = !showPanel },
+            Modifier.fillMaxSize())
+        if (showPanel) {
+            Column(
+                Modifier.offset { IntOffset(panelX.roundToInt(), (panelY * density).roundToInt()) }
+                    .width(panelWidth)
+                    .heightIn(max = containerHeight - 76.dp)
+                    .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.97f), RoundedCornerShape(16.dp))
             ) {
-                Text("INSPECTOR", Modifier.weight(1f), style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Black)
-                TextButton(onClick = { panelExpanded = !panelExpanded }) {
-                    Text(if (panelExpanded) "Minimize" else "Buka")
+                Row(
+                    Modifier.fillMaxWidth()
+                        .pointerInput(containerWidth, containerHeight) {
+                            detectDragGestures { change, drag ->
+                                change.consume()
+                                val w = with(density) { panelWidth.toPx() }
+                                panelX = (panelX + drag.x).coerceIn(0f, (size.width - w).coerceAtLeast(0f))
+                                panelY = (panelY + drag.y / density).coerceIn(0f, (containerHeight.value - 56f).coerceAtLeast(0f))
+                            }
+                        }
+                        .padding(start = 14.dp, end = 8.dp, top = 8.dp, bottom = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text("INSPECTOR", Modifier.weight(1f), style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Black)
+                    TextButton(onClick = { panelExpanded = !panelExpanded }) {
+                        Text(if (panelExpanded) "Minimize" else "Buka")
+                    }
+                    TextButton(onClick = { showPanel = false }) { Text("Tutup") }
                 }
-            }
-            if (panelExpanded) {
-                HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.35f))
-                Panel(vm, gl, st, Modifier.fillMaxWidth().heightIn(max = containerHeight - 48.dp))
+                if (panelExpanded) {
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.35f))
+                    Panel(vm, gl, st, Modifier.fillMaxWidth().heightIn(max = containerHeight - 120.dp))
+                }
             }
         }
     }
@@ -82,7 +103,8 @@ fun GlEditor(vm: EditorVM, game: GameData) {
 @Composable
 fun Viewport(
     vm: EditorVM, gl: GlScene, st: FloatArray,
-    panMode: Boolean, setPan: (Boolean) -> Unit, modifier: Modifier
+    panMode: Boolean, setPan: (Boolean) -> Unit,
+    panelVisible: Boolean, togglePanel: () -> Unit, modifier: Modifier
 ) {
     val density = LocalDensity.current.density
     val pm = rememberUpdatedState(panMode)
@@ -114,7 +136,22 @@ fun Viewport(
             }
         )
         Box(
-            Modifier.fillMaxSize().pointerInput(Unit) {
+            Modifier.fillMaxSize()
+                .pointerInput(Unit) {
+                    awaitPointerEventScope {
+                        while (true) {
+                            val event = awaitPointerEvent()
+                            if (event.type == PointerEventType.Scroll) {
+                                val dy = event.changes.firstOrNull()?.scrollDelta?.y ?: 0f
+                                if (dy != 0f) {
+                                    gl.dist = (gl.dist * (1f + dy * 0.12f)).coerceIn(5f, 6000f)
+                                    gl.requestRender()
+                                }
+                            }
+                        }
+                    }
+                }
+                .pointerInput(Unit) {
                 fun camMove(pan: Offset) {
                     if (!pm.value) {
                         gl.yaw -= pan.x * 0.008f
@@ -180,8 +217,8 @@ fun Viewport(
             }
         )
         Row(
-            Modifier.align(Alignment.TopEnd).fillMaxWidth(0.64f).horizontalScroll(rememberScrollState()).padding(8.dp),
-            horizontalArrangement = Arrangement.spacedBy(5.dp)
+            Modifier.align(Alignment.TopStart).fillMaxWidth().horizontalScroll(rememberScrollState()).padding(8.dp),
+            horizontalArrangement = Arrangement.spacedBy(6.dp)
         ) {
             FilterChip(selected = !panMode, onClick = { setPan(false) }, label = { Text("Putar") })
             FilterChip(selected = panMode, onClick = { setPan(true) }, label = { Text("Geser") })
@@ -190,8 +227,9 @@ fun Viewport(
                 if (o != null) { gl.tx = o.x; gl.ty = o.y; gl.tz = o.z; gl.dist = minOf(gl.dist, 60f); gl.requestRender() }
             }, label = { Text("Fokus") })
             AssistChip(onClick = { gl.tx = st[0]; gl.ty = st[1]; gl.tz = st[2]; gl.dist = st[3] * 1.2f; gl.requestRender() }, label = { Text("Semua") })
-            AssistChip(onClick = { vm.undo(); gl.requestRender() }, enabled = vm.canUndo, label = { Text("Undo") })
-            AssistChip(onClick = { vm.redo(); gl.requestRender() }, enabled = vm.canRedo, label = { Text("Redo") })
+            AssistChip(onClick = { vm.undo(); gl.requestRender() }, enabled = vm.canUndo, label = { Text("Urung") })
+            AssistChip(onClick = { vm.redo(); gl.requestRender() }, enabled = vm.canRedo, label = { Text("Ulang") })
+            AssistChip(onClick = togglePanel, label = { Text(if (panelVisible) "Sembunyikan panel" else "Tampilkan panel") })
         }
         val sel = vm.entries.getOrNull(vm.sel) as? Obj
         val g = vm.game
@@ -410,24 +448,4 @@ fun DiagDialog(vm: EditorVM, text: String) {
             }
         }
     )
-}
-
-@Composable
-fun BoxScope.GamePrompt(vm: EditorVM, onPick: () -> Unit) {
-    Card(
-        Modifier.align(Alignment.BottomCenter).padding(16.dp).fillMaxWidth(),
-        shape = RoundedCornerShape(18.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
-    ) {
-        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Text("Tampilkan model GTA asli", fontWeight = FontWeight.Bold)
-            Text("Pilih folder game (berisi gta3.img, data, dan texdb). Mendukung GTA SA mobile (tekstur dari texdb) maupun PC. Di Android 11+ folder Android/data tidak bisa dipilih, salin dulu ke Download/GTASA.",
-                style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            if (vm.gameStatus.isNotEmpty()) Text(vm.gameStatus, style = MaterialTheme.typography.labelSmall)
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Button(onClick = onPick, shape = RoundedCornerShape(14.dp)) { Text("Pilih folder GTA SA") }
-                OutlinedButton(onClick = { vm.diag = GameData.lastReport.ifEmpty { "Belum ada laporan. Pilih folder GTA SA dulu." } }, shape = RoundedCornerShape(14.dp)) { Text("Diagnosa") }
-            }
-        }
-    }
 }
