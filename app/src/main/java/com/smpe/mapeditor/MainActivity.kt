@@ -139,6 +139,11 @@ class EditorVM : ViewModel() {
     var gl: GlScene? = null
     var diag by mutableStateOf<String?>(null)
     var selStream by mutableIntStateOf(-1)
+
+    /** Pilihan banyak objek (mode Pilih banyak). Berisi indeks entries. */
+    val selSet = mutableStateListOf<Int>()
+    var multi by mutableStateOf(false)
+    var topDown by mutableStateOf(false)
     var snap by mutableFloatStateOf(0f)
     var extra by mutableStateOf<List<Obj>>(emptyList())
     var streamNote by mutableStateOf("")
@@ -154,21 +159,21 @@ class EditorVM : ViewModel() {
         if (undoS.isEmpty()) return
         redoS.add(entries.toList())
         val s = undoS.removeAt(undoS.size - 1)
-        entries.clear(); entries.addAll(s); sel = -1; dirty = true
+        selSet.clear(); entries.clear(); entries.addAll(s); sel = -1; dirty = true
         canUndo = undoS.isNotEmpty(); canRedo = true
     }
     fun redo() {
         if (redoS.isEmpty()) return
         undoS.add(entries.toList())
         val s = redoS.removeAt(redoS.size - 1)
-        entries.clear(); entries.addAll(s); sel = -1; dirty = true
+        selSet.clear(); entries.clear(); entries.addAll(s); sel = -1; dirty = true
         canRedo = redoS.isNotEmpty(); canUndo = true
     }
     val count: Int get() = entries.count { it is Obj }
 
     /** IPL kosong baru: satu blok inst/end, siap diisi objek. */
     fun newFile() {
-        entries.clear(); entries.add(Raw("inst")); entries.add(Raw("end"))
+        selSet.clear(); entries.clear(); entries.add(Raw("inst")); entries.add(Raw("end"))
         fileName = "baru.ipl"; uri = null; sel = -1; dirty = true
         undoS.clear(); redoS.clear(); canUndo = false; canRedo = false
         extra = emptyList(); streamNote = ""; selStream = -1
@@ -176,7 +181,7 @@ class EditorVM : ViewModel() {
 
     fun load(text: String, name: String, u: Uri?): Boolean {
         if (text.startsWith("bnry")) return false
-        entries.clear(); entries.addAll(parseIpl(text))
+        selSet.clear(); entries.clear(); entries.addAll(parseIpl(text))
         fileName = name; uri = u; sel = -1; dirty = false
         undoS.clear(); redoS.clear(); canUndo = false; canRedo = false
         extra = emptyList(); streamNote = ""; selStream = -1
@@ -195,7 +200,50 @@ class EditorVM : ViewModel() {
         }
     }
     fun update(i: Int, o: Obj) { snapshot(); entries[i] = o.copy(src = null); dirty = true }
-    fun remove(i: Int) { snapshot(); entries.removeAt(i); sel = -1; dirty = true }
+    fun remove(i: Int) { snapshot(); entries.removeAt(i); sel = -1; selSet.clear(); dirty = true }
+
+    fun clearSel() { selSet.clear(); sel = -1 }
+
+    /** Ketuk objek: mode biasa memilih satu objek, mode Pilih banyak menambah/mengeluarkan dari pilihan. */
+    fun tapSelect(i: Int) {
+        if (!multi) { selSet.clear(); sel = i; return }
+        if (selSet.contains(i)) selSet.remove(i) else selSet.add(i)
+        sel = if (selSet.size == 1) selSet[0] else -1
+    }
+
+    /** Daftar objek yang sedang dipilih (banyak, atau satu dari sel). */
+    fun groupIdx(): List<Int> = when {
+        selSet.isNotEmpty() -> selSet.toList()
+        sel >= 0 -> listOf(sel)
+        else -> emptyList()
+    }
+
+    fun shiftGroup(axis: Int, delta: Float) {
+        val g = groupIdx(); if (g.isEmpty()) return
+        beginEdit()
+        for (i in g) {
+            val o = entries.getOrNull(i) as? Obj ?: continue
+            val v = if (axis == 0) o.x else if (axis == 1) o.y else o.z
+            setAxis(i, axis, v + delta)
+        }
+    }
+
+    fun rotateGroup(deg: Float) {
+        val g = groupIdx(); if (g.isEmpty()) return
+        beginEdit()
+        for (i in g) {
+            val o = entries.getOrNull(i) as? Obj ?: continue
+            entries[i] = rotZ(o, deg).copy(src = null)
+        }
+        dirty = true
+    }
+
+    fun removeGroup() {
+        val g = groupIdx(); if (g.isEmpty()) return
+        beginEdit()
+        for (i in g.sortedDescending()) entries.removeAt(i)
+        selSet.clear(); sel = -1; dirty = true
+    }
     fun beginEdit() { snapshot() }
     fun setAxis(i: Int, axis: Int, v: Float) {
         val o = entries.getOrNull(i) as? Obj ?: return
@@ -663,7 +711,9 @@ fun ChangelogCard() {
         "Zoom tanpa batas di tampilan 3D.",
         "Geser objek bebas dengan sentuhan: seret objek yang sudah dipilih.",
         "Simpan IDE: membuat file .ide pendamping dari IPL.",
-        "Impor model baru: pilih DFF (dan TXD opsional), lalu tempatkan di 3D."
+        "Impor model baru: pilih DFF (dan TXD opsional), lalu tempatkan di 3D.",
+        "Tampilan atas: kamera tegak lurus ke bawah, seperti minimap.",
+        "Pilih banyak objek: ketuk beberapa objek, lalu geser, putar, atau hapus sekaligus."
     )
     var open by remember { mutableStateOf(false) }
     Card(

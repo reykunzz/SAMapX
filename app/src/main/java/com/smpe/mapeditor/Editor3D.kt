@@ -110,6 +110,7 @@ fun Viewport(
 ) {
     val density = LocalDensity.current.density
     val pm = rememberUpdatedState(panMode)
+    val modeKey = vm.topDown to vm.selSet.toList()
     val exScene = remember(vm.extra) { vm.extra.mapIndexed { i, o -> SceneObj(-(i + 2), o) } }
     var tick by remember { mutableIntStateOf(0) }
     LaunchedEffect(Unit) { while (true) { delay(800); tick++ } }
@@ -134,6 +135,8 @@ fun Viewport(
                 gl.extra = exScene
                 gl.sel = vm.sel
                 gl.selStream = vm.selStream
+                gl.topDown = vm.topDown
+                gl.multiSel = vm.selSet.toSet()
                 v.requestRender()
             }
         )
@@ -157,7 +160,7 @@ fun Viewport(
                 fun camMove(pan: Offset) {
                     if (!pm.value) {
                         gl.yaw -= pan.x * 0.008f
-                        gl.pitch = (gl.pitch + pan.y * 0.008f).coerceIn(0.05f, 1.5f)
+                        if (!gl.topDown) gl.pitch = (gl.pitch + pan.y * 0.008f).coerceIn(0.05f, 1.5f)
                     } else {
                         val k = gl.dist / (minOf(size.width, size.height) * 1.1f)
                         val c = cos(gl.yaw); val s = sin(gl.yaw)
@@ -174,9 +177,10 @@ fun Viewport(
                     var startVal = 0f
                     var acc = 0f
                     var last = down.position
-                    val freeHit = axis < 0 && !pm.value && vm.sel >= 0 &&
-                        gl.pick(down.position.x, down.position.y, 24f * density) == vm.sel
-                    var fsx = 0f; var fsy = 0f; var fdx = 0f; var fdy = 0f
+                    val grp = if (axis < 0 && !pm.value) vm.groupIdx() else emptyList()
+                    val freeHit = grp.isNotEmpty() && gl.pick(down.position.x, down.position.y, 24f * density) in grp
+                    val gx = FloatArray(grp.size); val gy = FloatArray(grp.size)
+                    var fdx = 0f; var fdy = 0f
                     while (true) {
                         val ev = awaitPointerEvent()
                         val pressed = ev.changes.filter { it.pressed }
@@ -206,22 +210,27 @@ fun Viewport(
                                 }
                             } else if (freeHit) {
                                 if (moved) {
-                                    val o = vm.entries.getOrNull(vm.sel) as? Obj
-                                    if (o != null) {
-                                        if (!started) { started = true; vm.beginEdit(); fsx = o.x; fsy = o.y; fdx = 0f; fdy = 0f }
-                                        val pd = c.position - c.previousPosition
-                                        val k = gl.dist / (minOf(size.width, size.height) * 1.1f)
-                                        val cs = cos(gl.yaw); val sn = sin(gl.yaw)
-                                        fdx += pd.x * k * cs + pd.y * k * sn
-                                        fdy += pd.x * k * sn - pd.y * k * cs
-                                        var vx = fsx + fdx; var vy = fsy + fdy
+                                    if (!started) {
+                                        started = true; vm.beginEdit(); fdx = 0f; fdy = 0f
+                                        for ((j, idx) in grp.withIndex()) {
+                                            val o = vm.entries.getOrNull(idx) as? Obj
+                                            if (o != null) { gx[j] = o.x; gy[j] = o.y }
+                                        }
+                                    }
+                                    val pd = c.position - c.previousPosition
+                                    val k = gl.dist / (minOf(size.width, size.height) * 1.1f)
+                                    val cs = cos(gl.yaw); val sn = sin(gl.yaw)
+                                    fdx += pd.x * k * cs + pd.y * k * sn
+                                    fdy += pd.x * k * sn - pd.y * k * cs
+                                    for ((j, idx) in grp.withIndex()) {
+                                        var vx = gx[j] + fdx; var vy = gy[j] + fdy
                                         if (vm.snap > 0f) {
                                             vx = Math.round(vx / vm.snap) * vm.snap
                                             vy = Math.round(vy / vm.snap) * vm.snap
                                         }
-                                        vm.setAxis(vm.sel, 0, vx); vm.setAxis(vm.sel, 1, vy)
-                                        gl.requestRender()
+                                        vm.setAxis(idx, 0, vx); vm.setAxis(idx, 1, vy)
                                     }
+                                    gl.requestRender()
                                     c.consume()
                                 }
                             } else if (moved) {
@@ -233,9 +242,9 @@ fun Viewport(
                     }
                     if (!moved) {
                         val i = gl.pick(down.position.x, down.position.y, 40f * density)
-                        if (i >= 0) { vm.sel = i; vm.selStream = -1 }
-                        else if (i <= -2) { vm.selStream = -(i + 2); vm.sel = -1 }
-                        else { vm.sel = -1; vm.selStream = -1 }
+                        if (i >= 0) { vm.tapSelect(i); vm.selStream = -1 }
+                        else if (i <= -2) { vm.selStream = -(i + 2); vm.selSet.clear(); vm.sel = -1 }
+                        else if (!vm.multi) { vm.clearSel(); vm.selStream = -1 }
                         gl.requestRender()
                     }
                 }
@@ -257,7 +266,16 @@ fun Viewport(
             onSnap = {
                 val order = listOf(0f, 0.5f, 1f, 5f)
                 vm.snap = order[(order.indexOf(vm.snap) + 1) % order.size]
-            }
+            },
+            topDown = vm.topDown,
+            onTopDown = {
+                vm.topDown = !vm.topDown
+                gl.topDown = vm.topDown
+                gl.pitch = if (vm.topDown) 1.5f else 0.7f
+                gl.requestRender()
+            },
+            multi = vm.multi,
+            onMulti = { vm.multi = !vm.multi }
         )
         val sel = vm.entries.getOrNull(vm.sel) as? Obj
         val g = vm.game
@@ -322,7 +340,7 @@ fun Panel(vm: EditorVM, gl: GlScene, st: FloatArray, modifier: Modifier) {
         }
     }
     var tab by remember { mutableIntStateOf(0) }
-    LaunchedEffect(vm.sel, vm.selStream) { if (vm.sel >= 0 || vm.selStream >= 0) tab = 0 }
+    LaunchedEffect(vm.sel, vm.selStream, vm.selSet.size) { if (vm.sel >= 0 || vm.selStream >= 0 || vm.selSet.size > 1) tab = 0 }
     Column(modifier.background(MaterialTheme.colorScheme.surface)) {
     PanelTabs(tab) { tab = it }
     Column(
@@ -358,6 +376,7 @@ fun Panel(vm: EditorVM, gl: GlScene, st: FloatArray, modifier: Modifier) {
                     color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
+        if (vm.selSet.size > 1) GroupCard(vm, gl, step)
         if (o != null) {
             SectionCard("GERAKKAN") {
                 Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -500,7 +519,7 @@ fun SelCard(vm: EditorVM, gl: GlScene, o: Obj, modifier: Modifier) {
             Spacer(Modifier.width(8.dp))
             TbBtn(UiIcons.Copy, "Salin") { vm.duplicate(vm.sel); gl.requestRender() }
             TbBtn(Icons.Default.Delete, "Hapus", tint = cs.error) { vm.remove(vm.sel); gl.requestRender() }
-            TbBtn(Icons.Default.Close, "Tutup") { vm.sel = -1; gl.requestRender() }
+            TbBtn(Icons.Default.Close, "Tutup") { vm.clearSel(); gl.requestRender() }
         }
     }
 }
@@ -649,5 +668,33 @@ fun ImportModelCard(vm: EditorVM, gl: GlScene) {
             modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(14.dp)
         ) { Text("Impor & tempatkan") }
         if (msg.isNotEmpty()) Text(msg, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+    }
+}
+
+@Composable
+fun GroupCard(vm: EditorVM, gl: GlScene, step: Float) {
+    SectionCard("${vm.selSet.size} OBJEK DIPILIH") {
+        Text("Ketuk objek untuk menambah atau mengeluarkan dari pilihan. Seret salah satu objek yang dipilih untuk menggeser semuanya.",
+            style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            Nudge("X -", Modifier.weight(1f)) { vm.shiftGroup(0, -step); gl.requestRender() }
+            Nudge("X +", Modifier.weight(1f)) { vm.shiftGroup(0, step); gl.requestRender() }
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            Nudge("Y -", Modifier.weight(1f)) { vm.shiftGroup(1, -step); gl.requestRender() }
+            Nudge("Y +", Modifier.weight(1f)) { vm.shiftGroup(1, step); gl.requestRender() }
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            Nudge("Z -", Modifier.weight(1f)) { vm.shiftGroup(2, -step); gl.requestRender() }
+            Nudge("Z +", Modifier.weight(1f)) { vm.shiftGroup(2, step); gl.requestRender() }
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            Nudge("-90", Modifier.weight(1f)) { vm.rotateGroup(-90f); gl.requestRender() }
+            Nudge("+90", Modifier.weight(1f)) { vm.rotateGroup(90f); gl.requestRender() }
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            Nudge("Batal pilih", Modifier.weight(1f)) { vm.clearSel(); gl.requestRender() }
+            Nudge("Hapus semua", Modifier.weight(1f)) { vm.removeGroup(); gl.requestRender() }
+        }
     }
 }

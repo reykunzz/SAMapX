@@ -15,6 +15,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.Done
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -99,7 +101,9 @@ fun ViewToolbar(
     onUndo: () -> Unit, onRedo: () -> Unit,
     panelVisible: Boolean?, onTogglePanel: () -> Unit,
     modifier: Modifier = Modifier,
-    snap: Float? = null, onSnap: () -> Unit = {}
+    snap: Float? = null, onSnap: () -> Unit = {},
+    topDown: Boolean = false, onTopDown: () -> Unit = {},
+    multi: Boolean = false, onMulti: () -> Unit = {}
 ) {
     Surface(modifier, shape = RoundedCornerShape(22.dp), color = Color(0xE6121714)) {
         Row(
@@ -112,6 +116,8 @@ fun ViewToolbar(
             TbDivider()
             TbBtn(UiIcons.Focus, "Fokus ke objek", onClick = onFocus)
             TbBtn(UiIcons.FitAll, "Tampilkan semua", onClick = onAll)
+            TbBtn(Icons.Default.KeyboardArrowUp, "Tampilan atas", selected = topDown, onClick = onTopDown)
+            TbBtn(Icons.Default.Done, "Pilih banyak", selected = multi, onClick = onMulti)
             TbDivider()
             TbBtn(UiIcons.Undo, "Urungkan", enabled = canUndo, onClick = onUndo)
             TbBtn(UiIcons.Redo, "Ulangi", enabled = canRedo, onClick = onRedo)

@@ -71,6 +71,10 @@ class GlScene(private val game: GameData) : GLSurfaceView.Renderer {
     @Volatile var tz = 0f
     @Volatile var yaw = 0.5f
     @Volatile var pitch = 0.7f
+    /** Tampilan atas: kamera tegak lurus, sudut vertikal dikunci. */
+    @Volatile var topDown = false
+    /** Indeks objek yang dipilih dalam mode Pilih banyak. */
+    @Volatile var multiSel: Set<Int> = emptySet()
     @Volatile var dist = 150f
     @Volatile var viewDist = 500f
     @Volatile var hideLod = false
@@ -309,7 +313,7 @@ class GlScene(private val game: GameData) : GLSurfaceView.Renderer {
         }
         fun handle(so: SceneObj) {
             val o = so.o
-            val isSel = (so.idx >= 0 && so.idx == s) || (so.idx <= -2 && -(so.idx + 2) == selStream)
+            val isSel = (so.idx >= 0 && (so.idx == s || so.idx in multiSel)) || (so.idx <= -2 && -(so.idx + 2) == selStream)
             if (isSel) selObj = so
             val dx = o.x - cx; val dy = o.y - cy; val dz = o.z - cz
             val dd = sqrt(dx * dx + dy * dy + dz * dz)
@@ -353,7 +357,7 @@ class GlScene(private val game: GameData) : GLSurfaceView.Renderer {
             lines(floatArrayOf(o.x, o.y, o.z, o.x + len, o.y, o.z), 1f, 0.2f, 0.2f)
             lines(floatArrayOf(o.x, o.y, o.z, o.x, o.y + len, o.z), 0.2f, 1f, 0.2f)
             lines(floatArrayOf(o.x, o.y, o.z, o.x, o.y, o.z + len), 0.3f, 0.5f, 1f)
-            gzPos = floatArrayOf(o.x, o.y, o.z); gzLen = len; gzOn = so.idx >= 0
+            gzPos = floatArrayOf(o.x, o.y, o.z); gzLen = len; gzOn = so.idx >= 0 && multiSel.size <= 1
         } else gzOn = false
         if (game.pending.get() > 0 || !ready.isEmpty()) view?.requestRender()
     }
