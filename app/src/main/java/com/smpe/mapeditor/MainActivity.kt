@@ -316,7 +316,7 @@ fun App(vm: EditorVM = viewModel()) {
             try { ctx.contentResolver.takePersistableUriPermission(u, 3) } catch (_: Exception) {}
             val txt = ctx.contentResolver.openInputStream(u)!!.bufferedReader().readText()
             if (vm.load(txt, nameOf(ctx, u), u)) {
-                tab = 2
+                tab = 1
                 say("${vm.count} objek dimuat")
             } else say("IPL biner belum didukung. Gunakan IPL teks.")
         } catch (e: Exception) { say("Gagal membuka file: ${e.message}") }
@@ -409,17 +409,19 @@ fun App(vm: EditorVM = viewModel()) {
             )
         },
         bottomBar = {
-            if (vm.entries.isNotEmpty()) NavigationBar(containerColor = MaterialTheme.colorScheme.surface) {
+            if (vm.entries.isNotEmpty()) NavigationBar(
+                containerColor = MaterialTheme.colorScheme.surface,
+                tonalElevation = 0.dp,
+                windowInsets = NavigationBarDefaults.windowInsets
+            ) {
                 NavigationBarItem(selected = tab == 0, onClick = { tab = 0 },
-                    icon = { Icon(Icons.Default.Place, null) }, label = { Text("Peta") })
-                NavigationBarItem(selected = tab == 1, onClick = { tab = 1 },
                     icon = { Icon(Icons.Default.List, null) }, label = { Text("Objek") })
-                NavigationBarItem(selected = tab == 2, onClick = { tab = 2 },
+                NavigationBarItem(selected = tab == 1, onClick = { tab = 1 },
                     icon = { Icon(Icons.Default.Home, null) }, label = { Text("3D") })
             }
         },
         floatingActionButton = {
-            if (vm.entries.isNotEmpty() && !(tab == 2 && vm.game != null)) ExtendedFloatingActionButton(
+            if (vm.entries.isNotEmpty() && !(tab == 1 && vm.game != null)) ExtendedFloatingActionButton(
                 onClick = { vm.sel = vm.add() },
                 containerColor = MaterialTheme.colorScheme.primary,
                 contentColor = MaterialTheme.colorScheme.onPrimary,
@@ -435,16 +437,16 @@ fun App(vm: EditorVM = viewModel()) {
                     gameStatus = vm.gameStatus,
                     onChangelog = { showChangelog = true }
                 )
-                tab == 0 -> MapView(vm)
-                tab == 1 -> ListView(vm)
-                else -> {
+                tab == 0 -> ListView(vm)
+                tab == 1 -> {
                     val g = vm.game
                     if (g != null) GlEditor(vm, g)
                     else Box(Modifier.fillMaxSize()) { View3D(vm); GamePrompt(vm) { pickTree.launch(null) } }
                 }
+                else -> { /* tab 0 and 1 are handled above */ }
             }
         }
-        if (vm.sel in vm.entries.indices && vm.entries[vm.sel] is Obj && !(tab == 2 && vm.game != null)) EditSheet(vm)
+        if (vm.sel in vm.entries.indices && vm.entries[vm.sel] is Obj && !(tab == 1 && vm.game != null)) EditSheet(vm)
         if (vm.picker) ModelPicker(vm)
         vm.diag?.let { DiagDialog(vm, it) }
         if (showChangelog) ChangelogDialog(onDismiss = { showChangelog = false })
