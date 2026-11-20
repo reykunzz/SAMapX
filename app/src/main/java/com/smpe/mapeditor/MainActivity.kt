@@ -10,6 +10,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.layout.*
@@ -36,6 +37,7 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -307,7 +309,6 @@ fun App(vm: EditorVM = viewModel()) {
     val snack = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     var tab by remember { mutableIntStateOf(0) }
-    var showChangelog by remember { mutableStateOf(false) }
     val prefs = remember { ctx.getSharedPreferences("smpe", Context.MODE_PRIVATE) }
     fun say(m: String) { scope.launch { snack.showSnackbar(m) } }
 
@@ -358,67 +359,30 @@ fun App(vm: EditorVM = viewModel()) {
         if (saved != null && vm.game == null) loadGame(Uri.parse(saved))
     }
 
-    @OptIn(ExperimentalMaterial3Api::class)
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
         snackbarHost = { SnackbarHost(snack) },
         topBar = {
-            TopAppBar(
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background),
-                title = {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                    Image(painterResource(R.drawable.logo), null, Modifier.size(34.dp))
-                    Spacer(Modifier.width(10.dp))
-                    Column {
-                        Text("SAMapX", fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.primary)
-                        Text(vm.fileName + if (vm.dirty) "  (belum disimpan)" else "",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)
+            AppHeader(
+                hasFile = vm.entries.isNotEmpty(), tab = tab, onTab = { tab = it },
+                dirty = vm.dirty,
+                onOpen = { open.launch(arrayOf("*/*")) },
+                onSave = { val u = vm.uri; if (u != null) write(u) else saveAs.launch(vm.fileName) },
+                menu = { close ->
+                    if (vm.entries.isNotEmpty()) {
+                        DropdownMenuItem(text = { Text("Simpan sebagai") }, onClick = { close(); saveAs.launch(vm.fileName) })
+                        DropdownMenuItem(text = { Text("Urungkan") }, enabled = vm.canUndo, onClick = { close(); vm.undo() })
+                        DropdownMenuItem(text = { Text("Ulangi") }, enabled = vm.canRedo, onClick = { close(); vm.redo() })
                     }
-                    }
-                },
-                actions = {
-                    var menu by remember { mutableStateOf(false) }
-                    TextButton(onClick = { open.launch(arrayOf("*/*")) }) { Text("Buka") }
-                    IconButton(onClick = { menu = true }) { Icon(Icons.Default.MoreVert, "Menu") }
-                    DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
-                        if (vm.entries.isNotEmpty()) {
-                            DropdownMenuItem(text = { Text("Simpan") }, onClick = {
-                                menu = false
-                                val u = vm.uri
-                                if (u != null) write(u) else saveAs.launch(vm.fileName)
-                            })
-                            DropdownMenuItem(text = { Text("Simpan sebagai") }, onClick = { menu = false; saveAs.launch(vm.fileName) })
+                    DropdownMenuItem(text = { Text("Diagnosa file game") }, onClick = {
+                        close()
+                        scope.launch(Dispatchers.IO) {
+                            vm.diag = (vm.game?.diagnose() ?: "Build: " + BUILD_TAG + "\n" + GameData.lastReport.ifEmpty { "Folder GTA SA belum dipilih." }) + "\nGL: " + (vm.gl?.glLog?.ifEmpty { "ok" } ?: "belum dibuat")
                         }
-                        DropdownMenuItem(text = { Text("Urungkan") }, enabled = vm.canUndo, onClick = { menu = false; vm.undo() })
-                        DropdownMenuItem(text = { Text("Ulangi") }, enabled = vm.canRedo, onClick = { menu = false; vm.redo() })
-                        DropdownMenuItem(text = { Text("Diagnosa file game") }, onClick = {
-                            menu = false
-                            scope.launch(Dispatchers.IO) {
-                                vm.diag = (vm.game?.diagnose() ?: "Build: " + BUILD_TAG + "\n" + GameData.lastReport.ifEmpty { "Folder GTA SA belum dipilih." }) + "\nGL: " + (vm.gl?.glLog?.ifEmpty { "ok" } ?: "belum dibuat")
-                            }
-                        })
-                        DropdownMenuItem(text = { Text("Changelog aplikasi") }, onClick = {
-                            menu = false; showChangelog = true
-                        })
-                        DropdownMenuItem(text = { Text("Versi: 1.1.0") }, enabled = false, onClick = { })
-                        DropdownMenuItem(text = { Text("Developer: ReyyXSA") }, enabled = false, onClick = { })
-                        DropdownMenuItem(text = { Text("Pilih folder GTA SA") }, onClick = { menu = false; pickTree.launch(null) })
-                    }
+                    })
+                    DropdownMenuItem(text = { Text("Pilih folder GTA SA") }, onClick = { close(); pickTree.launch(null) })
                 }
             )
-        },
-        bottomBar = {
-            if (vm.entries.isNotEmpty()) NavigationBar(
-                containerColor = MaterialTheme.colorScheme.surface,
-                tonalElevation = 0.dp,
-                windowInsets = NavigationBarDefaults.windowInsets
-            ) {
-                NavigationBarItem(selected = tab == 0, onClick = { tab = 0 },
-                    icon = { Icon(Icons.Default.List, null) }, label = { Text("Objek") })
-                NavigationBarItem(selected = tab == 1, onClick = { tab = 1 },
-                    icon = { Icon(Icons.Default.Home, null) }, label = { Text("3D") })
-            }
         },
         floatingActionButton = {
             if (vm.entries.isNotEmpty() && !(tab == 1 && vm.game != null)) ExtendedFloatingActionButton(
@@ -434,8 +398,7 @@ fun App(vm: EditorVM = viewModel()) {
                 vm.entries.isEmpty() -> Empty(
                     onOpen = { open.launch(arrayOf("*/*")) },
                     onPickFolder = { pickTree.launch(null) },
-                    gameStatus = vm.gameStatus,
-                    onChangelog = { showChangelog = true }
+                    gameStatus = vm.gameStatus
                 )
                 tab == 0 -> ListView(vm)
                 tab == 1 -> {
@@ -449,7 +412,6 @@ fun App(vm: EditorVM = viewModel()) {
         if (vm.sel in vm.entries.indices && vm.entries[vm.sel] is Obj && !(tab == 1 && vm.game != null)) EditSheet(vm)
         if (vm.picker) ModelPicker(vm)
         vm.diag?.let { DiagDialog(vm, it) }
-        if (showChangelog) ChangelogDialog(onDismiss = { showChangelog = false })
     }
 }
 
@@ -457,8 +419,7 @@ fun App(vm: EditorVM = viewModel()) {
 fun Empty(
     onOpen: () -> Unit,
     onPickFolder: () -> Unit,
-    gameStatus: String,
-    onChangelog: () -> Unit
+    gameStatus: String
 ) {
     Box(
         Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 20.dp, vertical = 18.dp),
@@ -525,8 +486,8 @@ fun Empty(
             }
 
             Spacer(Modifier.height(10.dp))
-            TextButton(onClick = onChangelog) { Text("Changelog · SAMapX 1.1.0") }
-            Spacer(Modifier.height(4.dp))
+            ChangelogCard()
+            Spacer(Modifier.height(12.dp))
             Text("Developed by ReyyXSA", style = MaterialTheme.typography.labelMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant)
             Spacer(Modifier.height(8.dp))
@@ -535,100 +496,88 @@ fun Empty(
 }
 
 @Composable
-fun ChangelogDialog(onDismiss: () -> Unit) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("Changelog SAMapX 1.1.0") },
-        text = {
-            Column(Modifier.heightIn(max = 360.dp).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text("Home UI V3.2", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
-                Text("• Halaman awal dirapikan dengan kartu Folder GTA SA dan Buka Map.")
-                Text("• Konten halaman awal sekarang bisa di-scroll.")
-                Text("• Tombol pilih folder GTA SA tersedia langsung di halaman awal.")
-                Text("• Changelog dapat dibuka dari halaman awal atau menu aplikasi.")
-                Text("• Setelah file IPL berhasil dibuka, aplikasi langsung menuju tab 3D.")
-                HorizontalDivider()
-                Text("Tetap dipertahankan", fontWeight = FontWeight.Bold)
-                Text("• Fitur editor objek, peta, Inspector, dan 3D yang sudah ada.")
-                Text("• Kredit developer ReyyXSA.")
-                Text("Versi sebelumnya: 1.0.0")
-            }
-        },
-        confirmButton = { TextButton(onClick = onDismiss) { Text("Tutup") } }
+fun ChangelogCard() {
+    val items = listOf(
+        "Editor peta IPL GTA San Andreas.",
+        "Tampilan objek 3D dan pemilihan objek.",
+        "Inspector untuk melihat dan mengubah posisi objek.",
+        "Transformasi objek: Putar dan Geser.",
+        "Fokus kamera ke objek dan tampilkan semua objek.",
+        "Undo dan Redo.",
+        "Snap posisi.",
+        "Zoom viewport dengan mouse wheel.",
+        "Buka dan simpan file IPL."
     )
+    Card(
+        Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+    ) {
+        Column(Modifier.fillMaxWidth().padding(18.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            Text("Changelog · SAMapX UI V4", style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.primary)
+            for (t in items) Text("• $t", style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+    }
 }
 
-// ---------- Map ----------
+/** Header ringkas: logo, tab Objek/3D, Buka, Simpan, menu titik tiga. */
 @Composable
-fun MapView(vm: EditorVM) {
-    var scale by remember { mutableFloatStateOf(1f) }
-    var off by remember { mutableStateOf(Offset.Zero) }
-    val cGrid = MaterialTheme.colorScheme.outline
-    val bg = MaterialTheme.colorScheme.surface
-    val tm = rememberTextMeasurer()
-    Box(Modifier.fillMaxSize()) {
-        Canvas(
-            Modifier.fillMaxSize().clipToBounds()
-                .pointerInput(Unit) {
-                    detectTransformGestures { _, pan, zoom, _ ->
-                        scale = (scale * zoom).coerceIn(0.5f, 60f); off += pan
-                    }
-                }
-                .pointerInput(Unit) {
-                    detectTapGestures { tap ->
-                        val base = minOf(size.width, size.height) / 6000f * scale
-                        val c = Offset(size.width / 2f, size.height / 2f) + off
-                        var best = -1
-                        var bd = (28f * density) * (28f * density)
-                        vm.entries.forEachIndexed { i, e ->
-                            if (e is Obj) {
-                                val d = (Offset(c.x + e.x * base, c.y - e.y * base) - tap).getDistanceSquared()
-                                if (d < bd) { bd = d; best = i }
-                            }
-                        }
-                        if (best >= 0) vm.sel = best
-                    }
-                }
+fun AppHeader(
+    hasFile: Boolean, tab: Int, onTab: (Int) -> Unit, dirty: Boolean,
+    onOpen: () -> Unit, onSave: () -> Unit,
+    menu: @Composable ColumnScope.(close: () -> Unit) -> Unit
+) {
+    val cs = MaterialTheme.colorScheme
+    var menuOpen by remember { mutableStateOf(false) }
+    Surface(color = cs.background) {
+        Row(
+            Modifier.statusBarsPadding().height(44.dp).padding(horizontal = 8.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            val base = size.minDimension / 6000f * scale
-            val c = Offset(size.width / 2f, size.height / 2f) + off
-            drawRect(Brush.verticalGradient(listOf(Color(0xFF24272D), Color(0xFF17191D))))
-            drawRect(bg, topLeft = c - Offset(3000f * base, 3000f * base), size = Size(6000f * base, 6000f * base))
-            var g = -3000
-            while (g <= 3000) {
-                val gx = c.x + g * base
-                val gy = c.y + g * base
-                val a = if (g % 1500 == 0) 0.9f else 0.35f
-                drawLine(cGrid.copy(alpha = a), Offset(gx, c.y - 3000f * base), Offset(gx, c.y + 3000f * base), 1f)
-                drawLine(cGrid.copy(alpha = a), Offset(c.x - 3000f * base, gy), Offset(c.x + 3000f * base, gy), 1f)
-                g += 500
+            Image(painterResource(R.drawable.logo), null, Modifier.size(26.dp))
+            Spacer(Modifier.width(6.dp))
+            if (hasFile) {
+                HeaderTab("Objek", tab == 0) { onTab(0) }
+                HeaderTab("3D", tab == 1) { onTab(1) }
+            } else {
+                Text("SAMapX", fontWeight = FontWeight.Black, color = cs.primary)
             }
-            val r = 3f * density
-            var labels = 0
-            vm.entries.forEachIndexed { i, e ->
-                if (e is Obj) {
-                    val p = Offset(c.x + e.x * base, c.y - e.y * base)
-                    if (p.x in -20f..size.width + 20f && p.y in -20f..size.height + 20f) {
-                        val col = modelColor(e.model)
-                        if (e.interior == 0) drawCircle(col, r, p)
-                        else drawRect(col, p - Offset(r, r), Size(2 * r, 2 * r))
-                        if (i == vm.sel) drawCircle(Color.White, r * 3.2f, p, style = Stroke(2f * density))
-                        if ((scale >= 6f && labels < 150) || i == vm.sel) {
-                            labels++
-                            label(tm, e.model, p.x + r + 3f, p.y - r - 14f)
-                        }
-                    }
+            Spacer(Modifier.weight(1f))
+            val pad = PaddingValues(horizontal = 10.dp)
+            TextButton(onClick = onOpen, contentPadding = pad) { Text("Buka") }
+            if (hasFile) TextButton(onClick = onSave, contentPadding = pad) {
+                Text("Simpan")
+                if (dirty) {
+                    Spacer(Modifier.width(4.dp))
+                    Box(Modifier.size(6.dp).background(cs.tertiary, CircleShape))
+                }
+            }
+            Box {
+                IconButton(onClick = { menuOpen = true }, modifier = Modifier.size(40.dp)) {
+                    Icon(Icons.Default.MoreVert, "Menu")
+                }
+                DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
+                    menu { menuOpen = false }
                 }
             }
         }
-        SmallFloatingActionButton(
-            onClick = { scale = 1f; off = Offset.Zero },
-            modifier = Modifier.align(Alignment.TopEnd).padding(12.dp),
-            containerColor = MaterialTheme.colorScheme.surfaceVariant
-        ) { Icon(Icons.Default.Refresh, "Reset tampilan") }
-        Text("${vm.count} objek. Warna = jenis model, bulat = luar, kotak = interior.\nZoom lebih dekat untuk melihat nama model.",
-            Modifier.align(Alignment.TopStart).padding(12.dp).fillMaxWidth(0.75f),
-            style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+    }
+}
+
+@Composable
+private fun HeaderTab(label: String, selected: Boolean, onClick: () -> Unit) {
+    val cs = MaterialTheme.colorScheme
+    Box(
+        Modifier.fillMaxHeight().clickable(onClick = onClick).padding(horizontal = 12.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(label, fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
+            color = if (selected) cs.primary else cs.onSurfaceVariant)
+        if (selected) Box(
+            Modifier.align(Alignment.BottomCenter).fillMaxWidth().height(2.dp).background(cs.primary, RoundedCornerShape(2.dp))
+        )
     }
 }
 
@@ -650,6 +599,18 @@ fun View3D(vm: EditorVM) {
     Box(Modifier.fillMaxSize()) {
         Canvas(
             Modifier.fillMaxSize().clipToBounds()
+                .pointerInput(Unit) {
+                    awaitPointerEventScope {
+                        while (true) {
+                            val ev = awaitPointerEvent()
+                            if (ev.type == PointerEventType.Scroll) {
+                                val dy = ev.changes.sumOf { it.scrollDelta.y.toDouble() }
+                                dist = (dist * 1.12.pow(dy).toFloat()).coerceIn(15f, 9000f)
+                                ev.changes.forEach { it.consume() }
+                            }
+                        }
+                    }
+                }
                 .pointerInput(Unit) {
                     detectTransformGestures { _, pan, zoom, _ ->
                         dist = (dist / zoom).coerceIn(15f, 9000f)
@@ -763,23 +724,18 @@ fun View3D(vm: EditorVM) {
             }
         }
 
-        Column(Modifier.align(Alignment.TopStart).padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                FilterChip(selected = !panMode, onClick = { panMode = false }, label = { Text("Putar") })
-                FilterChip(selected = panMode, onClick = { panMode = true }, label = { Text("Geser") })
-                AssistChip(onClick = {
-                    val o = vm.entries.getOrNull(vm.sel)
-                    if (o is Obj) { tx = o.x; ty = o.y; tz = o.z; dist = minOf(dist, 120f) }
-                }, label = { Text("Fokus") })
-            }
-            Text("Seret untuk ${if (panMode) "menggeser" else "memutar"}, cubit untuk zoom.\nKubus = posisi tiap model, warna = jenis model.",
-                style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        }
-        SmallFloatingActionButton(
-            onClick = { tx = st[0]; ty = st[1]; tz = st[2]; dist = st[3]; yaw = 0.5f; pitch = 0.8f },
-            modifier = Modifier.align(Alignment.TopEnd).padding(12.dp),
-            containerColor = MaterialTheme.colorScheme.surfaceVariant
-        ) { Icon(Icons.Default.Refresh, "Reset kamera") }
+        ViewToolbar(
+            panMode = panMode, setPan = { panMode = it },
+            canUndo = vm.canUndo, canRedo = vm.canRedo,
+            onFocus = {
+                val o = vm.entries.getOrNull(vm.sel)
+                if (o is Obj) { tx = o.x; ty = o.y; tz = o.z; dist = minOf(dist, 120f) }
+            },
+            onAll = { tx = st[0]; ty = st[1]; tz = st[2]; dist = st[3]; yaw = 0.5f; pitch = 0.8f },
+            onUndo = { vm.undo() }, onRedo = { vm.redo() },
+            panelVisible = null, onTogglePanel = {},
+            modifier = Modifier.align(Alignment.TopStart).padding(8.dp)
+        )
     }
 }
 
@@ -794,7 +750,7 @@ fun ListView(vm: EditorVM) {
         OutlinedTextField(
             value = q, onValueChange = { q = it }, modifier = Modifier.fillMaxWidth().padding(12.dp),
             leadingIcon = { Icon(Icons.Default.Search, null) },
-            placeholder = { Text("Cari model atau ID") },
+            placeholder = { Text("Cari model atau ID  ·  ${vm.fileName}", maxLines = 1) },
             singleLine = true, shape = RoundedCornerShape(16.dp)
         )
         LazyColumn(

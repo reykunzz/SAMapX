@@ -25,6 +25,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalDensity
@@ -57,7 +58,7 @@ fun GlEditor(vm: EditorVM, game: GameData) {
             Modifier.fillMaxSize())
         if (showPanel) {
             Column(
-                Modifier.align(Alignment.TopStart).padding(start = 8.dp, top = 56.dp, bottom = 8.dp)
+                Modifier.align(Alignment.TopStart).padding(start = 8.dp, top = 58.dp, bottom = 8.dp)
                     .width(panelWidth)
                     .heightIn(max = containerHeight - 76.dp)
                     .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.97f), RoundedCornerShape(16.dp))
@@ -120,6 +121,21 @@ fun Viewport(
         )
         Box(
             Modifier.fillMaxSize().pointerInput(Unit) {
+                // Scroll roda mouse: zoom in/out
+                awaitPointerEventScope {
+                    while (true) {
+                        val ev = awaitPointerEvent()
+                        if (ev.type == PointerEventType.Scroll) {
+                            val dy = ev.changes.sumOf { it.scrollDelta.y.toDouble() }.toFloat()
+                            if (dy != 0f) {
+                                gl.dist = (gl.dist * Math.pow(1.12, dy.toDouble()).toFloat()).coerceIn(5f, 6000f)
+                                gl.requestRender()
+                            }
+                            ev.changes.forEach { it.consume() }
+                        }
+                    }
+                }
+            }.pointerInput(Unit) {
                 fun camMove(pan: Offset) {
                     if (!pm.value) {
                         gl.yaw -= pan.x * 0.008f
@@ -184,21 +200,19 @@ fun Viewport(
                 }
             }
         )
-        Row(
-            Modifier.align(Alignment.TopStart).fillMaxWidth().horizontalScroll(rememberScrollState()).padding(8.dp),
-            horizontalArrangement = Arrangement.spacedBy(6.dp)
-        ) {
-            FilterChip(selected = !panMode, onClick = { setPan(false) }, label = { Text("Putar") })
-            FilterChip(selected = panMode, onClick = { setPan(true) }, label = { Text("Geser") })
-            AssistChip(onClick = {
+        ViewToolbar(
+            panMode = panMode, setPan = setPan,
+            canUndo = vm.canUndo, canRedo = vm.canRedo,
+            onFocus = {
                 val o = vm.entries.getOrNull(vm.sel) as? Obj
                 if (o != null) { gl.tx = o.x; gl.ty = o.y; gl.tz = o.z; gl.dist = minOf(gl.dist, 60f); gl.requestRender() }
-            }, label = { Text("Fokus") })
-            AssistChip(onClick = { gl.tx = st[0]; gl.ty = st[1]; gl.tz = st[2]; gl.dist = st[3] * 1.2f; gl.requestRender() }, label = { Text("Semua") })
-            AssistChip(onClick = { vm.undo(); gl.requestRender() }, enabled = vm.canUndo, label = { Text("Urung") })
-            AssistChip(onClick = { vm.redo(); gl.requestRender() }, enabled = vm.canRedo, label = { Text("Ulang") })
-            AssistChip(onClick = togglePanel, label = { Text(if (panelVisible) "Sembunyikan panel" else "Tampilkan panel") })
-        }
+            },
+            onAll = { gl.tx = st[0]; gl.ty = st[1]; gl.tz = st[2]; gl.dist = st[3] * 1.2f; gl.requestRender() },
+            onUndo = { vm.undo(); gl.requestRender() },
+            onRedo = { vm.redo(); gl.requestRender() },
+            panelVisible = panelVisible, onTogglePanel = togglePanel,
+            modifier = Modifier.align(Alignment.TopStart).padding(8.dp)
+        )
         val sel = vm.entries.getOrNull(vm.sel) as? Obj
         val g = vm.game
         val hud = remember(tick, vm.sel, vm.count) {
