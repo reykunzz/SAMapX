@@ -14,3 +14,4 @@ Catatan: IPL biner (bnry) belum didukung. Ini bukan port Ariane; terinspirasi da
 - Zoom viewport dengan scroll roda mouse.
 - Tombol Simpan di samping Buka.
 - Menu titik tiga dibersihkan (tanpa versi, changelog, developer); changelog ada di halaman awal.
+- Tema baru Deep Tosca (biru tosca gelap) dan font DM Sans; angka/koordinat memakai monospace.

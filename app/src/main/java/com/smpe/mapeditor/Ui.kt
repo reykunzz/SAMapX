@@ -92,7 +92,7 @@ fun ViewToolbar(
     panelVisible: Boolean?, onTogglePanel: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Surface(modifier, shape = RoundedCornerShape(22.dp), color = Color(0xE624272D)) {
+    Surface(modifier, shape = RoundedCornerShape(22.dp), color = Color(0xE610181C)) {
         Row(
             Modifier.padding(horizontal = 4.dp, vertical = 3.dp),
             horizontalArrangement = Arrangement.spacedBy(2.dp),

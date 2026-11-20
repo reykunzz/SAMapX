@@ -42,6 +42,8 @@ import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
@@ -242,25 +244,50 @@ fun DrawScope.line3(cam: Cam, x1: Float, y1: Float, z1: Float, x2: Float, y2: Fl
 fun DrawScope.label(tm: TextMeasurer, text: String, x: Float, y: Float) {
     // drawText throws when the text origin is outside the canvas, so skip those
     if (x.isNaN() || y.isNaN() || x < 0f || y < 0f || x > size.width - 30f || y > size.height - 20f) return
-    drawText(tm, text, Offset(x, y), TextStyle(color = Color.White, fontSize = 10.sp, background = Color(0xE624272D)))
+    drawText(tm, text, Offset(x, y), TextStyle(color = Color.White, fontSize = 10.sp, background = Color(0xE610181C)))
 }
 
 // ---------- Theme ----------
+// Deep Tosca: latar biru-hitam, aksen tosca gelap, teks putih kebiruan lembut.
 private val Scheme = darkColorScheme(
-    // Graphite Professional: graphite surfaces with restrained blue actions.
-    primary = Color(0xFF2589D8), onPrimary = Color(0xFFFFFFFF),
-    primaryContainer = Color(0xFF183B59), onPrimaryContainer = Color(0xFFD8ECFF),
-    secondary = Color(0xFF929AA5), onSecondary = Color(0xFF17191D),
-    secondaryContainer = Color(0xFF303640), onSecondaryContainer = Color(0xFFE5E7EB),
-    tertiary = Color(0xFF42B883),
-    background = Color(0xFF17191D), onBackground = Color(0xFFE5E7EB),
-    surface = Color(0xFF24272D), onSurface = Color(0xFFE5E7EB),
-    surfaceVariant = Color(0xFF303640), onSurfaceVariant = Color(0xFF929AA5),
-    outline = Color(0xFF3A4049), error = Color(0xFFE05252)
+    primary = Color(0xFF1FA3A8), onPrimary = Color(0xFFF0FBFB),
+    primaryContainer = Color(0xFF123A40), onPrimaryContainer = Color(0xFFBFE0E0),
+    secondary = Color(0xFF7F969C), onSecondary = Color(0xFF0A1013),
+    secondaryContainer = Color(0xFF18232A), onSecondaryContainer = Color(0xFFDCE8EA),
+    tertiary = Color(0xFFE8B75A),
+    background = Color(0xFF0A1013), onBackground = Color(0xFFDCE8EA),
+    surface = Color(0xFF10181C), onSurface = Color(0xFFDCE8EA),
+    surfaceVariant = Color(0xFF18232A), onSurfaceVariant = Color(0xFF7F969C),
+    surfaceContainerLowest = Color(0xFF0A1013), surfaceContainerLow = Color(0xFF10181C),
+    surfaceContainer = Color(0xFF141E23), surfaceContainerHigh = Color(0xFF18232A),
+    surfaceContainerHighest = Color(0xFF1D2A32),
+    outline = Color(0xFF25343C), outlineVariant = Color(0xFF25343C), error = Color(0xFFD86A6A)
 )
 
+val DmSans = FontFamily(
+    Font(R.font.dmsans_regular, FontWeight.Normal),
+    Font(R.font.dmsans_medium, FontWeight.Medium),
+    Font(R.font.dmsans_semibold, FontWeight.SemiBold),
+    Font(R.font.dmsans_bold, FontWeight.Bold),
+    Font(R.font.dmsans_extrabold, FontWeight.ExtraBold),
+    Font(R.font.dmsans_extrabold, FontWeight.Black)
+)
+
+private fun appTypography(): Typography {
+    val b = Typography()
+    fun TextStyle.f() = copy(fontFamily = DmSans)
+    return Typography(
+        displayLarge = b.displayLarge.f(), displayMedium = b.displayMedium.f(), displaySmall = b.displaySmall.f(),
+        headlineLarge = b.headlineLarge.f(), headlineMedium = b.headlineMedium.f(), headlineSmall = b.headlineSmall.f(),
+        titleLarge = b.titleLarge.f(), titleMedium = b.titleMedium.f(), titleSmall = b.titleSmall.f(),
+        bodyLarge = b.bodyLarge.f(), bodyMedium = b.bodyMedium.f(), bodySmall = b.bodySmall.f(),
+        labelLarge = b.labelLarge.f(), labelMedium = b.labelMedium.f(), labelSmall = b.labelSmall.f()
+    )
+}
+
 @Composable
-fun SmpeTheme(content: @Composable () -> Unit) = MaterialTheme(colorScheme = Scheme, content = content)
+fun SmpeTheme(content: @Composable () -> Unit) =
+    MaterialTheme(colorScheme = Scheme, typography = appTypography(), content = content)
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -647,7 +674,7 @@ fun View3D(vm: EditorVM) {
                 }
         ) {
             val cam = Cam(tx, ty, tz, yaw, pitch, dist, size.width, size.height)
-            drawRect(Brush.verticalGradient(listOf(Color(0xFF303640), Color(0xFF17191D))))
+            drawRect(Brush.verticalGradient(listOf(Color(0xFF11262C), Color(0xFF070B0D))))
 
             // ground grid
             val step = 10f.pow(floor(log10(dist / 5f)))
@@ -774,14 +801,14 @@ fun ListView(vm: EditorVM) {
                         Box(Modifier.size(12.dp).background(modelColor(e.model), CircleShape))
                         Spacer(Modifier.width(10.dp))
                         Surface(shape = RoundedCornerShape(10.dp), color = MaterialTheme.colorScheme.primaryContainer) {
-                            Text("${e.id}", Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                            Text("${e.id}", Modifier.padding(horizontal = 10.dp, vertical = 6.dp), fontFamily = FontFamily.Monospace,
                                 color = MaterialTheme.colorScheme.onPrimaryContainer, fontWeight = FontWeight.Bold)
                         }
                         Spacer(Modifier.width(12.dp))
                         Column {
                             Text(e.model, fontWeight = FontWeight.SemiBold)
                             Text(String.format(Locale.US, "%.1f, %.1f, %.1f", e.x, e.y, e.z),
-                                style = MaterialTheme.typography.bodySmall,
+                                style = MaterialTheme.typography.bodySmall, fontFamily = FontFamily.Monospace,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                     }

@@ -30,6 +30,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -222,7 +223,7 @@ fun Viewport(
                 g.texdbs.sumOf { it.ok.get() } + " ok, " + g.texdbs.sumOf { it.fail.get() } + " gagal" +
                 (if (g.failCount.get() > 0) "  [" + g.reasons.entries.joinToString { it.key + " " + it.value.get() } + "]" else "") else head
         }
-        Surface(Modifier.align(Alignment.BottomStart).padding(8.dp), shape = RoundedCornerShape(10.dp), color = Color(0xE624272D)) {
+        Surface(Modifier.align(Alignment.BottomStart).padding(8.dp), shape = RoundedCornerShape(10.dp), color = Color(0xE610181C)) {
             Text(hud, Modifier.padding(horizontal = 10.dp, vertical = 5.dp), fontSize = 11.sp, color = Color.White)
         }
     }
@@ -290,7 +291,7 @@ fun Panel(vm: EditorVM, gl: GlScene, st: FloatArray, modifier: Modifier) {
                     Text(o.model, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
                     Text("ID ${o.id}", style = MaterialTheme.typography.labelMedium)
                 }
-                Text(String.format(Locale.US, "X %.2f   Y %.2f   Z %.2f", o.x, o.y, o.z), style = MaterialTheme.typography.bodySmall)
+                Text(String.format(Locale.US, "X %.2f   Y %.2f   Z %.2f", o.x, o.y, o.z), style = MaterialTheme.typography.bodySmall, fontFamily = FontFamily.Monospace)
                 Text("Seret panah merah (X), hijau (Y), biru (Z) di layar 3D untuk menggeser objek.", style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
@@ -299,7 +300,7 @@ fun Panel(vm: EditorVM, gl: GlScene, st: FloatArray, modifier: Modifier) {
         if (sobj != null) {
             SectionCard("OBJEK STREAM (DILIHAT SAJA)") {
                 Text(sobj.model + "  (ID " + sobj.id + ")", fontWeight = FontWeight.Bold)
-                Text(String.format(Locale.US, "X %.2f   Y %.2f   Z %.2f", sobj.x, sobj.y, sobj.z), style = MaterialTheme.typography.bodySmall)
+                Text(String.format(Locale.US, "X %.2f   Y %.2f   Z %.2f", sobj.x, sobj.y, sobj.z), style = MaterialTheme.typography.bodySmall, fontFamily = FontFamily.Monospace)
                 Button(onClick = { vm.adoptStream(); gl.requestRender() }, shape = RoundedCornerShape(14.dp), modifier = Modifier.fillMaxWidth()) {
                     Text("Salin ke IPL agar bisa diedit")
                 }
