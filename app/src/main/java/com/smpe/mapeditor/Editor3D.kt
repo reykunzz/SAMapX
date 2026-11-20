@@ -47,23 +47,30 @@ fun GlEditor(vm: EditorVM, game: GameData) {
         GlScene(game).also { s -> s.tx = st[0]; s.ty = st[1]; s.tz = st[2]; s.dist = 150f; vm.gl = s }
     }
     var panMode by remember { mutableStateOf(false) }
+    var showPanel by remember { mutableStateOf(true) }
     BoxWithConstraints(Modifier.fillMaxSize()) {
         if (maxWidth >= 700.dp) {
             Row(Modifier.fillMaxSize()) {
-                Panel(vm, gl, st, Modifier.width(330.dp).fillMaxHeight())
-                Viewport(vm, gl, st, panMode, { panMode = it }, Modifier.weight(1f).fillMaxHeight())
+                if (showPanel) Panel(vm, gl, st, Modifier.width(300.dp).fillMaxHeight())
+                Viewport(vm, gl, st, panMode, { panMode = it }, showPanel, { showPanel = !showPanel },
+                    Modifier.weight(1f).fillMaxHeight())
             }
         } else {
             Column(Modifier.fillMaxSize()) {
-                Viewport(vm, gl, st, panMode, { panMode = it }, Modifier.weight(1f).fillMaxWidth())
-                Panel(vm, gl, st, Modifier.fillMaxWidth().heightIn(max = 300.dp))
+                Viewport(vm, gl, st, panMode, { panMode = it }, showPanel, { showPanel = !showPanel },
+                    Modifier.weight(1f).fillMaxWidth())
+                if (showPanel) Panel(vm, gl, st, Modifier.fillMaxWidth().heightIn(max = 250.dp))
             }
         }
     }
 }
 
 @Composable
-fun Viewport(vm: EditorVM, gl: GlScene, st: FloatArray, panMode: Boolean, setPan: (Boolean) -> Unit, modifier: Modifier) {
+fun Viewport(
+    vm: EditorVM, gl: GlScene, st: FloatArray,
+    panMode: Boolean, setPan: (Boolean) -> Unit,
+    panelVisible: Boolean, togglePanel: () -> Unit, modifier: Modifier
+) {
     val density = LocalDensity.current.density
     val pm = rememberUpdatedState(panMode)
     val exScene = remember(vm.extra) { vm.extra.mapIndexed { i, o -> SceneObj(-(i + 2), o) } }
@@ -172,6 +179,7 @@ fun Viewport(vm: EditorVM, gl: GlScene, st: FloatArray, panMode: Boolean, setPan
             AssistChip(onClick = { gl.tx = st[0]; gl.ty = st[1]; gl.tz = st[2]; gl.dist = st[3] * 1.2f; gl.requestRender() }, label = { Text("Semua") })
             AssistChip(onClick = { vm.undo(); gl.requestRender() }, enabled = vm.canUndo, label = { Text("Urung") })
             AssistChip(onClick = { vm.redo(); gl.requestRender() }, enabled = vm.canRedo, label = { Text("Ulang") })
+            AssistChip(onClick = togglePanel, label = { Text(if (panelVisible) "Sembunyikan panel" else "Tampilkan panel") })
         }
         val sel = vm.entries.getOrNull(vm.sel) as? Obj
         val g = vm.game

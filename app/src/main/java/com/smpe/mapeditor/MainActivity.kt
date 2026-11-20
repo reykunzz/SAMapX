@@ -244,13 +244,16 @@ fun DrawScope.label(tm: TextMeasurer, text: String, x: Float, y: Float) {
 
 // ---------- Theme ----------
 private val Scheme = darkColorScheme(
-    primary = Color(0xFFFF8A3D), onPrimary = Color(0xFF1B0F05),
-    primaryContainer = Color(0xFF3A2314), onPrimaryContainer = Color(0xFFFFD9BF),
-    secondary = Color(0xFF3FA7D6), tertiary = Color(0xFF7BCB5B),
-    background = Color(0xFF0D1117), onBackground = Color(0xFFECEFF4),
-    surface = Color(0xFF141922), onSurface = Color(0xFFECEFF4),
-    surfaceVariant = Color(0xFF1D2430), onSurfaceVariant = Color(0xFFA9B4C4),
-    outline = Color(0xFF3A4556), error = Color(0xFFFF6B6B)
+    // SAMapX identity: cyan for primary controls, electric blue for secondary actions.
+    primary = Color(0xFF24B9F2), onPrimary = Color(0xFF06131B),
+    primaryContainer = Color(0xFF15364A), onPrimaryContainer = Color(0xFFC9F3FF),
+    secondary = Color(0xFF258BFF), onSecondary = Color(0xFFFFFFFF),
+    secondaryContainer = Color(0xFF173B68), onSecondaryContainer = Color(0xFFD8E8FF),
+    tertiary = Color(0xFF35C98A),
+    background = Color(0xFF0D121A), onBackground = Color(0xFFE8EEF6),
+    surface = Color(0xFF141C28), onSurface = Color(0xFFE8EEF6),
+    surfaceVariant = Color(0xFF1C2938), onSurfaceVariant = Color(0xFFAAB8C9),
+    outline = Color(0xFF35465A), error = Color(0xFFFF6B78)
 )
 
 @Composable

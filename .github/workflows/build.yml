@@ -1,4 +1,4 @@
-name: Build SMPE APK
+name: Build SAMapX APK
 on:
   push:
     branches: [main]
@@ -28,7 +28,7 @@ jobs:
           grep -E "^e: |What went wrong|FAILURE|error:" -A4 build.log | head -120 || true
       - uses: actions/upload-artifact@v4
         with:
-          name: SA-Mobile-Map-Editor-SMPE
+          name: SAMapX-release
           path: app/build/outputs/apk/release/*.apk
       - name: Rilis (tag)
         if: startsWith(github.ref, 'refs/tags/v')
