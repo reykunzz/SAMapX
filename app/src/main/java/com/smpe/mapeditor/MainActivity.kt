@@ -183,6 +183,17 @@ class EditorVM : ViewModel() {
         return true
     }
     fun text(): String = entries.joinToString("\n") { if (it is Obj) it.line() else (it as Raw).t }
+
+    /** File IDE pendamping: satu baris per ID model unik yang dipakai di IPL ini. */
+    fun ideText(): String {
+        val seen = LinkedHashMap<Int, String>()
+        for (e in entries) if (e is Obj && !seen.containsKey(e.id)) seen[e.id] = e.model.lowercase()
+        return buildString {
+            append("objs\n")
+            for ((id, model) in seen) append("$id, $model, $model, 1, 300\n")
+            append("end\n")
+        }
+    }
     fun update(i: Int, o: Obj) { snapshot(); entries[i] = o.copy(src = null); dirty = true }
     fun remove(i: Int) { snapshot(); entries.removeAt(i); sel = -1; dirty = true }
     fun beginEdit() { snapshot() }
@@ -411,6 +422,15 @@ fun App(vm: EditorVM = viewModel()) {
     val saveAs = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("text/plain")) { u: Uri? ->
         if (u != null) write(u)
     }
+    fun writeIde(u: Uri) {
+        try {
+            ctx.contentResolver.openOutputStream(u, "wt")!!.use { it.write(vm.ideText().toByteArray()) }
+            say("File IDE tersimpan")
+        } catch (e: Exception) { say("Gagal menyimpan IDE: ${e.message}") }
+    }
+    val saveIde = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("text/plain")) { u: Uri? ->
+        if (u != null) writeIde(u)
+    }
 
     fun loadGame(u: Uri) {
         vm.gameStatus = "Memuat data GTA SA..."
@@ -451,6 +471,7 @@ fun App(vm: EditorVM = viewModel()) {
                 menu = { close ->
                     if (vm.entries.isNotEmpty()) {
                         DropdownMenuItem(text = { Text("Simpan sebagai") }, onClick = { close(); saveAs.launch(vm.fileName) })
+                        DropdownMenuItem(text = { Text("Simpan IDE") }, onClick = { close(); saveIde.launch(vm.fileName.substringBeforeLast('.') + ".ide") })
                         DropdownMenuItem(text = { Text("Urungkan") }, enabled = vm.canUndo, onClick = { close(); vm.undo() })
                         DropdownMenuItem(text = { Text("Ulangi") }, enabled = vm.canRedo, onClick = { close(); vm.redo() })
                     }
@@ -638,7 +659,10 @@ fun ChangelogCard() {
         "Kartu objek terpilih di viewport (Salin, Hapus, Tutup).",
         "Daftar file terakhir di halaman awal.",
         "Buat IPL baru dari halaman awal.",
-        "Orientasi: potret di menu, landscape saat editor terbuka."
+        "Orientasi: potret di menu, landscape saat editor terbuka.",
+        "Zoom tanpa batas di tampilan 3D.",
+        "Geser objek bebas dengan sentuhan: seret objek yang sudah dipilih.",
+        "Simpan IDE: membuat file .ide pendamping dari IPL."
     )
     var open by remember { mutableStateOf(false) }
     Card(

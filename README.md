@@ -18,6 +18,11 @@ Catatan: IPL biner (bnry) belum didukung. Ini bukan port Ariane; terinspirasi da
 
 ## Changelog
 
+### 1.2.2
+- Zoom tanpa batas di tampilan 3D.
+- Geser objek bebas dengan sentuhan: seret objek yang sudah dipilih.
+- Simpan IDE: file .ide pendamping dari IPL.
+
 ### 1.2.1
 - Logo baru dan ikon launcher.
 - Menu awal potret, editor landscape saat file IPL terbuka.

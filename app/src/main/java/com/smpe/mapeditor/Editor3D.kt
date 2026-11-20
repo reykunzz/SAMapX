@@ -138,7 +138,7 @@ fun Viewport(
                         if (ev.type == PointerEventType.Scroll) {
                             val dy = ev.changes.sumOf { it.scrollDelta.y.toDouble() }.toFloat()
                             if (dy != 0f) {
-                                gl.dist = (gl.dist * Math.pow(1.12, dy.toDouble()).toFloat()).coerceIn(5f, 6000f)
+                                gl.dist = (gl.dist * Math.pow(1.12, dy.toDouble()).toFloat()).coerceAtLeast(0.5f)
                                 gl.requestRender()
                             }
                             ev.changes.forEach { it.consume() }
@@ -166,6 +166,9 @@ fun Viewport(
                     var startVal = 0f
                     var acc = 0f
                     var last = down.position
+                    val freeHit = axis < 0 && !pm.value && vm.sel >= 0 &&
+                        gl.pick(down.position.x, down.position.y, 24f * density) == vm.sel
+                    var fsx = 0f; var fsy = 0f; var fdx = 0f; var fdy = 0f
                     while (true) {
                         val ev = awaitPointerEvent()
                         val pressed = ev.changes.filter { it.pressed }
@@ -175,7 +178,7 @@ fun Viewport(
                             val a = pressed[0]; val b = pressed[1]
                             val span = (a.position - b.position).getDistance()
                             val prev = (a.previousPosition - b.previousPosition).getDistance()
-                            if (prev > 1f && span > 1f) gl.dist = (gl.dist * prev / span).coerceIn(5f, 6000f)
+                            if (prev > 1f && span > 1f) gl.dist = (gl.dist * prev / span).coerceAtLeast(0.5f)
                             camMove((a.position + b.position) / 2f - (a.previousPosition + b.previousPosition) / 2f)
                             a.consume(); b.consume()
                         } else {
@@ -190,6 +193,26 @@ fun Viewport(
                                         var v = startVal + acc
                                         if (vm.snap > 0f) v = Math.round(v / vm.snap) * vm.snap
                                         vm.setAxis(vm.sel, axis, v)
+                                    }
+                                    c.consume()
+                                }
+                            } else if (freeHit) {
+                                if (moved) {
+                                    val o = vm.entries.getOrNull(vm.sel) as? Obj
+                                    if (o != null) {
+                                        if (!started) { started = true; vm.beginEdit(); fsx = o.x; fsy = o.y; fdx = 0f; fdy = 0f }
+                                        val pd = c.position - c.previousPosition
+                                        val k = gl.dist / (minOf(size.width, size.height) * 1.1f)
+                                        val cs = cos(gl.yaw); val sn = sin(gl.yaw)
+                                        fdx += pd.x * k * cs + pd.y * k * sn
+                                        fdy += pd.x * k * sn - pd.y * k * cs
+                                        var vx = fsx + fdx; var vy = fsy + fdy
+                                        if (vm.snap > 0f) {
+                                            vx = Math.round(vx / vm.snap) * vm.snap
+                                            vy = Math.round(vy / vm.snap) * vm.snap
+                                        }
+                                        vm.setAxis(vm.sel, 0, vx); vm.setAxis(vm.sel, 1, vy)
+                                        gl.requestRender()
                                     }
                                     c.consume()
                                 }
