@@ -7,6 +7,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.horizontalScroll
@@ -24,6 +25,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.unit.IntOffset
+import kotlin.math.roundToInt
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalClipboardManager
@@ -48,18 +51,46 @@ fun GlEditor(vm: EditorVM, game: GameData) {
     }
     var panMode by remember { mutableStateOf(false) }
     var showPanel by remember { mutableStateOf(true) }
+    var panelExpanded by remember { mutableStateOf(true) }
+    var panelX by remember { mutableFloatStateOf(-1f) }
+    var panelY by remember { mutableFloatStateOf(64f) }
+    val density = LocalDensity.current.density
     BoxWithConstraints(Modifier.fillMaxSize()) {
-        if (maxWidth >= 700.dp) {
-            Row(Modifier.fillMaxSize()) {
-                if (showPanel) Panel(vm, gl, st, Modifier.width(300.dp).fillMaxHeight())
-                Viewport(vm, gl, st, panMode, { panMode = it }, showPanel, { showPanel = !showPanel },
-                    Modifier.weight(1f).fillMaxHeight())
-            }
-        } else {
-            Column(Modifier.fillMaxSize()) {
-                Viewport(vm, gl, st, panMode, { panMode = it }, showPanel, { showPanel = !showPanel },
-                    Modifier.weight(1f).fillMaxWidth())
-                if (showPanel) Panel(vm, gl, st, Modifier.fillMaxWidth().heightIn(max = 250.dp))
+        val panelWidth = if (maxWidth < 420.dp) (maxWidth - 24.dp).coerceAtLeast(220.dp) else 320.dp
+        if (panelX < 0f) panelX = with(LocalDensity.current) { (maxWidth - panelWidth - 12.dp).toPx() }
+        Viewport(vm, gl, st, panMode, { panMode = it }, showPanel, { showPanel = !showPanel },
+            Modifier.fillMaxSize())
+        if (showPanel) {
+            Column(
+                Modifier.offset { IntOffset(panelX.roundToInt(), (panelY * density).roundToInt()) }
+                    .width(panelWidth)
+                    .heightIn(max = maxHeight - 76.dp)
+                    .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.97f), RoundedCornerShape(16.dp))
+            ) {
+                Row(
+                    Modifier.fillMaxWidth()
+                        .pointerInput(maxWidth, maxHeight) {
+                            detectDragGestures { change, drag ->
+                                change.consume()
+                                val w = with(density) { panelWidth.toPx() }
+                                panelX = (panelX + drag.x).coerceIn(0f, (size.width - w).coerceAtLeast(0f))
+                                panelY = (panelY + drag.y / density).coerceIn(0f, (maxHeight.value - 56f).coerceAtLeast(0f))
+                            }
+                        }
+                        .padding(start = 14.dp, end = 8.dp, top = 8.dp, bottom = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text("INSPECTOR", Modifier.weight(1f), style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Black)
+                    TextButton(onClick = { panelExpanded = !panelExpanded }) {
+                        Text(if (panelExpanded) "Minimize" else "Buka")
+                    }
+                    TextButton(onClick = { showPanel = false }) { Text("Tutup") }
+                }
+                if (panelExpanded) {
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.35f))
+                    Panel(vm, gl, st, Modifier.fillMaxWidth().heightIn(max = maxHeight - 120.dp))
+                }
             }
         }
     }

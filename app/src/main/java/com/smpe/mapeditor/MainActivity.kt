@@ -396,6 +396,7 @@ fun App(vm: EditorVM = viewModel()) {
                             }
                         })
                         DropdownMenuItem(text = { Text("Versi: " + BUILD_TAG) }, enabled = false, onClick = { })
+                        DropdownMenuItem(text = { Text("Developer: ReyyXSA") }, enabled = false, onClick = { })
                         DropdownMenuItem(text = { Text("Pilih folder GTA SA") }, onClick = { menu = false; pickTree.launch(null) })
                     }
                 }
@@ -449,6 +450,12 @@ fun Empty(onOpen: () -> Unit) {
             textAlign = TextAlign.Center, color = MaterialTheme.colorScheme.onSurfaceVariant)
         Spacer(Modifier.height(24.dp))
         Button(onClick = onOpen, shape = RoundedCornerShape(16.dp)) { Text("Buka file IPL") }
+        Spacer(Modifier.height(18.dp))
+        Text(
+            "Developed by ReyyXSA",
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
     }
 }
 
