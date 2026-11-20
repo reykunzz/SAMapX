@@ -54,34 +54,20 @@ fun GlEditor(vm: EditorVM, game: GameData) {
     var panMode by remember { mutableStateOf(false) }
     var showPanel by remember { mutableStateOf(true) }
     var panelExpanded by remember { mutableStateOf(true) }
-    var panelX by remember { mutableFloatStateOf(-1f) }
-    var panelY by remember { mutableFloatStateOf(64f) }
-    val density = LocalDensity.current.density
     BoxWithConstraints(Modifier.fillMaxSize()) {
-        val containerWidth = this.maxWidth
         val containerHeight = this.maxHeight
-        val panelWidth = if (containerWidth < 420.dp) (containerWidth - 24.dp).coerceAtLeast(220.dp) else 320.dp
-        if (panelX < 0f) panelX = with(LocalDensity.current) { (containerWidth - panelWidth - 12.dp).toPx() }
+        val panelWidth = if (maxWidth < 600.dp) 260.dp else 300.dp
         Viewport(vm, gl, st, panMode, { panMode = it }, showPanel, { showPanel = !showPanel },
             Modifier.fillMaxSize())
         if (showPanel) {
             Column(
-                Modifier.offset { IntOffset(panelX.roundToInt(), (panelY * density).roundToInt()) }
+                Modifier.align(Alignment.TopStart).padding(start = 8.dp, top = 8.dp)
                     .width(panelWidth)
-                    .heightIn(max = containerHeight - 76.dp)
+                    .heightIn(max = containerHeight - 16.dp)
                     .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.97f), RoundedCornerShape(16.dp))
             ) {
                 Row(
-                    Modifier.fillMaxWidth()
-                        .pointerInput(containerWidth, containerHeight) {
-                            detectDragGestures { change, drag ->
-                                change.consume()
-                                val w = with(density) { panelWidth.toPx() }
-                                panelX = (panelX + drag.x).coerceIn(0f, (size.width - w).coerceAtLeast(0f))
-                                panelY = (panelY + drag.y / density).coerceIn(0f, (containerHeight.value - 56f).coerceAtLeast(0f))
-                            }
-                        }
-                        .padding(start = 14.dp, end = 8.dp, top = 8.dp, bottom = 4.dp),
+                    Modifier.fillMaxWidth().padding(start = 14.dp, end = 8.dp, top = 8.dp, bottom = 4.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text("INSPECTOR", Modifier.weight(1f), style = MaterialTheme.typography.labelLarge,
@@ -89,11 +75,10 @@ fun GlEditor(vm: EditorVM, game: GameData) {
                     TextButton(onClick = { panelExpanded = !panelExpanded }) {
                         Text(if (panelExpanded) "Minimize" else "Buka")
                     }
-                    TextButton(onClick = { showPanel = false }) { Text("Tutup") }
                 }
                 if (panelExpanded) {
                     HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.35f))
-                    Panel(vm, gl, st, Modifier.fillMaxWidth().heightIn(max = containerHeight - 120.dp))
+                    Panel(vm, gl, st, Modifier.fillMaxWidth().heightIn(max = containerHeight - 72.dp))
                 }
             }
         }
@@ -217,7 +202,7 @@ fun Viewport(
             }
         )
         Row(
-            Modifier.align(Alignment.TopStart).fillMaxWidth().horizontalScroll(rememberScrollState()).padding(8.dp),
+            Modifier.align(Alignment.TopEnd).horizontalScroll(rememberScrollState()).padding(8.dp),
             horizontalArrangement = Arrangement.spacedBy(6.dp)
         ) {
             FilterChip(selected = !panMode, onClick = { setPan(false) }, label = { Text("Putar") })

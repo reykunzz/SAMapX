@@ -306,7 +306,7 @@ fun App(vm: EditorVM = viewModel()) {
     val ctx = LocalContext.current
     val snack = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
-    var tab by remember { mutableIntStateOf(0) }
+    var tab by remember { mutableIntStateOf(1) }
     val prefs = remember { ctx.getSharedPreferences("smpe", Context.MODE_PRIVATE) }
     fun say(m: String) { scope.launch { snack.showSnackbar(m) } }
 
@@ -315,7 +315,7 @@ fun App(vm: EditorVM = viewModel()) {
             try { ctx.contentResolver.takePersistableUriPermission(u, 3) } catch (_: Exception) {}
             val txt = ctx.contentResolver.openInputStream(u)!!.bufferedReader().readText()
             if (vm.load(txt, nameOf(ctx, u), u)) {
-                tab = 2
+                tab = 1
                 say("${vm.count} objek dimuat · membuka 3D")
             } else say("IPL biner belum didukung. Gunakan IPL teks.")
         } catch (e: Exception) { say("Gagal membuka file: ${e.message}") }
@@ -362,6 +362,7 @@ fun App(vm: EditorVM = viewModel()) {
         containerColor = MaterialTheme.colorScheme.background,
         snackbarHost = { SnackbarHost(snack) },
         topBar = {
+            Column {
             TopAppBar(
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background),
                 title = {
@@ -403,19 +404,28 @@ fun App(vm: EditorVM = viewModel()) {
                     }
                 }
             )
-        },
-        bottomBar = {
-            if (vm.entries.isNotEmpty()) NavigationBar(containerColor = MaterialTheme.colorScheme.surface) {
-                NavigationBarItem(selected = tab == 0, onClick = { tab = 0 },
-                    icon = { Icon(Icons.Default.Place, null) }, label = { Text("Peta") })
-                NavigationBarItem(selected = tab == 1, onClick = { tab = 1 },
-                    icon = { Icon(Icons.Default.List, null) }, label = { Text("Objek") })
-                NavigationBarItem(selected = tab == 2, onClick = { tab = 2 },
-                    icon = { Icon(Icons.Default.Home, null) }, label = { Text("3D") })
+            if (vm.entries.isNotEmpty()) {
+                Row(
+                    Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.surfaceVariant).padding(horizontal = 12.dp, vertical = 4.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    TextButton(onClick = { tab = 0 }) {
+                        Icon(Icons.Default.List, null)
+                        Spacer(Modifier.width(6.dp))
+                        Text("Objek", color = if (tab == 0) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                    TextButton(onClick = { tab = 1 }) {
+                        Icon(Icons.Default.Home, null)
+                        Spacer(Modifier.width(6.dp))
+                        Text("3D", color = if (tab == 1) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                }
+            }
             }
         },
         floatingActionButton = {
-            if (vm.entries.isNotEmpty() && !(tab == 2 && vm.game != null)) ExtendedFloatingActionButton(
+            if (vm.entries.isNotEmpty() && !(tab == 1 && vm.game != null)) ExtendedFloatingActionButton(
                 onClick = { vm.sel = vm.add() },
                 containerColor = MaterialTheme.colorScheme.primary,
                 contentColor = MaterialTheme.colorScheme.onPrimary,
@@ -431,8 +441,7 @@ fun App(vm: EditorVM = viewModel()) {
                     gameStatus = vm.gameStatus,
                     onDiagnose = { vm.diag = GameData.lastReport.ifEmpty { "Belum ada laporan. Pilih folder GTA SA dulu." } }
                 )
-                tab == 0 -> MapView(vm)
-                tab == 1 -> ListView(vm)
+                tab == 0 -> ListView(vm)
                 else -> {
                     val g = vm.game
                     if (g != null) GlEditor(vm, g)
@@ -440,7 +449,7 @@ fun App(vm: EditorVM = viewModel()) {
                 }
             }
         }
-        if (vm.sel in vm.entries.indices && vm.entries[vm.sel] is Obj && !(tab == 2 && vm.game != null)) EditSheet(vm)
+        if (vm.sel in vm.entries.indices && vm.entries[vm.sel] is Obj && !(tab == 1 && vm.game != null)) EditSheet(vm)
         if (vm.picker) ModelPicker(vm)
         vm.diag?.let { DiagDialog(vm, it) }
     }
