@@ -6,7 +6,23 @@ Catatan: IPL biner (bnry) belum didukung. Ini bukan port Ariane; terinspirasi da
 
 **ReyyXSA**
 
+## Panduan penggunaan
+
+1. **Siapkan folder map.** Buat folder (misalnya `map`) yang berisi `gta3.img`, folder `Maps`, dan folder `texdb`. Di Android 11 ke atas, `Android/data` tidak bisa dipilih, jadi salin dulu folder game ke `Download`.
+2. **Pilih folder GTA SA.** Di halaman awal, tekan **Pilih** pada kartu "Folder GTA San Andreas", lalu pilih folder `map`. Fungsinya agar model dan tekstur asli tampil di 3D.
+3. **Buka atau buat IPL.** Tekan **Buka File IPL** untuk membuka file `.ipl` teks, atau **Buat IPL baru** untuk file kosong. IPL biner (`bnry`) belum didukung.
+4. **Tab Objek.** Cari berdasarkan nama model atau ID, dan pakai filter Semua, Luar, Interior, atau LOD. Ketuk kartu objek untuk mengubah Model, ID, X, Y, Z, lalu tekan **Terapkan**. Tombol **Objek baru** di pojok kanan bawah menambah objek.
+5. **Tab 3D.** Geser satu jari untuk memutar kamera, cubit untuk zoom. Ketuk objek untuk memilihnya, lalu seret panah merah (X), hijau (Y), atau biru (Z) untuk menggeser. Toolbar berisi Putar, Geser, Fokus, Tampilkan semua, Urungkan, Ulangi, Snap, dan Inspector.
+6. **Inspector.** Tab **Objek** berisi tombol geser dan rotasi. Tab **Stream** menampilkan objek detail dari file stream biner, hanya untuk dilihat. Gunakan **Salin ke IPL** agar bisa diedit. Tab **Adegan** berisi Tambah objek, jarak pandang, balik tekstur, dan sembunyikan LOD.
+7. **Simpan.** Tombol **Simpan** menimpa file asli. Titik kuning berarti ada perubahan yang belum disimpan. **Simpan sebagai**, **Urungkan**, **Ulangi**, dan **Diagnosa file game** ada di menu titik tiga.
+
 ## Changelog
+
+### 1.2.1
+- Logo baru dan ikon launcher.
+- Menu awal potret, editor landscape saat file IPL terbuka.
+- Tombol Buat IPL baru.
+- Panduan penggunaan di halaman awal.
 
 ### 1.2.0 (UI V4)
 - Navigasi pindah ke atas (tab Objek dan 3D); tab Peta dihapus.

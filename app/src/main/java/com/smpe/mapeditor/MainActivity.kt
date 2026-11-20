@@ -577,9 +577,47 @@ fun Empty(
                 }
             }
 
+            GuideCard()
             ChangelogCard()
             Text("Developed by ReyyXSA", style = MaterialTheme.typography.labelMedium, color = cs.onSurfaceVariant)
             Spacer(Modifier.height(4.dp))
+        }
+    }
+}
+
+@Composable
+fun GuideCard() {
+    val steps = listOf(
+        "1. Siapkan folder map" to "Buat folder (misalnya map) yang berisi gta3.img, folder Maps, dan folder texdb. Di Android 11 ke atas, Android/data tidak bisa dipilih, jadi salin dulu folder game ke Download.",
+        "2. Pilih folder GTA SA" to "Di halaman awal, tekan Pilih pada kartu Folder GTA San Andreas, lalu pilih folder map tadi. Fungsinya agar model dan tekstur asli tampil di 3D.",
+        "3. Buka atau buat IPL" to "Tekan Buka File IPL untuk membuka file .ipl teks. Tekan Buat IPL baru untuk membuat file kosong. IPL biner (bnry) belum didukung.",
+        "4. Tab Objek" to "Cari berdasarkan nama model atau ID, dan pakai filter Semua, Luar, Interior, atau LOD. Ketuk kartu objek untuk mengubah Model, ID, X, Y, Z, lalu tekan Terapkan. Objek baru ditambah lewat tombol Objek baru.",
+        "5. Tab 3D" to "Geser satu jari untuk memutar kamera, cubit untuk zoom. Ketuk objek untuk memilihnya, lalu seret panah X, Y, atau Z untuk menggeser. Toolbar berisi Putar, Geser, Fokus, Tampilkan semua, Urungkan, Ulangi, Snap, dan Inspector.",
+        "6. Inspector" to "Tab Objek berisi tombol geser dan rotasi. Tab Stream menampilkan objek detail dari file stream biner, hanya untuk dilihat. Gunakan Salin ke IPL agar bisa diedit. Tab Adegan berisi Tambah objek, jarak pandang, balik tekstur, dan sembunyikan LOD.",
+        "7. Simpan" to "Tombol Simpan menimpa file asli. Titik kuning berarti ada perubahan yang belum disimpan. Simpan sebagai, Urungkan, Ulangi, dan Diagnosa file game ada di menu titik tiga."
+    )
+    var open by remember { mutableStateOf(false) }
+    Card(
+        Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+    ) {
+        Column(Modifier.fillMaxWidth()) {
+            Row(Modifier.fillMaxWidth().clickable { open = !open }.padding(horizontal = 18.dp, vertical = 14.dp),
+                verticalAlignment = Alignment.CenterVertically) {
+                Text("Panduan penggunaan", Modifier.weight(1f), style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.primary)
+                Text(if (open) "Tutup" else "Lihat", style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+            if (open) Column(Modifier.fillMaxWidth().padding(start = 18.dp, end = 18.dp, bottom = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                for ((title, body) in steps) Column {
+                    Text(title, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
+                    Text(body, style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+            }
         }
     }
 }
@@ -598,7 +636,9 @@ fun ChangelogCard() {
         "Buka dan simpan file IPL.",
         "Daftar objek 2 kolom dengan filter Luar, Interior, dan LOD.",
         "Kartu objek terpilih di viewport (Salin, Hapus, Tutup).",
-        "Daftar file terakhir di halaman awal."
+        "Daftar file terakhir di halaman awal.",
+        "Buat IPL baru dari halaman awal.",
+        "Orientasi: potret di menu, landscape saat editor terbuka."
     )
     var open by remember { mutableStateOf(false) }
     Card(
