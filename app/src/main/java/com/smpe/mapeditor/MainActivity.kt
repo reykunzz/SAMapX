@@ -360,6 +360,7 @@ fun App(vm: EditorVM = viewModel()) {
         containerColor = MaterialTheme.colorScheme.background,
         snackbarHost = { SnackbarHost(snack) },
         topBar = {
+            Column {
             TopAppBar(
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background),
                 title = {
@@ -401,19 +402,28 @@ fun App(vm: EditorVM = viewModel()) {
                     }
                 }
             )
-        },
-        bottomBar = {
-            if (vm.entries.isNotEmpty()) NavigationBar(containerColor = MaterialTheme.colorScheme.surface) {
-                NavigationBarItem(selected = tab == 0, onClick = { tab = 0 },
-                    icon = { Icon(Icons.Default.Place, null) }, label = { Text("Peta") })
-                NavigationBarItem(selected = tab == 1, onClick = { tab = 1 },
-                    icon = { Icon(Icons.Default.List, null) }, label = { Text("Objek") })
-                NavigationBarItem(selected = tab == 2, onClick = { tab = 2 },
-                    icon = { Icon(Icons.Default.Home, null) }, label = { Text("3D") })
+            if (vm.entries.isNotEmpty()) {
+                Row(
+                    Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.surface)
+                        .padding(horizontal = 12.dp, vertical = 2.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    TextButton(onClick = { tab = 0 }) {
+                        Icon(Icons.Default.List, null, Modifier.size(18.dp))
+                        Spacer(Modifier.width(6.dp))
+                        Text("Objek", color = if (tab == 0) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                    TextButton(onClick = { tab = 1 }) {
+                        Icon(Icons.Default.Home, null, Modifier.size(18.dp))
+                        Spacer(Modifier.width(6.dp))
+                        Text("3D", color = if (tab == 1) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                }
+            }
             }
         },
         floatingActionButton = {
-            if (vm.entries.isNotEmpty() && !(tab == 2 && vm.game != null)) ExtendedFloatingActionButton(
+            if (vm.entries.isNotEmpty() && tab == 0) ExtendedFloatingActionButton(
                 onClick = { vm.sel = vm.add() },
                 containerColor = MaterialTheme.colorScheme.primary,
                 contentColor = MaterialTheme.colorScheme.onPrimary,
@@ -424,8 +434,7 @@ fun App(vm: EditorVM = viewModel()) {
         Box(Modifier.padding(pad).fillMaxSize()) {
             when {
                 vm.entries.isEmpty() -> Empty { open.launch(arrayOf("*/*")) }
-                tab == 0 -> MapView(vm)
-                tab == 1 -> ListView(vm)
+                tab == 0 -> ListView(vm)
                 else -> {
                     val g = vm.game
                     if (g != null) GlEditor(vm, g)
@@ -433,7 +442,7 @@ fun App(vm: EditorVM = viewModel()) {
                 }
             }
         }
-        if (vm.sel in vm.entries.indices && vm.entries[vm.sel] is Obj && !(tab == 2 && vm.game != null)) EditSheet(vm)
+        if (vm.sel in vm.entries.indices && vm.entries[vm.sel] is Obj && !(tab == 1 && vm.game != null)) EditSheet(vm)
         if (vm.picker) ModelPicker(vm)
         vm.diag?.let { DiagDialog(vm, it) }
     }
