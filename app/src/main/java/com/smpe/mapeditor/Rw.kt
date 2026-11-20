@@ -15,7 +15,7 @@ import java.util.concurrent.atomic.AtomicInteger
 import kotlin.math.max
 import kotlin.math.sqrt
 
-const val BUILD_TAG = "SAMapX-1.2.0-UI-V4"
+const val BUILD_TAG = "SanEditor-1.2.1-UI-V4"
 
 class ImgEntry(val offset: Long, val size: Int)
 class TexData(val key: String, val w: Int, val h: Int, val rgba: ByteArray)

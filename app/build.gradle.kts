@@ -3,7 +3,7 @@ plugins {
     id("org.jetbrains.kotlin.android")
 }
 
-base { archivesName.set("SAMapX") }
+base { archivesName.set("SanEditor") }
 
 android {
     namespace = "com.smpe.mapeditor"

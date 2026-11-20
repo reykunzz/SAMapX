@@ -1,4 +1,4 @@
-# SAMapX — San Andreas Map Editor
+# San Editor — San Andreas Map Editor
 Editor IPL teks untuk GTA San Andreas di Android (Kotlin + Jetpack Compose).
 Catatan: IPL biner (bnry) belum didukung. Ini bukan port Ariane; terinspirasi dari Ariane (Dryxio, GPL).
 

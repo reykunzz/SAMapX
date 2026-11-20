@@ -649,7 +649,7 @@ fun ChangelogCard() {
         Column(Modifier.fillMaxWidth()) {
             Row(Modifier.fillMaxWidth().clickable { open = !open }.padding(horizontal = 18.dp, vertical = 14.dp),
                 verticalAlignment = Alignment.CenterVertically) {
-                Text("Changelog · SAMapX UI V4", Modifier.weight(1f), style = MaterialTheme.typography.titleSmall,
+                Text("Changelog · San Editor UI V4", Modifier.weight(1f), style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.primary)
                 Text(if (open) "Tutup" else "Lihat", style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -683,7 +683,7 @@ fun AppHeader(
                 HeaderTab("Objek", tab == 0) { onTab(0) }
                 HeaderTab("3D", tab == 1) { onTab(1) }
             } else {
-                Text("SAMapX", fontWeight = FontWeight.Black, color = cs.primary)
+                Text("San Editor", fontWeight = FontWeight.Black, color = cs.primary)
             }
             Spacer(Modifier.weight(1f))
             val pad = PaddingValues(horizontal = 10.dp)
