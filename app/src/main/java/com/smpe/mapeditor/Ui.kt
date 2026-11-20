@@ -2,6 +2,8 @@ package com.smpe.mapeditor
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -17,6 +19,7 @@ import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -26,6 +29,8 @@ import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.PathParser
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.unit.dp
 
 // Ikon kecil (path Material) supaya tidak perlu dependensi material-icons-extended.
@@ -50,6 +55,9 @@ object UiIcons {
     val FitAll: ImageVector by lazy {
         icon("fit_all", "M15,3l2.3,2.3 -2.89,2.87 1.42,1.42L18.7,6.7 21,9V3zM3,9l2.3,-2.3 2.87,2.89 1.42,-1.42L6.7,5.3 9,3H3zM9,21l-2.3,-2.3 2.89,-2.87 -1.42,-1.42L5.3,17.3 3,15v6zM21,15l-2.3,2.3 -2.87,-2.89 -1.42,1.42 2.89,2.87L15,21h6z")
     }
+    val Copy: ImageVector by lazy {
+        icon("copy", "M16,1H4C2.9,1 2,1.9 2,3v14h2V3h12V1zM19,5H8C6.9,5 6,5.9 6,7v14c0,1.1 0.9,2 2,2h11c1.1,0 2,-0.9 2,-2V7C21,5.9 20.1,5 19,5zM19,21H8V7h11V21z")
+    }
     val Rotate get() = Icons.Default.Refresh
     val Panel get() = Icons.Default.Menu
 }
@@ -57,7 +65,7 @@ object UiIcons {
 @Composable
 fun TbBtn(
     icon: ImageVector, desc: String,
-    selected: Boolean = false, enabled: Boolean = true, onClick: () -> Unit
+    selected: Boolean = false, enabled: Boolean = true, tint: Color? = null, onClick: () -> Unit
 ) {
     val cs = MaterialTheme.colorScheme
     Box(
@@ -70,7 +78,7 @@ fun TbBtn(
             icon, desc, Modifier.size(20.dp),
             tint = when {
                 selected -> cs.onPrimary
-                enabled -> Color.White
+                enabled -> tint ?: Color.White
                 else -> Color.White.copy(alpha = 0.3f)
             }
         )
@@ -90,11 +98,12 @@ fun ViewToolbar(
     onFocus: () -> Unit, onAll: () -> Unit,
     onUndo: () -> Unit, onRedo: () -> Unit,
     panelVisible: Boolean?, onTogglePanel: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    snap: Float? = null, onSnap: () -> Unit = {}
 ) {
-    Surface(modifier, shape = RoundedCornerShape(22.dp), color = Color(0xE610181C)) {
+    Surface(modifier, shape = RoundedCornerShape(22.dp), color = Color(0xE6121714)) {
         Row(
-            Modifier.padding(horizontal = 4.dp, vertical = 3.dp),
+            Modifier.horizontalScroll(rememberScrollState()).padding(horizontal = 4.dp, vertical = 3.dp),
             horizontalArrangement = Arrangement.spacedBy(2.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -106,6 +115,20 @@ fun ViewToolbar(
             TbDivider()
             TbBtn(UiIcons.Undo, "Urungkan", enabled = canUndo, onClick = onUndo)
             TbBtn(UiIcons.Redo, "Ulangi", enabled = canRedo, onClick = onRedo)
+            if (snap != null) {
+                TbDivider()
+                val cs = MaterialTheme.colorScheme
+                Box(
+                    Modifier.height(30.dp).clip(RoundedCornerShape(15.dp))
+                        .background(if (snap > 0f) cs.primary else Color.Transparent)
+                        .clickable(role = Role.Button, onClick = onSnap).padding(horizontal = 10.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    val v = if (snap == snap.toInt().toFloat()) snap.toInt().toString() else snap.toString()
+                    Text(if (snap == 0f) "Snap off" else "Snap $v", fontSize = 12.sp, fontWeight = FontWeight.Medium,
+                        color = if (snap > 0f) cs.onPrimary else Color.White.copy(alpha = 0.85f), maxLines = 1)
+                }
+            }
             if (panelVisible != null) {
                 TbDivider()
                 TbBtn(UiIcons.Panel, "Inspector", selected = panelVisible, onClick = onTogglePanel)

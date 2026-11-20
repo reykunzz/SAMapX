@@ -3,6 +3,7 @@
 package com.smpe.mapeditor
 
 import android.opengl.GLSurfaceView
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.awaitEachGesture
@@ -18,10 +19,14 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
@@ -57,6 +62,10 @@ fun GlEditor(vm: EditorVM, game: GameData) {
         val panelWidth = if (containerWidth < 420.dp) (containerWidth - 24.dp).coerceAtLeast(220.dp) else 320.dp
         Viewport(vm, gl, st, panMode, { panMode = it }, showPanel, { showPanel = !showPanel },
             Modifier.fillMaxSize())
+        val selObj = vm.entries.getOrNull(vm.sel) as? Obj
+        if (selObj != null && (!showPanel || containerWidth >= 700.dp)) {
+            SelCard(vm, gl, selObj, Modifier.align(Alignment.BottomCenter).padding(start = 8.dp, end = 8.dp, bottom = 46.dp))
+        }
         if (showPanel) {
             Column(
                 Modifier.align(Alignment.TopStart).padding(start = 8.dp, top = 58.dp, bottom = 8.dp)
@@ -212,7 +221,12 @@ fun Viewport(
             onUndo = { vm.undo(); gl.requestRender() },
             onRedo = { vm.redo(); gl.requestRender() },
             panelVisible = panelVisible, onTogglePanel = togglePanel,
-            modifier = Modifier.align(Alignment.TopStart).padding(8.dp)
+            modifier = Modifier.align(Alignment.TopStart).padding(8.dp),
+            snap = vm.snap,
+            onSnap = {
+                val order = listOf(0f, 0.5f, 1f, 5f)
+                vm.snap = order[(order.indexOf(vm.snap) + 1) % order.size]
+            }
         )
         val sel = vm.entries.getOrNull(vm.sel) as? Obj
         val g = vm.game
@@ -223,7 +237,7 @@ fun Viewport(
                 g.texdbs.sumOf { it.ok.get() } + " ok, " + g.texdbs.sumOf { it.fail.get() } + " gagal" +
                 (if (g.failCount.get() > 0) "  [" + g.reasons.entries.joinToString { it.key + " " + it.value.get() } + "]" else "") else head
         }
-        Surface(Modifier.align(Alignment.BottomStart).padding(8.dp), shape = RoundedCornerShape(10.dp), color = Color(0xE610181C)) {
+        Surface(Modifier.align(Alignment.BottomStart).padding(8.dp), shape = RoundedCornerShape(10.dp), color = Color(0xE6121714)) {
             Text(hud, Modifier.padding(horizontal = 10.dp, vertical = 5.dp), fontSize = 11.sp, color = Color.White)
         }
     }
@@ -276,10 +290,15 @@ fun Panel(vm: EditorVM, gl: GlScene, st: FloatArray, modifier: Modifier) {
             gl.requestRender()
         }
     }
+    var tab by remember { mutableIntStateOf(0) }
+    LaunchedEffect(vm.sel, vm.selStream) { if (vm.sel >= 0 || vm.selStream >= 0) tab = 0 }
+    Column(modifier.background(MaterialTheme.colorScheme.surface)) {
+    PanelTabs(tab) { tab = it }
     Column(
-        modifier.background(MaterialTheme.colorScheme.surface).verticalScroll(rememberScrollState()).padding(12.dp),
+        Modifier.weight(1f, fill = false).verticalScroll(rememberScrollState()).padding(12.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
+        if (tab == 0) {
         SectionCard("OBJEK TERPILIH") {
             if (o == null) {
                 Text("Ketuk objek di tampilan 3D untuk memilihnya.", style = MaterialTheme.typography.bodySmall,
@@ -291,7 +310,7 @@ fun Panel(vm: EditorVM, gl: GlScene, st: FloatArray, modifier: Modifier) {
                     Text(o.model, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
                     Text("ID ${o.id}", style = MaterialTheme.typography.labelMedium)
                 }
-                Text(String.format(Locale.US, "X %.2f   Y %.2f   Z %.2f", o.x, o.y, o.z), style = MaterialTheme.typography.bodySmall, fontFamily = FontFamily.Monospace)
+                AxisRow(o.x, o.y, o.z)
                 Text("Seret panah merah (X), hijau (Y), biru (Z) di layar 3D untuk menggeser objek.", style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
@@ -300,7 +319,7 @@ fun Panel(vm: EditorVM, gl: GlScene, st: FloatArray, modifier: Modifier) {
         if (sobj != null) {
             SectionCard("OBJEK STREAM (DILIHAT SAJA)") {
                 Text(sobj.model + "  (ID " + sobj.id + ")", fontWeight = FontWeight.Bold)
-                Text(String.format(Locale.US, "X %.2f   Y %.2f   Z %.2f", sobj.x, sobj.y, sobj.z), style = MaterialTheme.typography.bodySmall, fontFamily = FontFamily.Monospace)
+                AxisRow(sobj.x, sobj.y, sobj.z)
                 Button(onClick = { vm.adoptStream(); gl.requestRender() }, shape = RoundedCornerShape(14.dp), modifier = Modifier.fillMaxWidth()) {
                     Text("Salin ke IPL agar bisa diedit")
                 }
@@ -360,6 +379,8 @@ fun Panel(vm: EditorVM, gl: GlScene, st: FloatArray, modifier: Modifier) {
                 Nudge("Hapus", Modifier.weight(1f)) { vm.remove(i) }
             }
         }
+        }
+        if (tab == 1) {
         SectionCard("IPL STREAM (DETAIL PETA)") {
             Text(vm.streamNote.ifEmpty { "IPL teks hanya memuat sebagian objek (banyak LOD). Detail bangunan ada di file stream biner dalam gta3.img. Hanya untuk dilihat, tidak ikut disimpan." },
                 style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -369,6 +390,8 @@ fun Panel(vm: EditorVM, gl: GlScene, st: FloatArray, modifier: Modifier) {
                 Nudge("Kosongkan", Modifier.weight(1f)) { vm.extra = emptyList(); vm.streamNote = ""; gl.requestRender() }
             }
         }
+        }
+        if (tab == 2) {
         SectionCard("ADEGAN") {
             Button(onClick = { vm.picker = true }, shape = RoundedCornerShape(14.dp), modifier = Modifier.fillMaxWidth()) { Text("Tambah objek") }
             Text("Jarak pandang: ${viewDist.toInt()} m", style = MaterialTheme.typography.labelMedium)
@@ -383,6 +406,70 @@ fun Panel(vm: EditorVM, gl: GlScene, st: FloatArray, modifier: Modifier) {
             }
         }
         Text(vm.gameStatus, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+    }
+    }
+}
+
+@Composable
+fun PanelTabs(tab: Int, onTab: (Int) -> Unit) {
+    val cs = MaterialTheme.colorScheme
+    Row(
+        Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp)
+            .background(cs.surfaceVariant, RoundedCornerShape(12.dp)).padding(3.dp),
+        horizontalArrangement = Arrangement.spacedBy(3.dp)
+    ) {
+        listOf("Objek", "Stream", "Adegan").forEachIndexed { i, label ->
+            val on = tab == i
+            Box(
+                Modifier.weight(1f).clip(RoundedCornerShape(9.dp))
+                    .background(if (on) cs.primary else Color.Transparent)
+                    .clickable { onTab(i) }.padding(vertical = 7.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(label, fontSize = 13.sp, fontWeight = if (on) FontWeight.Bold else FontWeight.Medium,
+                    color = if (on) cs.onPrimary else cs.onSurfaceVariant)
+            }
+        }
+    }
+}
+
+@Composable
+fun AxisRow(x: Float, y: Float, z: Float) {
+    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+        AxisBox("X", x, Modifier.weight(1f)); AxisBox("Y", y, Modifier.weight(1f)); AxisBox("Z", z, Modifier.weight(1f))
+    }
+}
+
+@Composable
+fun AxisBox(label: String, v: Float, modifier: Modifier) {
+    Column(modifier.background(MaterialTheme.colorScheme.background, RoundedCornerShape(8.dp)).padding(horizontal = 8.dp, vertical = 5.dp)) {
+        Text(label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text(String.format(Locale.US, "%.2f", v), fontSize = 12.sp, fontFamily = FontFamily.Monospace, maxLines = 1)
+    }
+}
+
+/** Kartu kecil objek terpilih di bawah viewport: Salin, Hapus, Tutup. */
+@Composable
+fun SelCard(vm: EditorVM, gl: GlScene, o: Obj, modifier: Modifier) {
+    val cs = MaterialTheme.colorScheme
+    Surface(modifier, shape = RoundedCornerShape(18.dp), color = cs.surface.copy(alpha = 0.96f),
+        border = BorderStroke(1.dp, cs.primary)) {
+        Row(Modifier.padding(start = 14.dp, end = 6.dp, top = 5.dp, bottom = 5.dp), verticalAlignment = Alignment.CenterVertically) {
+            Column(Modifier.widthIn(max = 240.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(o.model, fontWeight = FontWeight.Bold, fontSize = 14.sp, maxLines = 1, modifier = Modifier.weight(1f, fill = false))
+                    Spacer(Modifier.width(6.dp))
+                    Text("${o.id}", fontSize = 11.sp, fontFamily = FontFamily.Monospace, color = cs.primary)
+                }
+                Text(String.format(Locale.US, "%.1f · %.1f · %.1f", o.x, o.y, o.z), fontSize = 11.sp,
+                    fontFamily = FontFamily.Monospace, color = cs.onSurfaceVariant, maxLines = 1)
+            }
+            Spacer(Modifier.width(8.dp))
+            TbBtn(UiIcons.Copy, "Salin") { vm.duplicate(vm.sel); gl.requestRender() }
+            TbBtn(Icons.Default.Delete, "Hapus", tint = cs.error) { vm.remove(vm.sel); gl.requestRender() }
+            TbBtn(Icons.Default.Close, "Tutup") { vm.sel = -1; gl.requestRender() }
+        }
     }
 }
 

@@ -16,6 +16,10 @@ import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items as gridItems
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
@@ -73,6 +77,15 @@ import android.content.Context
 import androidx.compose.material.icons.filled.MoreVert
 import kotlinx.coroutines.Dispatchers
 import java.util.Locale
+
+// ---------- File terakhir ----------
+data class Recent(val uri: String, val name: String, val t: Long)
+
+fun loadRecents(prefs: android.content.SharedPreferences): List<Recent> =
+    (prefs.getString("recent", "") ?: "").lines().mapNotNull { l ->
+        val p = l.split("\t")
+        if (p.size >= 3 && p[0].isNotBlank()) Recent(p[0], p[1], p[2].toLongOrNull() ?: 0L) else null
+    }
 
 // ---------- Model ----------
 sealed interface Entry
@@ -244,24 +257,24 @@ fun DrawScope.line3(cam: Cam, x1: Float, y1: Float, z1: Float, x2: Float, y2: Fl
 fun DrawScope.label(tm: TextMeasurer, text: String, x: Float, y: Float) {
     // drawText throws when the text origin is outside the canvas, so skip those
     if (x.isNaN() || y.isNaN() || x < 0f || y < 0f || x > size.width - 30f || y > size.height - 20f) return
-    drawText(tm, text, Offset(x, y), TextStyle(color = Color.White, fontSize = 10.sp, background = Color(0xE610181C)))
+    drawText(tm, text, Offset(x, y), TextStyle(color = Color.White, fontSize = 10.sp, background = Color(0xE6121714)))
 }
 
 // ---------- Theme ----------
-// Deep Tosca: latar biru-hitam, aksen tosca gelap, teks putih kebiruan lembut.
+// Deep Emerald: latar hijau-hitam, aksen zamrud gelap, teks putih kehijauan lembut.
 private val Scheme = darkColorScheme(
-    primary = Color(0xFF1FA3A8), onPrimary = Color(0xFFF0FBFB),
-    primaryContainer = Color(0xFF123A40), onPrimaryContainer = Color(0xFFBFE0E0),
-    secondary = Color(0xFF7F969C), onSecondary = Color(0xFF0A1013),
-    secondaryContainer = Color(0xFF18232A), onSecondaryContainer = Color(0xFFDCE8EA),
+    primary = Color(0xFF2E9C74), onPrimary = Color(0xFFF2FBF6),
+    primaryContainer = Color(0xFF163A2D), onPrimaryContainer = Color(0xFFC9DDD2),
+    secondary = Color(0xFF82948A), onSecondary = Color(0xFF0B0F0D),
+    secondaryContainer = Color(0xFF1A211D), onSecondaryContainer = Color(0xFFDDE6E0),
     tertiary = Color(0xFFE8B75A),
-    background = Color(0xFF0A1013), onBackground = Color(0xFFDCE8EA),
-    surface = Color(0xFF10181C), onSurface = Color(0xFFDCE8EA),
-    surfaceVariant = Color(0xFF18232A), onSurfaceVariant = Color(0xFF7F969C),
-    surfaceContainerLowest = Color(0xFF0A1013), surfaceContainerLow = Color(0xFF10181C),
-    surfaceContainer = Color(0xFF141E23), surfaceContainerHigh = Color(0xFF18232A),
-    surfaceContainerHighest = Color(0xFF1D2A32),
-    outline = Color(0xFF25343C), outlineVariant = Color(0xFF25343C), error = Color(0xFFD86A6A)
+    background = Color(0xFF0B0F0D), onBackground = Color(0xFFDDE6E0),
+    surface = Color(0xFF121714), onSurface = Color(0xFFDDE6E0),
+    surfaceVariant = Color(0xFF1A211D), onSurfaceVariant = Color(0xFF82948A),
+    surfaceContainerLowest = Color(0xFF0B0F0D), surfaceContainerLow = Color(0xFF121714),
+    surfaceContainer = Color(0xFF161C19), surfaceContainerHigh = Color(0xFF1A211D),
+    surfaceContainerHighest = Color(0xFF202824),
+    outline = Color(0xFF27312C), outlineVariant = Color(0xFF27312C), error = Color(0xFFD86A6A)
 )
 
 val DmSans = FontFamily(
@@ -340,15 +353,32 @@ fun App(vm: EditorVM = viewModel()) {
     val prefs = remember { ctx.getSharedPreferences("smpe", Context.MODE_PRIVATE) }
     fun say(m: String) { scope.launch { snack.showSnackbar(m) } }
 
-    val open = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { u: Uri? ->
-        if (u != null) try {
+    val recents = remember { mutableStateListOf<Recent>().also { it.addAll(loadRecents(prefs)) } }
+    fun saveRecents() {
+        prefs.edit().putString("recent", recents.joinToString("\n") { it.uri + "\t" + it.name.replace('\t', ' ') + "\t" + it.t }).apply()
+    }
+    fun pushRecent(u: Uri, name: String) {
+        recents.removeAll { it.uri == u.toString() }
+        recents.add(0, Recent(u.toString(), name, System.currentTimeMillis()))
+        while (recents.size > 5) recents.removeAt(recents.size - 1)
+        saveRecents()
+    }
+    fun openUri(u: Uri) {
+        try {
             try { ctx.contentResolver.takePersistableUriPermission(u, 3) } catch (_: Exception) {}
             val txt = ctx.contentResolver.openInputStream(u)!!.bufferedReader().readText()
             if (vm.load(txt, nameOf(ctx, u), u)) {
                 tab = 1
+                pushRecent(u, vm.fileName)
                 say("${vm.count} objek dimuat")
             } else say("IPL biner belum didukung. Gunakan IPL teks.")
-        } catch (e: Exception) { say("Gagal membuka file: ${e.message}") }
+        } catch (e: Exception) {
+            recents.removeAll { it.uri == u.toString() }; saveRecents()
+            say("Gagal membuka file: ${e.message}")
+        }
+    }
+    val open = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { u: Uri? ->
+        if (u != null) openUri(u)
     }
     fun write(u: Uri) {
         try {
@@ -426,7 +456,10 @@ fun App(vm: EditorVM = viewModel()) {
                 vm.entries.isEmpty() -> Empty(
                     onOpen = { open.launch(arrayOf("*/*")) },
                     onPickFolder = { pickTree.launch(null) },
-                    gameStatus = vm.gameStatus
+                    gameStatus = vm.gameStatus,
+                    recents = recents,
+                    onRecent = { r -> openUri(Uri.parse(r.uri)) },
+                    onClearRecents = { recents.clear(); saveRecents() }
                 )
                 tab == 0 -> ListView(vm)
                 tab == 1 -> {
@@ -447,78 +480,79 @@ fun App(vm: EditorVM = viewModel()) {
 fun Empty(
     onOpen: () -> Unit,
     onPickFolder: () -> Unit,
-    gameStatus: String
+    gameStatus: String,
+    recents: List<Recent>,
+    onRecent: (Recent) -> Unit,
+    onClearRecents: () -> Unit
 ) {
+    val cs = MaterialTheme.colorScheme
     Box(
-        Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 20.dp, vertical = 18.dp),
+        Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 20.dp, vertical = 14.dp),
         contentAlignment = Alignment.TopCenter
     ) {
         Column(
             Modifier.fillMaxWidth().widthIn(max = 720.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Image(painterResource(R.drawable.logo), null, Modifier.size(112.dp))
-            Spacer(Modifier.height(12.dp))
-            Text("Mulai SAMapX", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
-            Spacer(Modifier.height(6.dp))
-            Text(
-                "Kelola dan edit map GTA San Andreas.",
-                textAlign = TextAlign.Center,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            Spacer(Modifier.height(20.dp))
+            Image(painterResource(R.drawable.logo), null, Modifier.size(84.dp))
+            Text("Kelola dan edit map GTA San Andreas.", textAlign = TextAlign.Center, color = cs.onSurfaceVariant)
 
-            Card(
-                Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(20.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
-            ) {
-                Column(Modifier.fillMaxWidth().padding(18.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Default.Place, null, tint = MaterialTheme.colorScheme.primary)
-                        Spacer(Modifier.width(9.dp))
-                        Text("Folder GTA San Andreas", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+            Card(Modifier.fillMaxWidth(), shape = RoundedCornerShape(20.dp),
+                colors = CardDefaults.cardColors(containerColor = cs.surfaceVariant)) {
+                Row(Modifier.fillMaxWidth().padding(start = 18.dp, end = 10.dp, top = 12.dp, bottom = 12.dp),
+                    verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.Place, null, tint = cs.primary)
+                    Spacer(Modifier.width(10.dp))
+                    Column(Modifier.weight(1f)) {
+                        Text("Folder GTA San Andreas", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
+                        Text(gameStatus.ifBlank { "Belum dipilih. Dipakai untuk model dan tekstur asli." },
+                            color = cs.onSurfaceVariant, style = MaterialTheme.typography.bodySmall, maxLines = 2)
                     }
-                    Text(
-                        gameStatus.ifBlank { "Pilih folder game untuk mengaktifkan model dan tekstur GTA SA asli." },
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        style = MaterialTheme.typography.bodySmall
-                    )
-                    Button(onClick = onPickFolder, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(14.dp)) {
-                        Text("Pilih Folder GTA SA")
-                    }
+                    TextButton(onClick = onPickFolder) { Text(if (gameStatus.isBlank()) "Pilih" else "Ganti") }
                 }
             }
 
-            Spacer(Modifier.height(12.dp))
-            Card(
-                Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(20.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
-            ) {
-                Column(Modifier.fillMaxWidth().padding(18.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Card(Modifier.fillMaxWidth(), shape = RoundedCornerShape(20.dp),
+                colors = CardDefaults.cardColors(containerColor = cs.surfaceVariant)) {
+                Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Default.List, null, tint = MaterialTheme.colorScheme.primary)
-                        Spacer(Modifier.width(9.dp))
-                        Text("Buka Map", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                        Icon(Icons.Default.List, null, tint = cs.primary)
+                        Spacer(Modifier.width(10.dp))
+                        Text("Buka Map", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
                     }
-                    Text(
-                        "Pilih file IPL teks untuk mulai mengedit objek dan tampilan 3D.",
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        style = MaterialTheme.typography.bodySmall
-                    )
-                    OutlinedButton(onClick = onOpen, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(14.dp)) {
+                    Text("Pilih file IPL teks untuk mulai mengedit objek dan tampilan 3D.",
+                        color = cs.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
+                    Button(onClick = onOpen, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(14.dp)) {
                         Text("Buka File IPL")
                     }
                 }
             }
 
-            Spacer(Modifier.height(10.dp))
+            if (recents.isNotEmpty()) Card(Modifier.fillMaxWidth(), shape = RoundedCornerShape(20.dp),
+                colors = CardDefaults.cardColors(containerColor = cs.surfaceVariant)) {
+                Column(Modifier.fillMaxWidth().padding(vertical = 8.dp)) {
+                    Row(Modifier.fillMaxWidth().padding(start = 18.dp, end = 6.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Text("File terakhir", Modifier.weight(1f), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
+                        TextButton(onClick = onClearRecents) { Text("Hapus daftar", style = MaterialTheme.typography.labelMedium) }
+                    }
+                    for (r in recents) {
+                        Row(Modifier.fillMaxWidth().clickable { onRecent(r) }.padding(horizontal = 18.dp, vertical = 10.dp),
+                            verticalAlignment = Alignment.CenterVertically) {
+                            Text(r.name, Modifier.weight(1f), maxLines = 1, fontWeight = FontWeight.Medium)
+                            Spacer(Modifier.width(10.dp))
+                            Text(
+                                android.text.format.DateUtils.getRelativeTimeSpanString(
+                                    r.t, System.currentTimeMillis(), android.text.format.DateUtils.MINUTE_IN_MILLIS).toString(),
+                                style = MaterialTheme.typography.labelSmall, color = cs.onSurfaceVariant, maxLines = 1)
+                        }
+                    }
+                }
+            }
+
             ChangelogCard()
-            Spacer(Modifier.height(12.dp))
-            Text("Developed by ReyyXSA", style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant)
-            Spacer(Modifier.height(8.dp))
+            Text("Developed by ReyyXSA", style = MaterialTheme.typography.labelMedium, color = cs.onSurfaceVariant)
+            Spacer(Modifier.height(4.dp))
         }
     }
 }
@@ -528,24 +562,36 @@ fun ChangelogCard() {
     val items = listOf(
         "Editor peta IPL GTA San Andreas.",
         "Tampilan objek 3D dan pemilihan objek.",
-        "Inspector untuk melihat dan mengubah posisi objek.",
+        "Inspector untuk melihat dan mengubah posisi objek, dengan tab Objek, Stream, dan Adegan.",
         "Transformasi objek: Putar dan Geser.",
         "Fokus kamera ke objek dan tampilkan semua objek.",
         "Undo dan Redo.",
         "Snap posisi.",
         "Zoom viewport dengan mouse wheel.",
-        "Buka dan simpan file IPL."
+        "Buka dan simpan file IPL.",
+        "Daftar objek 2 kolom dengan filter Luar, Interior, dan LOD.",
+        "Kartu objek terpilih di viewport (Salin, Hapus, Tutup).",
+        "Daftar file terakhir di halaman awal."
     )
+    var open by remember { mutableStateOf(false) }
     Card(
         Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
     ) {
-        Column(Modifier.fillMaxWidth().padding(18.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            Text("Changelog · SAMapX UI V4", style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.primary)
-            for (t in items) Text("• $t", style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Column(Modifier.fillMaxWidth()) {
+            Row(Modifier.fillMaxWidth().clickable { open = !open }.padding(horizontal = 18.dp, vertical = 14.dp),
+                verticalAlignment = Alignment.CenterVertically) {
+                Text("Changelog · SAMapX UI V4", Modifier.weight(1f), style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.primary)
+                Text(if (open) "Tutup" else "Lihat", style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+            if (open) Column(Modifier.fillMaxWidth().padding(start = 18.dp, end = 18.dp, bottom = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                for (t in items) Text("• $t", style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
         }
     }
 }
@@ -674,7 +720,7 @@ fun View3D(vm: EditorVM) {
                 }
         ) {
             val cam = Cam(tx, ty, tz, yaw, pitch, dist, size.width, size.height)
-            drawRect(Brush.verticalGradient(listOf(Color(0xFF11262C), Color(0xFF070B0D))))
+            drawRect(Brush.verticalGradient(listOf(Color(0xFF14231C), Color(0xFF080B09))))
 
             // ground grid
             val step = 10f.pow(floor(log10(dist / 5f)))
@@ -776,28 +822,52 @@ fun View3D(vm: EditorVM) {
 @Composable
 fun ListView(vm: EditorVM) {
     var q by remember { mutableStateOf("") }
-    val rows = vm.entries.withIndex().filter { (_, e) ->
-        e is Obj && (q.isBlank() || e.model.contains(q.trim(), true) || e.id.toString() == q.trim())
+    var filter by remember { mutableIntStateOf(0) } // 0 semua, 1 luar, 2 interior, 3 LOD
+    fun isLod(o: Obj) = o.model.startsWith("lod", ignoreCase = true)
+    val all = vm.entries.withIndex().filter { it.value is Obj }
+    val nOut = all.count { (it.value as Obj).interior == 0 }
+    val nIn = all.size - nOut
+    val nLod = all.count { isLod(it.value as Obj) }
+    val rows = all.filter { (_, e) ->
+        e as Obj
+        val okF = when (filter) { 1 -> e.interior == 0; 2 -> e.interior != 0; 3 -> isLod(e); else -> true }
+        okF && (q.isBlank() || e.model.contains(q.trim(), true) || e.id.toString() == q.trim())
     }
     Column {
         OutlinedTextField(
-            value = q, onValueChange = { q = it }, modifier = Modifier.fillMaxWidth().padding(12.dp),
+            value = q, onValueChange = { q = it }, modifier = Modifier.fillMaxWidth().padding(start = 12.dp, end = 12.dp, top = 8.dp),
             leadingIcon = { Icon(Icons.Default.Search, null) },
             placeholder = { Text("Cari model atau ID  ·  ${vm.fileName}", maxLines = 1) },
             singleLine = true, shape = RoundedCornerShape(16.dp)
         )
-        LazyColumn(
+        Row(
+            Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(horizontal = 12.dp, vertical = 8.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            val labels = listOf("Semua ${all.size}", "Luar $nOut", "Interior $nIn", "LOD $nLod")
+            labels.forEachIndexed { i, l ->
+                FilterChip(
+                    selected = filter == i, onClick = { filter = i }, label = { Text(l) },
+                    colors = FilterChipDefaults.filterChipColors(
+                        selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                        selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer)
+                )
+            }
+        }
+        LazyVerticalGrid(
+            columns = GridCells.Adaptive(minSize = 300.dp),
             contentPadding = PaddingValues(start = 12.dp, end = 12.dp, bottom = 96.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            items(rows, key = { it.index }) { row ->
+            gridItems(rows, key = { it.index }) { row ->
                 val i = row.index
                 val e = row.value as Obj
                 Card(
-                    onClick = { vm.sel = i }, shape = RoundedCornerShape(14.dp),
+                    onClick = { vm.sel = i }, shape = RoundedCornerShape(14.dp), modifier = Modifier.fillMaxWidth(),
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
                 ) {
-                    Row(Modifier.padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Row(Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
                         Box(Modifier.size(12.dp).background(modelColor(e.model), CircleShape))
                         Spacer(Modifier.width(10.dp))
                         Surface(shape = RoundedCornerShape(10.dp), color = MaterialTheme.colorScheme.primaryContainer) {
@@ -806,7 +876,7 @@ fun ListView(vm: EditorVM) {
                         }
                         Spacer(Modifier.width(12.dp))
                         Column {
-                            Text(e.model, fontWeight = FontWeight.SemiBold)
+                            Text(e.model, fontWeight = FontWeight.SemiBold, maxLines = 1)
                             Text(String.format(Locale.US, "%.1f, %.1f, %.1f", e.x, e.y, e.z),
                                 style = MaterialTheme.typography.bodySmall, fontFamily = FontFamily.Monospace,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant)
