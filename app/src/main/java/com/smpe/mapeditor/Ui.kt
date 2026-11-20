@@ -103,7 +103,8 @@ fun ViewToolbar(
     modifier: Modifier = Modifier,
     snap: Float? = null, onSnap: () -> Unit = {},
     topDown: Boolean = false, onTopDown: () -> Unit = {},
-    multi: Boolean = false, onMulti: () -> Unit = {}
+    multi: Boolean = false, onMulti: () -> Unit = {},
+    undoLabel: String = "", gridOn: Boolean = false, onGrid: () -> Unit = {}
 ) {
     Surface(modifier, shape = RoundedCornerShape(22.dp), color = Color(0xE6121714)) {
         Row(
@@ -120,7 +121,19 @@ fun ViewToolbar(
             TbBtn(Icons.Default.Done, "Pilih banyak", selected = multi, onClick = onMulti)
             TbDivider()
             TbBtn(UiIcons.Undo, "Urungkan", enabled = canUndo, onClick = onUndo)
+            if (canUndo && undoLabel.isNotEmpty()) Text("Batalkan: $undoLabel", fontSize = 11.sp, maxLines = 1,
+                color = Color.White.copy(alpha = 0.85f), modifier = Modifier.padding(horizontal = 4.dp))
             TbBtn(UiIcons.Redo, "Ulangi", enabled = canRedo, onClick = onRedo)
+            TbDivider()
+            Box(
+                Modifier.height(30.dp).clip(RoundedCornerShape(15.dp))
+                    .background(if (gridOn) MaterialTheme.colorScheme.primary else Color.Transparent)
+                    .clickable(role = Role.Button, onClick = onGrid).padding(horizontal = 10.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text("Grid", fontSize = 12.sp, fontWeight = FontWeight.Medium,
+                    color = if (gridOn) MaterialTheme.colorScheme.onPrimary else Color.White.copy(alpha = 0.85f), maxLines = 1)
+            }
             if (snap != null) {
                 TbDivider()
                 val cs = MaterialTheme.colorScheme

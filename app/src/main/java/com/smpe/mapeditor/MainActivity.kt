@@ -56,6 +56,8 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.delay
 import androidx.compose.foundation.background
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.filled.Home
@@ -95,7 +97,8 @@ data class Obj(
     val id: Int, val model: String, val interior: Int,
     val x: Float, val y: Float, val z: Float,
     val rx: Float, val ry: Float, val rz: Float, val rw: Float,
-    val lod: Int?, val src: String? = null
+    val lod: Int?, val src: String? = null,
+    val locked: Boolean = false
 ) : Entry {
     private fun f(v: Float) = String.format(Locale.US, "%.6f", v)
     fun line(): String = src ?: buildString {
@@ -144,6 +147,12 @@ class EditorVM : ViewModel() {
     val selSet = mutableStateListOf<Int>()
     var multi by mutableStateOf(false)
     var topDown by mutableStateOf(false)
+    var gridOn by mutableStateOf(false)
+    /** Naik setiap ada perubahan; dipakai untuk autosave draf. */
+    var rev by mutableIntStateOf(0)
+    /** Label aksi terakhir yang bisa dibatalkan, mis. "Geser X". */
+    var undoLabel by mutableStateOf("")
+    private val undoLabels = ArrayList<String>()
     var snap by mutableFloatStateOf(0f)
     var extra by mutableStateOf<List<Obj>>(emptyList())
     var streamNote by mutableStateOf("")
@@ -151,16 +160,20 @@ class EditorVM : ViewModel() {
     var canRedo by mutableStateOf(false)
     private val undoS = ArrayList<List<Entry>>()
     private val redoS = ArrayList<List<Entry>>()
-    private fun snapshot() {
+    private fun snapshot(label: String = "Ubah") {
         undoS.add(entries.toList()); if (undoS.size > 80) undoS.removeAt(0)
+        undoLabels.add(label); if (undoLabels.size > 80) undoLabels.removeAt(0)
+        undoLabel = label; rev++
         redoS.clear(); canUndo = true; canRedo = false
     }
     fun undo() {
         if (undoS.isEmpty()) return
         redoS.add(entries.toList())
         val s = undoS.removeAt(undoS.size - 1)
+        undoLabels.removeLastOrNull()
         selSet.clear(); entries.clear(); entries.addAll(s); sel = -1; dirty = true
         canUndo = undoS.isNotEmpty(); canRedo = true
+        undoLabel = undoLabels.lastOrNull() ?: ""
     }
     fun redo() {
         if (redoS.isEmpty()) return
@@ -199,8 +212,49 @@ class EditorVM : ViewModel() {
             append("end\n")
         }
     }
-    fun update(i: Int, o: Obj) { snapshot(); entries[i] = o.copy(src = null); dirty = true }
-    fun remove(i: Int) { snapshot(); entries.removeAt(i); sel = -1; selSet.clear(); dirty = true }
+    fun update(i: Int, o: Obj) {
+        snapshot("Ubah nilai")
+        val old = entries[i] as? Obj
+        // Objek terkunci: posisi dan rotasi tidak ikut berubah.
+        entries[i] = if (old != null && old.locked)
+            o.copy(x = old.x, y = old.y, z = old.z, rx = old.rx, ry = old.ry, rz = old.rz, rw = old.rw, src = null, locked = true)
+        else o.copy(src = null)
+        dirty = true
+    }
+
+    fun setLocked(i: Int, v: Boolean) {
+        val o = entries.getOrNull(i) as? Obj ?: return
+        snapshot(if (v) "Kunci objek" else "Buka kunci")
+        entries[i] = o.copy(locked = v, src = null); dirty = true
+    }
+
+    fun setLockedGroup(v: Boolean) {
+        val g = groupIdx(); if (g.isEmpty()) return
+        snapshot(if (v) "Kunci grup" else "Buka kunci grup")
+        for (i in g) { val o = entries.getOrNull(i) as? Obj ?: continue; entries[i] = o.copy(locked = v, src = null) }
+        dirty = true
+    }
+
+    /** Ganti semua objek bernama [from] menjadi [to]. Objek terkunci dilewati. Mengembalikan jumlah yang diganti. */
+    fun replaceModel(from: String, to: String): Int {
+        val f = from.trim().lowercase(); val t = to.trim()
+        if (f.isEmpty() || t.isEmpty()) return 0
+        val idx = entries.indices.filter { val o = entries[it] as? Obj; o != null && !o.locked && o.model.lowercase() == f }
+        if (idx.isEmpty()) return 0
+        snapshot("Ganti model")
+        for (i in idx) { val o = entries[i] as Obj; entries[i] = o.copy(model = t, src = null) }
+        dirty = true
+        return idx.size
+    }
+
+    /** Pulihkan draf yang belum disimpan. Hasilnya belum punya lokasi file, jadi Simpan akan menanyakan lokasi. */
+    fun loadDraft(text: String, name: String) {
+        selSet.clear(); entries.clear(); entries.addAll(parseIpl(text))
+        fileName = name; uri = null; sel = -1; dirty = true
+        undoS.clear(); redoS.clear(); undoLabels.clear()
+        canUndo = false; canRedo = false; undoLabel = ""
+    }
+    fun remove(i: Int) { snapshot("Hapus objek"); entries.removeAt(i); sel = -1; selSet.clear(); dirty = true }
 
     fun clearSel() { selSet.clear(); sel = -1 }
 
@@ -220,7 +274,7 @@ class EditorVM : ViewModel() {
 
     fun shiftGroup(axis: Int, delta: Float) {
         val g = groupIdx(); if (g.isEmpty()) return
-        beginEdit()
+        beginEdit("Geser grup")
         for (i in g) {
             val o = entries.getOrNull(i) as? Obj ?: continue
             val v = if (axis == 0) o.x else if (axis == 1) o.y else o.z
@@ -230,9 +284,10 @@ class EditorVM : ViewModel() {
 
     fun rotateGroup(deg: Float) {
         val g = groupIdx(); if (g.isEmpty()) return
-        beginEdit()
+        beginEdit("Putar grup")
         for (i in g) {
             val o = entries.getOrNull(i) as? Obj ?: continue
+            if (o.locked) continue
             entries[i] = rotZ(o, deg).copy(src = null)
         }
         dirty = true
@@ -240,13 +295,15 @@ class EditorVM : ViewModel() {
 
     fun removeGroup() {
         val g = groupIdx(); if (g.isEmpty()) return
-        beginEdit()
+        beginEdit("Hapus grup")
         for (i in g.sortedDescending()) entries.removeAt(i)
         selSet.clear(); sel = -1; dirty = true
     }
-    fun beginEdit() { snapshot() }
+    fun beginEdit(label: String = "Ubah") { snapshot(label) }
     fun setAxis(i: Int, axis: Int, v: Float) {
         val o = entries.getOrNull(i) as? Obj ?: return
+        if (o.locked) return
+        rev++
         entries[i] = when (axis) { 0 -> o.copy(x = v, src = null); 1 -> o.copy(y = v, src = null); else -> o.copy(z = v, src = null) }
         dirty = true
     }
@@ -423,6 +480,21 @@ fun App(vm: EditorVM = viewModel()) {
     // Menu awal: potret. Setelah file IPL dibuka (editor 3D): landscape.
     val activity = ctx as? android.app.Activity
     val editorOpen = vm.entries.isNotEmpty()
+
+    // Draf: disimpan otomatis 1,5 detik setelah perubahan terakhir, dibuang saat file disimpan.
+    val draftFile = remember { File(ctx.filesDir, "draft.ipl") }
+    val draftMeta = remember { File(ctx.filesDir, "draft_name.txt") }
+    var hasDraft by remember { mutableStateOf(draftFile.exists()) }
+    LaunchedEffect(vm.rev) {
+        if (vm.entries.isNotEmpty() && vm.dirty && vm.rev > 0) {
+            delay(1500)
+            val txt = vm.text(); val nm = vm.fileName
+            withContext(Dispatchers.IO) {
+                try { draftFile.writeText(txt); draftMeta.writeText(nm) } catch (_: Exception) { }
+            }
+            hasDraft = true
+        }
+    }
     LaunchedEffect(editorOpen) {
         activity?.requestedOrientation = if (editorOpen)
             ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
@@ -465,6 +537,7 @@ fun App(vm: EditorVM = viewModel()) {
         try {
             ctx.contentResolver.openOutputStream(u, "wt")!!.use { it.write(vm.text().toByteArray()) }
             vm.uri = u; vm.dirty = false; say("Tersimpan")
+            draftFile.delete(); draftMeta.delete(); hasDraft = false
         } catch (e: Exception) { say("Gagal menyimpan: ${e.message}. Coba Simpan sebagai.") }
     }
     val saveAs = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("text/plain")) { u: Uri? ->
@@ -563,6 +636,22 @@ fun App(vm: EditorVM = viewModel()) {
             }
         }
         if (vm.sel in vm.entries.indices && vm.entries[vm.sel] is Obj && !(tab == 1 && vm.game != null)) EditSheet(vm)
+        if (hasDraft && vm.entries.isEmpty()) AlertDialog(
+            onDismissRequest = { },
+            title = { Text("Draf belum disimpan") },
+            text = { Text("Ada perubahan dari sesi sebelumnya yang belum disimpan. Pulihkan?") },
+            confirmButton = {
+                TextButton(onClick = {
+                    val t = try { draftFile.readText() } catch (_: Exception) { "" }
+                    val n = try { draftMeta.readText() } catch (_: Exception) { "baru.ipl" }
+                    if (t.isNotEmpty()) vm.loadDraft(t, n)
+                    hasDraft = false
+                }) { Text("Pulihkan") }
+            },
+            dismissButton = {
+                TextButton(onClick = { draftFile.delete(); draftMeta.delete(); hasDraft = false }) { Text("Buang") }
+            }
+        )
         if (vm.picker) ModelPicker(vm)
         vm.diag?.let { DiagDialog(vm, it) }
     }
@@ -713,7 +802,13 @@ fun ChangelogCard() {
         "Simpan IDE: membuat file .ide pendamping dari IPL.",
         "Impor model baru: pilih DFF (dan TXD opsional), lalu tempatkan di 3D.",
         "Tampilan atas: kamera tegak lurus ke bawah, seperti minimap.",
-        "Pilih banyak objek: ketuk beberapa objek, lalu geser, putar, atau hapus sekaligus."
+        "Pilih banyak objek: ketuk beberapa objek, lalu geser, putar, atau hapus sekaligus.",
+        "Grid tanah dan penggaris: tombol Grid di toolbar. Pilih 2 objek untuk melihat jaraknya.",
+        "Kunci objek: objek terkunci tidak bisa digeser, diputar, atau diubah posisinya.",
+        "Pencarian model lengkap: daftar dari IDE, gta3.img, dan model impor.",
+        "Ganti model: ganti semua objek bernama tertentu dalam satu langkah.",
+        "Draf otomatis: perubahan yang belum disimpan bisa dipulihkan saat aplikasi dibuka lagi.",
+        "Undo lebih jelas: tombol Batalkan menampilkan aksi yang akan dibatalkan."
     )
     var open by remember { mutableStateOf(false) }
     Card(

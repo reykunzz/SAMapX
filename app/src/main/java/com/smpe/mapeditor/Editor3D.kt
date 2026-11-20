@@ -137,6 +137,7 @@ fun Viewport(
                 gl.selStream = vm.selStream
                 gl.topDown = vm.topDown
                 gl.multiSel = vm.selSet.toSet()
+                gl.gridOn = vm.gridOn
                 v.requestRender()
             }
         )
@@ -171,13 +172,13 @@ fun Viewport(
                 }
                 awaitEachGesture {
                     val down = awaitFirstDown(requireUnconsumed = false)
-                    val axis = if (vm.sel >= 0) gl.hitGizmo(down.position.x, down.position.y, 44f * density) else -1
+                    val axis = if (vm.sel >= 0 && (vm.entries.getOrNull(vm.sel) as? Obj)?.locked != true) gl.hitGizmo(down.position.x, down.position.y, 44f * density) else -1
                     var moved = false
                     var started = false
                     var startVal = 0f
                     var acc = 0f
                     var last = down.position
-                    val grp = if (axis < 0 && !pm.value) vm.groupIdx() else emptyList()
+                    val grp = if (axis < 0 && !pm.value) vm.groupIdx().filter { (vm.entries.getOrNull(it) as? Obj)?.locked != true } else emptyList()
                     val freeHit = grp.isNotEmpty() && gl.pick(down.position.x, down.position.y, 24f * density) in grp
                     val gx = FloatArray(grp.size); val gy = FloatArray(grp.size)
                     var fdx = 0f; var fdy = 0f
@@ -200,7 +201,7 @@ fun Viewport(
                                 if (moved) {
                                     val o = vm.entries.getOrNull(vm.sel) as? Obj
                                     if (o != null) {
-                                        if (!started) { started = true; vm.beginEdit(); startVal = if (axis == 0) o.x else if (axis == 1) o.y else o.z; acc = 0f }
+                                        if (!started) { started = true; vm.beginEdit("Geser " + (if (axis == 0) "X" else if (axis == 1) "Y" else "Z")); startVal = if (axis == 0) o.x else if (axis == 1) o.y else o.z; acc = 0f }
                                         acc += gl.axisDelta(axis, last.x, last.y, c.position.x, c.position.y)
                                         var v = startVal + acc
                                         if (vm.snap > 0f) v = Math.round(v / vm.snap) * vm.snap
@@ -211,7 +212,7 @@ fun Viewport(
                             } else if (freeHit) {
                                 if (moved) {
                                     if (!started) {
-                                        started = true; vm.beginEdit(); fdx = 0f; fdy = 0f
+                                        started = true; vm.beginEdit("Geser objek"); fdx = 0f; fdy = 0f
                                         for ((j, idx) in grp.withIndex()) {
                                             val o = vm.entries.getOrNull(idx) as? Obj
                                             if (o != null) { gx[j] = o.x; gy[j] = o.y }
@@ -275,7 +276,10 @@ fun Viewport(
                 gl.requestRender()
             },
             multi = vm.multi,
-            onMulti = { vm.multi = !vm.multi }
+            onMulti = { vm.multi = !vm.multi },
+            undoLabel = vm.undoLabel,
+            gridOn = vm.gridOn,
+            onGrid = { vm.gridOn = !vm.gridOn; gl.gridOn = vm.gridOn; gl.requestRender() }
         )
         val sel = vm.entries.getOrNull(vm.sel) as? Obj
         val g = vm.game
@@ -426,6 +430,7 @@ fun Panel(vm: EditorVM, gl: GlScene, st: FloatArray, modifier: Modifier) {
             Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                 Nudge("Ke tengah", Modifier.weight(1f)) { vm.update(i, o.copy(x = gl.tx, y = gl.ty, z = gl.tz)) }
                 Nudge("Salin", Modifier.weight(1f)) { vm.duplicate(i) }
+                Nudge(if (o.locked) "Buka kunci" else "Kunci", Modifier.weight(1f)) { vm.setLocked(i, !o.locked); gl.requestRender() }
                 Nudge("Hapus", Modifier.weight(1f)) { vm.remove(i) }
             }
         }
@@ -445,6 +450,7 @@ fun Panel(vm: EditorVM, gl: GlScene, st: FloatArray, modifier: Modifier) {
         SectionCard("ADEGAN") {
             Button(onClick = { vm.picker = true }, shape = RoundedCornerShape(14.dp), modifier = Modifier.fillMaxWidth()) { Text("Tambah objek") }
             ImportModelCard(vm, gl)
+            ReplaceModelCard(vm)
             Text("Jarak pandang: ${viewDist.toInt()} m", style = MaterialTheme.typography.labelMedium)
             Slider(value = viewDist, onValueChange = { viewDist = it; gl.viewDist = it; gl.requestRender() }, valueRange = 150f..2500f)
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -537,15 +543,15 @@ fun ModelPicker(vm: EditorVM) {
                 OutlinedTextField(value = q, onValueChange = { q = it }, singleLine = true, shape = RoundedCornerShape(14.dp),
                     placeholder = { Text("Cari nama model atau ID") }, modifier = Modifier.fillMaxWidth())
                 val key = q.trim().lowercase()
-                val res = if (g == null || key.isEmpty()) emptyList() else g.defList.filter { it.lc.contains(key) || it.id.toString() == key }.take(60)
+                val res = if (g == null || key.isEmpty()) emptyList() else g.allModels().filter { it.first.contains(key) || it.second.toString() == key }.take(150)
                 if (key.isEmpty()) Text(
                     if (g != null && !g.idsKnown) "File .ide tidak ditemukan: daftar dari nama model, ID = 0. Ubah ID lewat Edit nilai." else "Ketik nama model, misalnya lamppost.",
                     Modifier.padding(top = 10.dp), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 LazyColumn(Modifier.heightIn(max = 320.dp)) {
                     items(res) { d ->
-                        Text("${d.model}   (${d.id})", Modifier.fillMaxWidth().clickable {
+                        Text("${d.first}   (${d.second})", Modifier.fillMaxWidth().clickable {
                             val s = vm.gl
-                            vm.sel = vm.add(d.model, d.id, s?.tx ?: 0f, s?.ty ?: 0f, s?.tz ?: 10f)
+                            vm.sel = vm.add(d.first, d.second, s?.tx ?: 0f, s?.ty ?: 0f, s?.tz ?: 10f)
                             vm.picker = false
                         }.padding(vertical = 12.dp))
                     }
@@ -692,9 +698,45 @@ fun GroupCard(vm: EditorVM, gl: GlScene, step: Float) {
             Nudge("-90", Modifier.weight(1f)) { vm.rotateGroup(-90f); gl.requestRender() }
             Nudge("+90", Modifier.weight(1f)) { vm.rotateGroup(90f); gl.requestRender() }
         }
+        if (vm.selSet.size == 2) {
+            val a = vm.entries.getOrNull(vm.selSet[0]) as? Obj
+            val b = vm.entries.getOrNull(vm.selSet[1]) as? Obj
+            if (a != null && b != null) {
+                val dxy = Math.hypot((a.x - b.x).toDouble(), (a.y - b.y).toDouble())
+                val d3 = Math.sqrt(dxy * dxy + (a.z - b.z).toDouble() * (a.z - b.z))
+                Text(String.format(Locale.US, "Penggaris: %.2f m (datar %.2f m)", d3, dxy),
+                    fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.bodySmall)
+            }
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            Nudge("Kunci semua", Modifier.weight(1f)) { vm.setLockedGroup(true); gl.requestRender() }
+            Nudge("Buka semua", Modifier.weight(1f)) { vm.setLockedGroup(false); gl.requestRender() }
+        }
         Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             Nudge("Batal pilih", Modifier.weight(1f)) { vm.clearSel(); gl.requestRender() }
             Nudge("Hapus semua", Modifier.weight(1f)) { vm.removeGroup(); gl.requestRender() }
         }
+    }
+}
+
+@Composable
+fun ReplaceModelCard(vm: EditorVM) {
+    var from by remember { mutableStateOf("") }
+    var to by remember { mutableStateOf("") }
+    var msg by remember { mutableStateOf("") }
+    Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text("Ganti model", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Field("Dari", from, Modifier.weight(1f)) { from = it }
+            Field("Menjadi", to, Modifier.weight(1f)) { to = it }
+        }
+        Button(
+            onClick = {
+                val n = vm.replaceModel(from, to)
+                msg = if (n > 0) "$n objek diganti." else "Tidak ada objek yang cocok (atau terkunci)."
+            },
+            shape = RoundedCornerShape(14.dp), modifier = Modifier.fillMaxWidth()
+        ) { Text("Ganti semua") }
+        if (msg.isNotEmpty()) Text(msg, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }

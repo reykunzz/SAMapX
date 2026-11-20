@@ -32,6 +32,14 @@ Catatan: model impor hanya bisa dilihat dan ditempatkan di editor. Agar muncul d
 
 ## Changelog
 
+### 1.5.0
+- Grid tanah dan penggaris: tombol Grid di toolbar. Pilih 2 objek di mode Pilih banyak untuk melihat jaraknya.
+- Kunci objek: objek terkunci tidak bisa digeser, diputar, atau diubah posisinya. Kunci hanya berlaku di sesi aplikasi dan tidak ditulis ke IPL.
+- Pencarian model lengkap di picker "Tambah objek": daftar dari IDE, gta3.img, dan model impor.
+- Ganti model: di tab Adegan, isi "Dari" dan "Menjadi", lalu tekan Ganti semua. Objek terkunci dilewati.
+- Draf otomatis: perubahan disimpan ke draf 1,5 detik setelah edit terakhir. Saat aplikasi dibuka lagi, dialog akan menawarkan pemulihan.
+- Undo lebih jelas: tombol Batalkan menampilkan aksi terakhir, misalnya "Batalkan: Geser X".
+
 ### 1.4.0
 - Tampilan atas (tombol di toolbar): kamera tegak lurus ke bawah, seperti minimap.
 - Pilih banyak objek (tombol Pilih banyak): ketuk beberapa objek. Seret salah satunya untuk menggeser semuanya. Panel grup punya tombol geser, putar, hapus, dan batal pilih.
