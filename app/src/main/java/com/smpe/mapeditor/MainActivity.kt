@@ -306,7 +306,8 @@ fun App(vm: EditorVM = viewModel()) {
     val ctx = LocalContext.current
     val snack = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
-    var tab by remember { mutableIntStateOf(1) }
+    var tab by remember { mutableIntStateOf(0) }
+    var showChangelog by remember { mutableStateOf(false) }
     val prefs = remember { ctx.getSharedPreferences("smpe", Context.MODE_PRIVATE) }
     fun say(m: String) { scope.launch { snack.showSnackbar(m) } }
 
@@ -315,8 +316,8 @@ fun App(vm: EditorVM = viewModel()) {
             try { ctx.contentResolver.takePersistableUriPermission(u, 3) } catch (_: Exception) {}
             val txt = ctx.contentResolver.openInputStream(u)!!.bufferedReader().readText()
             if (vm.load(txt, nameOf(ctx, u), u)) {
-                tab = 1
-                say("${vm.count} objek dimuat · membuka 3D")
+                tab = 2
+                say("${vm.count} objek dimuat")
             } else say("IPL biner belum didukung. Gunakan IPL teks.")
         } catch (e: Exception) { say("Gagal membuka file: ${e.message}") }
     }
@@ -362,7 +363,6 @@ fun App(vm: EditorVM = viewModel()) {
         containerColor = MaterialTheme.colorScheme.background,
         snackbarHost = { SnackbarHost(snack) },
         topBar = {
-            Column {
             TopAppBar(
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background),
                 title = {
@@ -398,34 +398,28 @@ fun App(vm: EditorVM = viewModel()) {
                                 vm.diag = (vm.game?.diagnose() ?: "Build: " + BUILD_TAG + "\n" + GameData.lastReport.ifEmpty { "Folder GTA SA belum dipilih." }) + "\nGL: " + (vm.gl?.glLog?.ifEmpty { "ok" } ?: "belum dibuat")
                             }
                         })
-                        DropdownMenuItem(text = { Text("Versi: " + BUILD_TAG) }, enabled = false, onClick = { })
+                        DropdownMenuItem(text = { Text("Changelog aplikasi") }, onClick = {
+                            menu = false; showChangelog = true
+                        })
+                        DropdownMenuItem(text = { Text("Versi: 1.1.0") }, enabled = false, onClick = { })
                         DropdownMenuItem(text = { Text("Developer: ReyyXSA") }, enabled = false, onClick = { })
                         DropdownMenuItem(text = { Text("Pilih folder GTA SA") }, onClick = { menu = false; pickTree.launch(null) })
                     }
                 }
             )
-            if (vm.entries.isNotEmpty()) {
-                Row(
-                    Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.surfaceVariant).padding(horizontal = 12.dp, vertical = 4.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    TextButton(onClick = { tab = 0 }) {
-                        Icon(Icons.Default.List, null)
-                        Spacer(Modifier.width(6.dp))
-                        Text("Objek", color = if (tab == 0) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant)
-                    }
-                    TextButton(onClick = { tab = 1 }) {
-                        Icon(Icons.Default.Home, null)
-                        Spacer(Modifier.width(6.dp))
-                        Text("3D", color = if (tab == 1) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant)
-                    }
-                }
-            }
+        },
+        bottomBar = {
+            if (vm.entries.isNotEmpty()) NavigationBar(containerColor = MaterialTheme.colorScheme.surface) {
+                NavigationBarItem(selected = tab == 0, onClick = { tab = 0 },
+                    icon = { Icon(Icons.Default.Place, null) }, label = { Text("Peta") })
+                NavigationBarItem(selected = tab == 1, onClick = { tab = 1 },
+                    icon = { Icon(Icons.Default.List, null) }, label = { Text("Objek") })
+                NavigationBarItem(selected = tab == 2, onClick = { tab = 2 },
+                    icon = { Icon(Icons.Default.Home, null) }, label = { Text("3D") })
             }
         },
         floatingActionButton = {
-            if (vm.entries.isNotEmpty() && !(tab == 1 && vm.game != null)) ExtendedFloatingActionButton(
+            if (vm.entries.isNotEmpty() && !(tab == 2 && vm.game != null)) ExtendedFloatingActionButton(
                 onClick = { vm.sel = vm.add() },
                 containerColor = MaterialTheme.colorScheme.primary,
                 contentColor = MaterialTheme.colorScheme.onPrimary,
@@ -437,55 +431,129 @@ fun App(vm: EditorVM = viewModel()) {
             when {
                 vm.entries.isEmpty() -> Empty(
                     onOpen = { open.launch(arrayOf("*/*")) },
-                    onPickGame = { pickTree.launch(null) },
+                    onPickFolder = { pickTree.launch(null) },
                     gameStatus = vm.gameStatus,
-                    onDiagnose = { vm.diag = GameData.lastReport.ifEmpty { "Belum ada laporan. Pilih folder GTA SA dulu." } }
+                    onChangelog = { showChangelog = true }
                 )
-                tab == 0 -> ListView(vm)
+                tab == 0 -> MapView(vm)
+                tab == 1 -> ListView(vm)
                 else -> {
                     val g = vm.game
                     if (g != null) GlEditor(vm, g)
-                    else View3D(vm)
+                    else Box(Modifier.fillMaxSize()) { View3D(vm); GamePrompt(vm) { pickTree.launch(null) } }
                 }
             }
         }
-        if (vm.sel in vm.entries.indices && vm.entries[vm.sel] is Obj && !(tab == 1 && vm.game != null)) EditSheet(vm)
+        if (vm.sel in vm.entries.indices && vm.entries[vm.sel] is Obj && !(tab == 2 && vm.game != null)) EditSheet(vm)
         if (vm.picker) ModelPicker(vm)
         vm.diag?.let { DiagDialog(vm, it) }
+        if (showChangelog) ChangelogDialog(onDismiss = { showChangelog = false })
     }
 }
 
 @Composable
 fun Empty(
     onOpen: () -> Unit,
-    onPickGame: () -> Unit,
+    onPickFolder: () -> Unit,
     gameStatus: String,
-    onDiagnose: () -> Unit
+    onChangelog: () -> Unit
 ) {
-    Column(Modifier.fillMaxSize().padding(32.dp), Arrangement.Center, Alignment.CenterHorizontally) {
-        Image(painterResource(R.drawable.logo), null, Modifier.size(180.dp))
-        Spacer(Modifier.height(24.dp))
-        Text("Mulai SAMapX", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-        Spacer(Modifier.height(8.dp))
-        Text("Pilih folder GTA San Andreas untuk menampilkan model asli, lalu buka file IPL untuk mulai mengedit map.",
-            textAlign = TextAlign.Center, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        Spacer(Modifier.height(20.dp))
-        Button(onClick = onPickGame, shape = RoundedCornerShape(16.dp)) { Text("Pilih folder GTA SA") }
-        if (gameStatus.isNotBlank()) {
+    Box(
+        Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 20.dp, vertical = 18.dp),
+        contentAlignment = Alignment.TopCenter
+    ) {
+        Column(
+            Modifier.fillMaxWidth().widthIn(max = 720.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Image(painterResource(R.drawable.logo), null, Modifier.size(112.dp))
+            Spacer(Modifier.height(12.dp))
+            Text("Mulai SAMapX", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+            Spacer(Modifier.height(6.dp))
+            Text(
+                "Kelola dan edit map GTA San Andreas.",
+                textAlign = TextAlign.Center,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Spacer(Modifier.height(20.dp))
+
+            Card(
+                Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(20.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+            ) {
+                Column(Modifier.fillMaxWidth().padding(18.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Default.Place, null, tint = MaterialTheme.colorScheme.primary)
+                        Spacer(Modifier.width(9.dp))
+                        Text("Folder GTA San Andreas", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                    }
+                    Text(
+                        gameStatus.ifBlank { "Pilih folder game untuk mengaktifkan model dan tekstur GTA SA asli." },
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                    Button(onClick = onPickFolder, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(14.dp)) {
+                        Text("Pilih Folder GTA SA")
+                    }
+                }
+            }
+
+            Spacer(Modifier.height(12.dp))
+            Card(
+                Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(20.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+            ) {
+                Column(Modifier.fillMaxWidth().padding(18.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Default.List, null, tint = MaterialTheme.colorScheme.primary)
+                        Spacer(Modifier.width(9.dp))
+                        Text("Buka Map", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                    }
+                    Text(
+                        "Pilih file IPL teks untuk mulai mengedit objek dan tampilan 3D.",
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                    OutlinedButton(onClick = onOpen, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(14.dp)) {
+                        Text("Buka File IPL")
+                    }
+                }
+            }
+
+            Spacer(Modifier.height(10.dp))
+            TextButton(onClick = onChangelog) { Text("Changelog · SAMapX 1.1.0") }
+            Spacer(Modifier.height(4.dp))
+            Text("Developed by ReyyXSA", style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant)
             Spacer(Modifier.height(8.dp))
-            Text(gameStatus, style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = TextAlign.Center)
         }
-        TextButton(onClick = onDiagnose) { Text("Diagnosa folder game") }
-        Spacer(Modifier.height(8.dp))
-        OutlinedButton(onClick = onOpen, shape = RoundedCornerShape(16.dp)) { Text("Buka file IPL") }
-        Spacer(Modifier.height(18.dp))
-        Text(
-            "Developed by ReyyXSA",
-            style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
     }
+}
+
+@Composable
+fun ChangelogDialog(onDismiss: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Changelog SAMapX 1.1.0") },
+        text = {
+            Column(Modifier.heightIn(max = 360.dp).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text("Home UI V3.2", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+                Text("• Halaman awal dirapikan dengan kartu Folder GTA SA dan Buka Map.")
+                Text("• Konten halaman awal sekarang bisa di-scroll.")
+                Text("• Tombol pilih folder GTA SA tersedia langsung di halaman awal.")
+                Text("• Changelog dapat dibuka dari halaman awal atau menu aplikasi.")
+                Text("• Setelah file IPL berhasil dibuka, aplikasi langsung menuju tab 3D.")
+                HorizontalDivider()
+                Text("Tetap dipertahankan", fontWeight = FontWeight.Bold)
+                Text("• Fitur editor objek, peta, Inspector, dan 3D yang sudah ada.")
+                Text("• Kredit developer ReyyXSA.")
+                Text("Versi sebelumnya: 1.0.0")
+            }
+        },
+        confirmButton = { TextButton(onClick = onDismiss) { Text("Tutup") } }
+    )
 }
 
 // ---------- Map ----------
