@@ -147,7 +147,7 @@ class EditorVM : ViewModel() {
     val selSet = mutableStateListOf<Int>()
     var multi by mutableStateOf(false)
     var topDown by mutableStateOf(false)
-    var gridOn by mutableStateOf(false)
+    var gridOn by mutableStateOf(true)
     /** Naik setiap ada perubahan; dipakai untuk autosave draf. */
     var rev by mutableIntStateOf(0)
     /** Label aksi terakhir yang bisa dibatalkan, mis. "Geser X". */
@@ -806,6 +806,7 @@ fun ChangelogCard() {
         "Grid tanah dan penggaris: tombol Grid di toolbar. Pilih 2 objek untuk melihat jaraknya.",
         "Kunci objek: objek terkunci tidak bisa digeser, diputar, atau diubah posisinya.",
         "Perbaikan: grid tidak lagi crash saat dinyalakan.",
+        "Grid: tombol Grid mengatur grid biru di tanah (menyala secara default).",
         "Pencarian model lengkap: daftar dari IDE, gta3.img, dan model impor.",
         "Ganti model: ganti semua objek bernama tertentu dalam satu langkah.",
         "Draf otomatis: perubahan yang belum disimpan bisa dipulihkan saat aplikasi dibuka lagi.",

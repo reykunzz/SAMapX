@@ -75,8 +75,8 @@ class GlScene(private val game: GameData) : GLSurfaceView.Renderer {
     @Volatile var topDown = false
     /** Indeks objek yang dipilih dalam mode Pilih banyak. */
     @Volatile var multiSel: Set<Int> = emptySet()
-    /** Grid tanah (z = 0) sebagai penggaris jarak. */
-    @Volatile var gridOn = false
+    /** Grid tanah biru: diatur tombol Grid di toolbar. */
+    @Volatile var gridOn = true
     @Volatile var dist = 150f
     @Volatile var viewDist = 500f
     @Volatile var hideLod = false
@@ -262,7 +262,6 @@ class GlScene(private val game: GameData) : GLSurfaceView.Renderer {
         Matrix.perspectiveM(proj, 0, 60f, vw.toFloat() / vh, max(0.3f, d * 0.01f), max(viewDist * 3f + 500f, d * 4f))
         Matrix.setLookAtM(vm4, 0, cx, cy, cz, tx, ty, tz, 0f, 0f, 1f)
         Matrix.multiplyMM(vp, 0, proj, 0, vm4, 0)
-        if (gridOn) drawGrid()
         vpOut = vp.copyOf()
         val fx = (tx - cx) / d; val fy = (ty - cy) / d; val fz = (tz - cz) / d
 
@@ -273,7 +272,7 @@ class GlScene(private val game: GameData) : GLSurfaceView.Renderer {
         GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, 0)
         for (a in 1..3) GLES20.glDisableVertexAttribArray(a)
         GLES20.glEnableVertexAttribArray(0)
-        run {
+        if (gridOn) run {
             val gstep = Math.pow(10.0, Math.floor(Math.log10((d / 4f).toDouble()))).toFloat()
             val gx0 = Math.floor((tx / gstep).toDouble()).toFloat() * gstep
             val gy0 = Math.floor((ty / gstep).toDouble()).toFloat() * gstep
@@ -388,32 +387,6 @@ class GlScene(private val game: GameData) : GLSurfaceView.Renderer {
         val sx = ((vp[0] * x + vp[4] * y + vp[8] * z + vp[12]) / cw * 0.5f + 0.5f) * vw
         val sy = (1f - ((vp[1] * x + vp[5] * y + vp[9] * z + vp[13]) / cw * 0.5f + 0.5f)) * vh
         return floatArrayOf(sx, sy)
-    }
-
-    /** Gambar grid di bidang tanah di sekitar kamera. Jarak antar garis menyesuaikan zoom. */
-    private fun drawGrid() {
-        val r = max(60f, dist * 1.5f)
-        val step = listOf(1f, 2f, 5f, 10f, 20f, 50f, 100f, 200f, 500f).firstOrNull { r / it <= 30f } ?: 500f
-        val n = (r / step).toInt() + 1
-        val m = 2 * n + 1
-        val pts = FloatArray(2 * m * 6)
-        var k = 0
-        val gx = Math.floor((tx / step).toDouble()).toFloat() * step
-        val gy = Math.floor((ty / step).toDouble()).toFloat() * step
-        for (i in -n..n) {
-            val x = gx + i * step
-            pts[k++] = x; pts[k++] = ty - r; pts[k++] = 0f; pts[k++] = x; pts[k++] = ty + r; pts[k++] = 0f
-        }
-        for (i in -n..n) {
-            val y = gy + i * step
-            pts[k++] = tx - r; pts[k++] = y; pts[k++] = 0f; pts[k++] = tx + r; pts[k++] = y; pts[k++] = 0f
-        }
-        GLES20.glUseProgram(lprog)
-        GLES20.glUniformMatrix4fv(luVP, 1, false, vp, 0)
-        GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, 0)
-        for (a in 1..3) GLES20.glDisableVertexAttribArray(a)
-        GLES20.glLineWidth(1f)
-        lines(pts, 0.2f, 0.45f, 0.38f)
     }
 
     /** Which gizmo axis (0=X, 1=Y, 2=Z) is under the touch point, or -1. */
