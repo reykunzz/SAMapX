@@ -1,5 +1,6 @@
 package com.smpe.mapeditor
 
+import android.content.pm.ActivityInfo
 import android.net.Uri
 import android.os.Bundle
 import android.provider.OpenableColumns
@@ -165,6 +166,14 @@ class EditorVM : ViewModel() {
     }
     val count: Int get() = entries.count { it is Obj }
 
+    /** IPL kosong baru: satu blok inst/end, siap diisi objek. */
+    fun newFile() {
+        entries.clear(); entries.add(Raw("inst")); entries.add(Raw("end"))
+        fileName = "baru.ipl"; uri = null; sel = -1; dirty = true
+        undoS.clear(); redoS.clear(); canUndo = false; canRedo = false
+        extra = emptyList(); streamNote = ""; selStream = -1
+    }
+
     fun load(text: String, name: String, u: Uri?): Boolean {
         if (text.startsWith("bnry")) return false
         entries.clear(); entries.addAll(parseIpl(text))
@@ -200,7 +209,11 @@ class EditorVM : ViewModel() {
         val last = entries.indexOfLast { it is Obj }
         dirty = true
         return if (last >= 0) { entries.add(last + 1, o); last + 1 }
-        else { entries.add(Raw("inst")); entries.add(o); entries.add(Raw("end")); entries.size - 2 }
+        else {
+            val end = entries.indexOfLast { it is Raw && it.t.trim().equals("end", true) }
+            if (end >= 0) { entries.add(end, o); end }
+            else { entries.add(Raw("inst")); entries.add(o); entries.add(Raw("end")); entries.size - 2 }
+        }
     }
 }
 
@@ -348,6 +361,15 @@ fun nameOf(ctx: android.content.Context, u: Uri): String {
 fun App(vm: EditorVM = viewModel()) {
     val ctx = LocalContext.current
     val snack = remember { SnackbarHostState() }
+    // Menu awal: potret. Setelah file IPL dibuka (editor 3D): landscape.
+    val activity = ctx as? android.app.Activity
+    val editorOpen = vm.entries.isNotEmpty()
+    LaunchedEffect(editorOpen) {
+        activity?.requestedOrientation = if (editorOpen)
+            ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
+        else
+            ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT
+    }
     val scope = rememberCoroutineScope()
     var tab by remember { mutableIntStateOf(0) }
     val prefs = remember { ctx.getSharedPreferences("smpe", Context.MODE_PRIVATE) }
@@ -459,7 +481,8 @@ fun App(vm: EditorVM = viewModel()) {
                     gameStatus = vm.gameStatus,
                     recents = recents,
                     onRecent = { r -> openUri(Uri.parse(r.uri)) },
-                    onClearRecents = { recents.clear(); saveRecents() }
+                    onClearRecents = { recents.clear(); saveRecents() },
+                    onNew = { vm.newFile(); tab = 0 }
                 )
                 tab == 0 -> ListView(vm)
                 tab == 1 -> {
@@ -483,7 +506,8 @@ fun Empty(
     gameStatus: String,
     recents: List<Recent>,
     onRecent: (Recent) -> Unit,
-    onClearRecents: () -> Unit
+    onClearRecents: () -> Unit,
+    onNew: () -> Unit
 ) {
     val cs = MaterialTheme.colorScheme
     Box(
@@ -525,6 +549,9 @@ fun Empty(
                         color = cs.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
                     Button(onClick = onOpen, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(14.dp)) {
                         Text("Buka File IPL")
+                    }
+                    OutlinedButton(onClick = onNew, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(14.dp)) {
+                        Text("Buat IPL baru")
                     }
                 }
             }
