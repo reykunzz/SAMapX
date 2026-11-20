@@ -662,7 +662,8 @@ fun ChangelogCard() {
         "Orientasi: potret di menu, landscape saat editor terbuka.",
         "Zoom tanpa batas di tampilan 3D.",
         "Geser objek bebas dengan sentuhan: seret objek yang sudah dipilih.",
-        "Simpan IDE: membuat file .ide pendamping dari IPL."
+        "Simpan IDE: membuat file .ide pendamping dari IPL.",
+        "Impor model baru: pilih DFF (dan TXD opsional), lalu tempatkan di 3D."
     )
     var open by remember { mutableStateOf(false) }
     Card(

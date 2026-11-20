@@ -16,7 +16,20 @@ Catatan: IPL biner (bnry) belum didukung. Ini bukan port Ariane; terinspirasi da
 6. **Inspector.** Tab **Objek** berisi tombol geser dan rotasi. Tab **Stream** menampilkan objek detail dari file stream biner, hanya untuk dilihat. Gunakan **Salin ke IPL** agar bisa diedit. Tab **Adegan** berisi Tambah objek, jarak pandang, balik tekstur, dan sembunyikan LOD.
 7. **Simpan.** Tombol **Simpan** menimpa file asli. Titik kuning berarti ada perubahan yang belum disimpan. **Simpan sebagai**, **Urungkan**, **Ulangi**, dan **Diagnosa file game** ada di menu titik tiga.
 
+## Impor model baru (1.3.0)
+
+Di tab 3D, buka panel **Adegan**, lalu di bagian **Impor model baru**:
+1. Pilih file `.dff`. Nama model otomatis terisi dari nama file.
+2. Pilih file `.txd` jika model punya texture sendiri (opsional).
+3. Tekan **Impor & tempatkan**. Model langsung muncul di posisi kamera.
+
+Catatan: model impor hanya bisa dilihat dan ditempatkan di editor. Agar muncul di game, file DFF dan TXD harus dimasukkan ke dalam gta3.img atau mod loader. Gunakan **Simpan IDE** untuk membuat file IDE pendamping.
+
 ## Changelog
+
+### 1.3.0
+- Impor model baru: pilih file DFF (dan TXD opsional) di tab Adegan, lalu tempatkan di 3D.
+- Model hasil impor otomatis mendapat ID mulai 20000 dan ikut tersimpan di Simpan IDE.
 
 ### 1.2.2
 - Zoom tanpa batas di tampilan 3D.

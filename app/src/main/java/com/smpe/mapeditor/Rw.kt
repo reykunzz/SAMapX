@@ -15,7 +15,7 @@ import java.util.concurrent.atomic.AtomicInteger
 import kotlin.math.max
 import kotlin.math.sqrt
 
-const val BUILD_TAG = "SanEditor-1.2.1-UI-V4"
+const val BUILD_TAG = "SanEditor-1.3.0"
 
 class ImgEntry(val offset: Long, val size: Int)
 class TexData(val key: String, val w: Int, val h: Int, val rgba: ByteArray)
@@ -490,6 +490,26 @@ class GameData private constructor(private val fis: FileInputStream, private val
         override fun sizeOf(key: String, value: TexData): Int = max(1, value.rgba.size / 1024)
     }
     private val models = LruCache<String, ModelData>(400)
+
+    /** Model hasil impor DFF (di luar gta3.img). Tidak ikut di-purge. */
+    val customModels = java.util.concurrent.ConcurrentHashMap<String, ModelData>()
+
+    /** Impor DFF (dan TXD opsional) dari luar gta3.img. Dipanggil dari thread IO. */
+    fun importModel(key: String, dff: ByteArray, txd: ByteArray?): Boolean {
+        val k = key.lowercase()
+        val tx = txd?.let { TxdFile(k, it) }
+        val md = try {
+            parseDff(dff) { tn ->
+                var r: TexData? = tx?.let { texture(it, tn) }
+                if (r == null) r = dbTexture(tn)
+                if (r == null) txd("generic")?.let { r = texture(it, tn) }
+                r
+            }
+        } catch (e: Throwable) { null } ?: return false
+        customModels[k] = md
+        models.put(k, md)
+        return true
+    }
     private val exec = Executors.newFixedThreadPool(2)
     val pending = AtomicInteger(0)
     var idsKnown = true
@@ -554,6 +574,7 @@ class GameData private constructor(private val fis: FileInputStream, private val
 
     fun loadModel(key: String): ModelData? {
         models.get(key)?.let { return it }
+        customModels[key.lowercase()]?.let { return it }
         val bytes = readEntry("$key.dff") ?: run { why("tidak ada di gta3.img"); return null }
         val chain = ArrayList<TxdFile>()
         var t: String? = defs[key]?.txd?.lowercase()

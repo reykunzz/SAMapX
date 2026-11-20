@@ -3,6 +3,14 @@
 package com.smpe.mapeditor
 
 import android.opengl.GLSurfaceView
+import android.net.Uri
+import android.content.Context
+import android.provider.OpenableColumns
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.withContext
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -417,6 +425,7 @@ fun Panel(vm: EditorVM, gl: GlScene, st: FloatArray, modifier: Modifier) {
         if (tab == 2) {
         SectionCard("ADEGAN") {
             Button(onClick = { vm.picker = true }, shape = RoundedCornerShape(14.dp), modifier = Modifier.fillMaxWidth()) { Text("Tambah objek") }
+            ImportModelCard(vm, gl)
             Text("Jarak pandang: ${viewDist.toInt()} m", style = MaterialTheme.typography.labelMedium)
             Slider(value = viewDist, onValueChange = { viewDist = it; gl.viewDist = it; gl.requestRender() }, valueRange = 150f..2500f)
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -560,5 +569,85 @@ fun BoxScope.GamePrompt(vm: EditorVM, onPick: () -> Unit) {
                 OutlinedButton(onClick = { vm.diag = GameData.lastReport.ifEmpty { "Belum ada laporan. Pilih folder GTA SA dulu." } }, shape = RoundedCornerShape(14.dp)) { Text("Diagnosa") }
             }
         }
+    }
+}
+
+fun fileNameOf(ctx: Context, u: Uri): String {
+    try {
+        ctx.contentResolver.query(u, null, null, null, null)?.use { c ->
+            val i = c.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+            if (i >= 0 && c.moveToFirst()) return c.getString(i) ?: "file"
+        }
+    } catch (_: Exception) { }
+    return u.lastPathSegment ?: "file"
+}
+
+@Composable
+fun ImportModelCard(vm: EditorVM, gl: GlScene) {
+    val ctx = LocalContext.current
+    val scope = rememberCoroutineScope()
+    var dffUri by remember { mutableStateOf<Uri?>(null) }
+    var txdUri by remember { mutableStateOf<Uri?>(null) }
+    var name by remember { mutableStateOf("") }
+    var msg by remember { mutableStateOf("") }
+    val pickDff = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { u: Uri? ->
+        if (u != null) {
+            dffUri = u
+            if (name.isBlank()) name = fileNameOf(ctx, u).substringBeforeLast('.').lowercase()
+                .filter { it.isLetterOrDigit() || it == '_' }.take(24)
+        }
+    }
+    val pickTxd = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { u: Uri? ->
+        if (u != null) txdUri = u
+    }
+    Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text("Impor model baru (DFF + TXD)", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
+        OutlinedButton(onClick = { pickDff.launch(arrayOf("*/*")) }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(14.dp)) {
+            Text(dffUri?.let { "DFF: " + fileNameOf(ctx, it) } ?: "Pilih file .dff")
+        }
+        OutlinedButton(onClick = { pickTxd.launch(arrayOf("*/*")) }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(14.dp)) {
+            Text(txdUri?.let { "TXD: " + fileNameOf(ctx, it) } ?: "Pilih file .txd (opsional)")
+        }
+        OutlinedTextField(
+            value = name,
+            onValueChange = { name = it.lowercase().filter { c -> c.isLetterOrDigit() || c == '_' }.take(24) },
+            label = { Text("Nama model") }, singleLine = true, modifier = Modifier.fillMaxWidth()
+        )
+        Button(
+            onClick = {
+                val du = dffUri
+                val g = vm.game
+                when {
+                    du == null -> msg = "Pilih file DFF dulu."
+                    name.isEmpty() -> msg = "Isi nama model."
+                    g == null -> msg = "Pilih folder GTA SA dulu."
+                    g.defs.containsKey(name) || g.customModels.containsKey(name) -> msg = "Nama '$name' sudah dipakai."
+                    else -> {
+                        val n = name; val tu = txdUri
+                        msg = "Mengimpor..."
+                        scope.launch(Dispatchers.IO) {
+                            val dff = try { ctx.contentResolver.openInputStream(du)?.use { it.readBytes() } } catch (e: Exception) { null }
+                            val txd = tu?.let { try { ctx.contentResolver.openInputStream(it)?.use { s -> s.readBytes() } } catch (e: Exception) { null } }
+                            val ok = dff != null && g.importModel(n, dff, txd)
+                            withContext(Dispatchers.Main) {
+                                if (ok) {
+                                    val used = vm.entries.filterIsInstance<Obj>().map { it.id }.toHashSet()
+                                    var id = 20000
+                                    while (used.contains(id)) id++
+                                    vm.sel = vm.add(n, id, gl.tx, gl.ty, gl.tz)
+                                    gl.requestRender()
+                                    msg = "Model $n diimpor dan ditempatkan (ID $id)."
+                                } else {
+                                    msg = "Gagal membaca DFF. Pastikan file format RenderWare (.dff)."
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            enabled = dffUri != null,
+            modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(14.dp)
+        ) { Text("Impor & tempatkan") }
+        if (msg.isNotEmpty()) Text(msg, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }
