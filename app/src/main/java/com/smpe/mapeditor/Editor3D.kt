@@ -56,25 +56,27 @@ fun GlEditor(vm: EditorVM, game: GameData) {
     var panelY by remember { mutableFloatStateOf(64f) }
     val density = LocalDensity.current.density
     BoxWithConstraints(Modifier.fillMaxSize()) {
-        val panelWidth = if (maxWidth < 420.dp) (maxWidth - 24.dp).coerceAtLeast(220.dp) else 320.dp
-        if (panelX < 0f) panelX = with(LocalDensity.current) { (maxWidth - panelWidth - 12.dp).toPx() }
+        val containerWidth = this.maxWidth
+        val containerHeight = this.maxHeight
+        val panelWidth = if (containerWidth < 420.dp) (containerWidth - 24.dp).coerceAtLeast(220.dp) else 320.dp
+        if (panelX < 0f) panelX = with(LocalDensity.current) { (containerWidth - panelWidth - 12.dp).toPx() }
         Viewport(vm, gl, st, panMode, { panMode = it }, showPanel, { showPanel = !showPanel },
             Modifier.fillMaxSize())
         if (showPanel) {
             Column(
                 Modifier.offset { IntOffset(panelX.roundToInt(), (panelY * density).roundToInt()) }
                     .width(panelWidth)
-                    .heightIn(max = maxHeight - 76.dp)
+                    .heightIn(max = containerHeight - 76.dp)
                     .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.97f), RoundedCornerShape(16.dp))
             ) {
                 Row(
                     Modifier.fillMaxWidth()
-                        .pointerInput(maxWidth, maxHeight) {
+                        .pointerInput(containerWidth, containerHeight) {
                             detectDragGestures { change, drag ->
                                 change.consume()
                                 val w = with(density) { panelWidth.toPx() }
                                 panelX = (panelX + drag.x).coerceIn(0f, (size.width - w).coerceAtLeast(0f))
-                                panelY = (panelY + drag.y / density).coerceIn(0f, (maxHeight.value - 56f).coerceAtLeast(0f))
+                                panelY = (panelY + drag.y / density).coerceIn(0f, (containerHeight.value - 56f).coerceAtLeast(0f))
                             }
                         }
                         .padding(start = 14.dp, end = 8.dp, top = 8.dp, bottom = 4.dp),
@@ -89,7 +91,7 @@ fun GlEditor(vm: EditorVM, game: GameData) {
                 }
                 if (panelExpanded) {
                     HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.35f))
-                    Panel(vm, gl, st, Modifier.fillMaxWidth().heightIn(max = maxHeight - 120.dp))
+                    Panel(vm, gl, st, Modifier.fillMaxWidth().heightIn(max = containerHeight - 120.dp))
                 }
             }
         }
