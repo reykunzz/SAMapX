@@ -243,7 +243,7 @@ class GlScene(private val game: GameData) : GLSurfaceView.Renderer {
     }
 
     override fun onDrawFrame(unused: GL10?) {
-        GLES20.glClearColor(0.38f, 0.55f, 0.78f, 1f)
+        GLES20.glClearColor(0.090f, 0.098f, 0.114f, 1f)
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT or GLES20.GL_DEPTH_BUFFER_BIT)
         if (models.size > 900 || texIds.size > 1500) purge()
         var up = 0

@@ -7,7 +7,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
-import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.horizontalScroll
@@ -25,8 +24,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.unit.IntOffset
-import kotlin.math.roundToInt
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalClipboardManager
@@ -52,33 +49,21 @@ fun GlEditor(vm: EditorVM, game: GameData) {
     var panMode by remember { mutableStateOf(false) }
     var showPanel by remember { mutableStateOf(true) }
     var panelExpanded by remember { mutableStateOf(true) }
-    var panelX by remember { mutableFloatStateOf(-1f) }
-    var panelY by remember { mutableFloatStateOf(64f) }
-    val density = LocalDensity.current.density
     BoxWithConstraints(Modifier.fillMaxSize()) {
         val containerWidth = this.maxWidth
         val containerHeight = this.maxHeight
         val panelWidth = if (containerWidth < 420.dp) (containerWidth - 24.dp).coerceAtLeast(220.dp) else 320.dp
-        if (panelX < 0f) panelX = with(LocalDensity.current) { (containerWidth - panelWidth - 12.dp).toPx() }
         Viewport(vm, gl, st, panMode, { panMode = it }, showPanel, { showPanel = !showPanel },
             Modifier.fillMaxSize())
         if (showPanel) {
             Column(
-                Modifier.offset { IntOffset(panelX.roundToInt(), (panelY * density).roundToInt()) }
+                Modifier.align(Alignment.TopStart).padding(start = 8.dp, top = 56.dp, bottom = 8.dp)
                     .width(panelWidth)
                     .heightIn(max = containerHeight - 76.dp)
                     .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.97f), RoundedCornerShape(16.dp))
             ) {
                 Row(
                     Modifier.fillMaxWidth()
-                        .pointerInput(containerWidth, containerHeight) {
-                            detectDragGestures { change, drag ->
-                                change.consume()
-                                val w = with(density) { panelWidth.toPx() }
-                                panelX = (panelX + drag.x).coerceIn(0f, (size.width - w).coerceAtLeast(0f))
-                                panelY = (panelY + drag.y / density).coerceIn(0f, (containerHeight.value - 56f).coerceAtLeast(0f))
-                            }
-                        }
                         .padding(start = 14.dp, end = 8.dp, top = 8.dp, bottom = 4.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -223,7 +208,7 @@ fun Viewport(
                 g.texdbs.sumOf { it.ok.get() } + " ok, " + g.texdbs.sumOf { it.fail.get() } + " gagal" +
                 (if (g.failCount.get() > 0) "  [" + g.reasons.entries.joinToString { it.key + " " + it.value.get() } + "]" else "") else head
         }
-        Surface(Modifier.align(Alignment.BottomStart).padding(8.dp), shape = RoundedCornerShape(10.dp), color = Color(0xCC0D1117)) {
+        Surface(Modifier.align(Alignment.BottomStart).padding(8.dp), shape = RoundedCornerShape(10.dp), color = Color(0xE624272D)) {
             Text(hud, Modifier.padding(horizontal = 10.dp, vertical = 5.dp), fontSize = 11.sp, color = Color.White)
         }
     }

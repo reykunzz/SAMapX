@@ -239,21 +239,21 @@ fun DrawScope.line3(cam: Cam, x1: Float, y1: Float, z1: Float, x2: Float, y2: Fl
 fun DrawScope.label(tm: TextMeasurer, text: String, x: Float, y: Float) {
     // drawText throws when the text origin is outside the canvas, so skip those
     if (x.isNaN() || y.isNaN() || x < 0f || y < 0f || x > size.width - 30f || y > size.height - 20f) return
-    drawText(tm, text, Offset(x, y), TextStyle(color = Color.White, fontSize = 10.sp, background = Color(0xAA0D1117)))
+    drawText(tm, text, Offset(x, y), TextStyle(color = Color.White, fontSize = 10.sp, background = Color(0xE624272D)))
 }
 
 // ---------- Theme ----------
 private val Scheme = darkColorScheme(
-    // SAMapX identity: cyan for primary controls, electric blue for secondary actions.
-    primary = Color(0xFF24B9F2), onPrimary = Color(0xFF06131B),
-    primaryContainer = Color(0xFF15364A), onPrimaryContainer = Color(0xFFC9F3FF),
-    secondary = Color(0xFF258BFF), onSecondary = Color(0xFFFFFFFF),
-    secondaryContainer = Color(0xFF173B68), onSecondaryContainer = Color(0xFFD8E8FF),
-    tertiary = Color(0xFF35C98A),
-    background = Color(0xFF0D121A), onBackground = Color(0xFFE8EEF6),
-    surface = Color(0xFF141C28), onSurface = Color(0xFFE8EEF6),
-    surfaceVariant = Color(0xFF1C2938), onSurfaceVariant = Color(0xFFAAB8C9),
-    outline = Color(0xFF35465A), error = Color(0xFFFF6B78)
+    // Graphite Professional: graphite surfaces with restrained blue actions.
+    primary = Color(0xFF2589D8), onPrimary = Color(0xFFFFFFFF),
+    primaryContainer = Color(0xFF183B59), onPrimaryContainer = Color(0xFFD8ECFF),
+    secondary = Color(0xFF929AA5), onSecondary = Color(0xFF17191D),
+    secondaryContainer = Color(0xFF303640), onSecondaryContainer = Color(0xFFE5E7EB),
+    tertiary = Color(0xFF42B883),
+    background = Color(0xFF17191D), onBackground = Color(0xFFE5E7EB),
+    surface = Color(0xFF24272D), onSurface = Color(0xFFE5E7EB),
+    surfaceVariant = Color(0xFF303640), onSurfaceVariant = Color(0xFF929AA5),
+    outline = Color(0xFF3A4049), error = Color(0xFFE05252)
 )
 
 @Composable
@@ -590,7 +590,7 @@ fun MapView(vm: EditorVM) {
         ) {
             val base = size.minDimension / 6000f * scale
             val c = Offset(size.width / 2f, size.height / 2f) + off
-            drawRect(Brush.verticalGradient(listOf(Color(0xFF101722), Color(0xFF0D1117))))
+            drawRect(Brush.verticalGradient(listOf(Color(0xFF24272D), Color(0xFF17191D))))
             drawRect(bg, topLeft = c - Offset(3000f * base, 3000f * base), size = Size(6000f * base, 6000f * base))
             var g = -3000
             while (g <= 3000) {
@@ -678,7 +678,7 @@ fun View3D(vm: EditorVM) {
                 }
         ) {
             val cam = Cam(tx, ty, tz, yaw, pitch, dist, size.width, size.height)
-            drawRect(Brush.verticalGradient(listOf(Color(0xFF24385A), Color(0xFF0D1117))))
+            drawRect(Brush.verticalGradient(listOf(Color(0xFF303640), Color(0xFF17191D))))
 
             // ground grid
             val step = 10f.pow(floor(log10(dist / 5f)))
