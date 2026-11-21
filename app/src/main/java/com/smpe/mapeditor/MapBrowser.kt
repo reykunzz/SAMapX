@@ -88,7 +88,7 @@ fun addToIde(ctx: Context, docUri: Uri, ideName: String, newLine: String, id: In
 fun MapBrowser(vm: EditorVM, tree: Uri, onOpen: (Uri) -> Unit, onClose: () -> Unit) {
     val ctx = LocalContext.current
     val rootId = remember(tree) { DocumentsContract.getTreeDocumentId(tree) }
-    var path by remember { mutableStateOf(listOf(Pair(rootId, "files"))) }
+    var path by remember { mutableStateOf(listOf(Pair(rootId, ""))) }
     var items by remember { mutableStateOf(emptyList<DocItem>()) }
     var ideSel by remember { mutableStateOf<DocItem?>(null) }
     var msg by remember { mutableStateOf("") }
@@ -97,7 +97,7 @@ fun MapBrowser(vm: EditorVM, tree: Uri, onOpen: (Uri) -> Unit, onClose: () -> Un
 
     Column(Modifier.fillMaxSize().padding(16.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(path.joinToString("/") { it.second }, Modifier.weight(1f),
+            Text("files" + path.drop(1).joinToString("") { "/" + it.second }, Modifier.weight(1f),
                 style = MaterialTheme.typography.titleSmall, maxLines = 1)
             TextButton(onClick = onClose) { Text("Tutup") }
         }
@@ -132,7 +132,7 @@ fun AddIdeCard(vm: EditorVM, tree: Uri, ide: DocItem, onMsg: (String) -> Unit) {
     var txd by remember(ide.docId) { mutableStateOf("") }
     val g = vm.game
     // Model dari gta3.img yang belum punya ID di IDE mana pun (ID 0).
-    val candidates = g?.defList?.filter { it.id == 0 && it.lc.contains(search.trim().lowercase()) }
+    val candidates = g?.defList?.filter { it.id == 0 && it.lc.contains(search.trim().lowercase().removeSuffix(".dff")) }
         ?.map { it.lc }?.take(20) ?: emptyList()
 
     Column(Modifier.fillMaxWidth().padding(top = 8.dp), verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(6.dp)) {
@@ -145,6 +145,10 @@ fun AddIdeCard(vm: EditorVM, tree: Uri, ide: DocItem, onMsg: (String) -> Unit) {
                     style = MaterialTheme.typography.bodyMedium)
             }
         }
+        if (candidates.isEmpty()) Text(
+            "Tidak ada model yang bisa ditambahkan. Model yang sudah punya ID di IDE game tidak ditampilkan. " +
+            "Model baru harus di-add dulu ke gta3.img dengan nama DFF yang belum dipakai game.",
+            style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         Text("Terpilih: " + model.ifEmpty { "-" }, style = MaterialTheme.typography.bodySmall)
         OutlinedTextField(value = idText, onValueChange = { idText = it.filter { ch -> ch.isDigit() } },
             label = { Text("ID") }, singleLine = true, modifier = Modifier.fillMaxWidth())
