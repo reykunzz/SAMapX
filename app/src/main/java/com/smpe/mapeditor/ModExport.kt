@@ -28,7 +28,7 @@ object ModExport {
         for ((name, id) in custom) {
             if (g.defList.any { it.lc == name }) conflicts += "$name: nama sudah ada di game"
             if (g.defList.any { it.id == id && it.lc != name }) conflicts += "$name: ID $id sudah dipakai game"
-            if (g.imgIndex.keys.any { it.equals("$name.dff", ignoreCase = true) }) conflicts += "$name: ada di gta3.img"
+            if (g.hasImgEntry("$name.dff")) conflicts += "$name: ada di gta3.img"
         }
         if (conflicts.isNotEmpty())
             return "EKSPOR DIBATALKAN, ada bentrok:\n" + conflicts.joinToString("\n") +

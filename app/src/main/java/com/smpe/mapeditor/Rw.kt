@@ -504,6 +504,9 @@ class GameData private constructor(private val fis: FileInputStream, private val
             customModels.containsKey(n)
     }
 
+    /** Apakah gta3.img punya entri dengan nama ini (tanpa membedakan huruf besar/kecil). */
+    fun hasImgEntry(name: String): Boolean = imgIndex.keys.any { it.equals(name, ignoreCase = true) }
+
     /** ID sudah didefinisikan oleh IDE game. */
     fun idTaken(id: Int): Boolean = defList.any { it.id == id }
 
