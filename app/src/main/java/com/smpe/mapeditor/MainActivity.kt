@@ -53,7 +53,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.Shadow
+import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
@@ -412,6 +412,8 @@ private val Scheme = darkColorScheme(
     outline = Color(0xFF3A342C), outlineVariant = Color(0xFF3A342C), error = Color(0xFFD86A6A)
 )
 
+val RussoOne = FontFamily(Font(R.font.russo_one, FontWeight.Normal))
+
 val DmSans = FontFamily(
     Font(R.font.dmsans_regular, FontWeight.Normal),
     Font(R.font.dmsans_medium, FontWeight.Medium),
@@ -714,7 +716,7 @@ fun Empty(
                     Image(painterResource(R.drawable.logo), null, Modifier.size(44.dp))
                     Spacer(Modifier.width(12.dp))
                     Column {
-                        Text("SAN EDITOR", fontFamily = DmSans, fontWeight = FontWeight.Black, fontSize = 26.sp,
+                        Text("SAN EDITOR", fontFamily = RussoOne, fontWeight = FontWeight.Normal, fontSize = 26.sp,
                             color = cs.onPrimary, letterSpacing = 1.sp,
                             style = TextStyle(shadow = Shadow(color = Color(0xFF7A2216), offset = Offset(3f, 3f), blurRadius = 0f)))
                         Text("Editor map GTA San Andreas", style = MaterialTheme.typography.bodySmall, color = cs.onPrimary)
@@ -895,6 +897,7 @@ fun ChangelogCard() {
         "Panduan penggunaan diperbarui sesuai fitur terbaru.",
         "Halaman awal lebih rapi: header ringkas, kartu error, dan kartu kosong saat belum ada file.",
         "Tema baru: merah bata, krem, dan arang hangat dengan judul bergaya tebal.",
+        "Judul memakai font Russo One. Perbaikan kompilasi impor Shadow.",
         "Konfirmasi keluar saat ada perubahan yang belum disimpan.",
         "Cari file di browser Pilih map.",
         "Perbaikan: gta3.img di dalam texdb/ kini ditemukan saat membuka folder game.",
