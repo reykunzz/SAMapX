@@ -449,9 +449,7 @@ fun Panel(vm: EditorVM, gl: GlScene, st: FloatArray, modifier: Modifier) {
         if (tab == 2) {
         SectionCard("ADEGAN") {
             Button(onClick = { vm.picker = true }, shape = RoundedCornerShape(14.dp), modifier = Modifier.fillMaxWidth()) { Text("Tambah objek") }
-            ImportModelCard(vm, gl)
             ReplaceModelCard(vm)
-            ExportCard(vm)
             Text("Jarak pandang: ${viewDist.toInt()} m", style = MaterialTheme.typography.labelMedium)
             Slider(value = viewDist, onValueChange = { viewDist = it; gl.viewDist = it; gl.requestRender() }, valueRange = 150f..2500f)
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -544,7 +542,7 @@ fun ModelPicker(vm: EditorVM) {
                 OutlinedTextField(value = q, onValueChange = { q = it }, singleLine = true, shape = RoundedCornerShape(14.dp),
                     placeholder = { Text("Cari nama model atau ID") }, modifier = Modifier.fillMaxWidth())
                 val key = q.trim().lowercase()
-                val res = if (g == null || key.isEmpty()) emptyList() else g.allModels().filter { it.first.contains(key) || it.second.toString() == key }.take(150)
+                val res = if (g == null || key.isEmpty()) emptyList() else g.allModels().filter { it.second > 0 && (it.first.contains(key) || it.second.toString() == key) }.take(150)
                 if (key.isEmpty()) Text(
                     if (g != null && !g.idsKnown) "File .ide tidak ditemukan: daftar dari nama model, ID = 0. Ubah ID lewat Edit nilai." else "Ketik nama model, misalnya lamppost.",
                     Modifier.padding(top = 10.dp), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)

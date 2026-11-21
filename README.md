@@ -32,6 +32,15 @@ Catatan: model impor hanya bisa dilihat dan ditempatkan di editor. Agar muncul d
 
 ## Changelog
 
+### 1.7.0
+- Jelajah folder map: tombol Jelajah folder map di halaman awal menampilkan folder dan file di files/data (buka folder, pilih .ipl untuk diedit, .ide untuk tambah model).
+- Tambah model ke IDE: pilih model dari gta3.img yang belum punya ID, isi ID dan nama TXD, lalu aplikasi menulis satu baris ke blok objs. File IDE lama dicadangkan di penyimpanan aplikasi.
+- Model yang baru ditambahkan langsung muncul di Tambah objek tanpa perlu membuka ulang folder game.
+
+### 1.6.2
+- Dihapus: impor DFF/TXD dan export paket custom. Fitur ini menyebabkan crash karena model baru perlu IMG dan collision.
+- Tambah objek hanya menampilkan model yang punya ID di IDE game, supaya ID-nya valid.
+
 ### 1.6.1
 - Nama model impor diperiksa terhadap IDE game dan gta3.img. Nama yang sudah dipakai ditolak.
 - ID model impor dipilih otomatis dari ID kosong di atas ID tertinggi game.

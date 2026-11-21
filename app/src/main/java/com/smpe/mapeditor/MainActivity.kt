@@ -1,5 +1,7 @@
 package com.smpe.mapeditor
 
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import android.content.pm.ActivityInfo
 import android.net.Uri
 import android.os.Bundle
@@ -505,6 +507,7 @@ fun App(vm: EditorVM = viewModel()) {
     }
     val scope = rememberCoroutineScope()
     var tab by remember { mutableIntStateOf(0) }
+    var browsing by remember { mutableStateOf(false) }
     val prefs = remember { ctx.getSharedPreferences("smpe", Context.MODE_PRIVATE) }
     fun say(m: String) { scope.launch { snack.showSnackbar(m) } }
 
@@ -627,7 +630,8 @@ fun App(vm: EditorVM = viewModel()) {
                     recents = recents,
                     onRecent = { r -> openUri(Uri.parse(r.uri)) },
                     onClearRecents = { recents.clear(); saveRecents() },
-                    onNew = { vm.newFile(); tab = 0 }
+                    onNew = { vm.newFile(); tab = 0 },
+                    onBrowse = { browsing = true }
                 )
                 tab == 0 -> ListView(vm)
                 tab == 1 -> {
@@ -655,6 +659,16 @@ fun App(vm: EditorVM = viewModel()) {
                 TextButton(onClick = { draftFile.delete(); draftMeta.delete(); hasDraft = false }) { Text("Buang") }
             }
         )
+        if (browsing) Dialog(onDismissRequest = { browsing = false }, properties = DialogProperties(usePlatformDefaultWidth = false)) {
+            Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
+                val t = prefs.getString("tree", null)
+                if (t == null) Column(Modifier.padding(16.dp)) {
+                    Text("Pilih folder GTA SA dulu.")
+                    TextButton(onClick = { browsing = false }) { Text("Tutup") }
+                }
+                else MapBrowser(vm, Uri.parse(t), onOpen = { u -> openUri(u); browsing = false }, onClose = { browsing = false })
+            }
+        }
         if (vm.picker) ModelPicker(vm)
         vm.diag?.let { DiagDialog(vm, it) }
     }
@@ -668,7 +682,8 @@ fun Empty(
     recents: List<Recent>,
     onRecent: (Recent) -> Unit,
     onClearRecents: () -> Unit,
-    onNew: () -> Unit
+    onNew: () -> Unit,
+    onBrowse: () -> Unit
 ) {
     val cs = MaterialTheme.colorScheme
     Box(
@@ -713,6 +728,9 @@ fun Empty(
                     }
                     OutlinedButton(onClick = onNew, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(14.dp)) {
                         Text("Buat IPL baru")
+                    }
+                    OutlinedButton(onClick = onBrowse, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(14.dp)) {
+                        Text("Jelajah folder map")
                     }
                 }
             }
@@ -814,6 +832,10 @@ fun ChangelogCard() {
         "Peringatan: model impor belum masuk gta3.img, jadi belum bisa dipakai di game.",
         "Export paket mod: membuat IDE, IPL, dan DFF/TXD dalam struktur folder game.",
         "Perbaikan: nama dan ID model impor diperiksa terhadap game. ID baru dipilih otomatis dan ekspor dibatalkan jika ada bentrok.",
+        "Dihapus: impor DFF/TXD dan export paket custom. Gunakan model dari daftar game.",
+        "Tambah objek: hanya model yang punya ID di IDE game yang ditampilkan.",
+        "Jelajah folder map: buka file IDE dan IPL dari daftar, tanpa memilih file satu per satu.",
+        "Tambah model ke IDE: pilih model dari gta3.img, isi ID dan TXD, lalu tulis ke file IDE.",
         "Grid: tombol Grid mengatur grid biru di tanah (menyala secara default).",
         "Pencarian model lengkap: daftar dari IDE, gta3.img, dan model impor.",
         "Ganti model: ganti semua objek bernama tertentu dalam satu langkah.",
