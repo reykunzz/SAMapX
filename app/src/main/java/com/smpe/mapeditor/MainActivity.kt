@@ -52,6 +52,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.Shadow
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
@@ -67,7 +69,6 @@ import androidx.compose.material.icons.filled.Home
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.text.TextMeasurer
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.sp
@@ -397,18 +398,18 @@ fun DrawScope.label(tm: TextMeasurer, text: String, x: Float, y: Float) {
 // ---------- Theme ----------
 // Deep Emerald: latar hijau-hitam, aksen zamrud gelap, teks putih kehijauan lembut.
 private val Scheme = darkColorScheme(
-    primary = Color(0xFF2E9C74), onPrimary = Color(0xFFF2FBF6),
-    primaryContainer = Color(0xFF163A2D), onPrimaryContainer = Color(0xFFC9DDD2),
-    secondary = Color(0xFF82948A), onSecondary = Color(0xFF0B0F0D),
-    secondaryContainer = Color(0xFF1A211D), onSecondaryContainer = Color(0xFFDDE6E0),
-    tertiary = Color(0xFFE8B75A),
-    background = Color(0xFF0B0F0D), onBackground = Color(0xFFDDE6E0),
-    surface = Color(0xFF121714), onSurface = Color(0xFFDDE6E0),
-    surfaceVariant = Color(0xFF1A211D), onSurfaceVariant = Color(0xFF82948A),
-    surfaceContainerLowest = Color(0xFF0B0F0D), surfaceContainerLow = Color(0xFF121714),
-    surfaceContainer = Color(0xFF161C19), surfaceContainerHigh = Color(0xFF1A211D),
-    surfaceContainerHighest = Color(0xFF202824),
-    outline = Color(0xFF27312C), outlineVariant = Color(0xFF27312C), error = Color(0xFFD86A6A)
+    primary = Color(0xFFC8402F), onPrimary = Color(0xFFF2E8D0),
+    primaryContainer = Color(0xFF5A1F16), onPrimaryContainer = Color(0xFFF2E8D0),
+    secondary = Color(0xFFA8A08C), onSecondary = Color(0xFF1E1A16),
+    secondaryContainer = Color(0xFF2A2520), onSecondaryContainer = Color(0xFFF2E8D0),
+    tertiary = Color(0xFFE3B54F),
+    background = Color(0xFF1E1A16), onBackground = Color(0xFFF2E8D0),
+    surface = Color(0xFF1E1A16), onSurface = Color(0xFFF2E8D0),
+    surfaceVariant = Color(0xFF2A2520), onSurfaceVariant = Color(0xFFA8A08C),
+    surfaceContainerLowest = Color(0xFF1A1714), surfaceContainerLow = Color(0xFF1E1A16),
+    surfaceContainer = Color(0xFF26221D), surfaceContainerHigh = Color(0xFF2A2520),
+    surfaceContainerHighest = Color(0xFF332D27),
+    outline = Color(0xFF3A342C), outlineVariant = Color(0xFF3A342C), error = Color(0xFFD86A6A)
 )
 
 val DmSans = FontFamily(
@@ -707,12 +708,17 @@ fun Empty(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                Image(painterResource(R.drawable.logo), null, Modifier.size(28.dp))
-                Spacer(Modifier.width(10.dp))
-                Column {
-                    Text("San Editor", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
-                    Text("Editor map GTA San Andreas", style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant)
+            Card(Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(containerColor = cs.primary)) {
+                Row(Modifier.fillMaxWidth().padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Image(painterResource(R.drawable.logo), null, Modifier.size(44.dp))
+                    Spacer(Modifier.width(12.dp))
+                    Column {
+                        Text("SAN EDITOR", fontFamily = DmSans, fontWeight = FontWeight.Black, fontSize = 26.sp,
+                            color = cs.onPrimary, letterSpacing = 1.sp,
+                            style = TextStyle(shadow = Shadow(color = Color(0xFF7A2216), offset = Offset(3f, 3f), blurRadius = 0f)))
+                        Text("Editor map GTA San Andreas", style = MaterialTheme.typography.bodySmall, color = cs.onPrimary)
+                    }
                 }
             }
 
@@ -888,6 +894,7 @@ fun ChangelogCard() {
         "Perbaikan: ID otomatis hanya memilih ID di bawah 20000. ID 20000 ke atas menyebabkan crash.",
         "Panduan penggunaan diperbarui sesuai fitur terbaru.",
         "Halaman awal lebih rapi: header ringkas, kartu error, dan kartu kosong saat belum ada file.",
+        "Tema baru: merah bata, krem, dan arang hangat dengan judul bergaya tebal.",
         "Konfirmasi keluar saat ada perubahan yang belum disimpan.",
         "Cari file di browser Pilih map.",
         "Perbaikan: gta3.img di dalam texdb/ kini ditemukan saat membuka folder game.",
