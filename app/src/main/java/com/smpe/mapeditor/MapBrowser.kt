@@ -92,6 +92,7 @@ fun MapBrowser(vm: EditorVM, tree: Uri, onOpen: (Uri) -> Unit, onClose: () -> Un
     var items by remember { mutableStateOf(emptyList<DocItem>()) }
     var ideSel by remember { mutableStateOf<DocItem?>(null) }
     var msg by remember { mutableStateOf("") }
+    var q by remember { mutableStateOf("") }
     val cur = path.last().first
     LaunchedEffect(cur) { items = withContext(Dispatchers.IO) { listChildren(ctx, tree, cur) } }
 
@@ -102,9 +103,11 @@ fun MapBrowser(vm: EditorVM, tree: Uri, onOpen: (Uri) -> Unit, onClose: () -> Un
             TextButton(onClick = onNew) { Text("Buat IPL baru") }
             TextButton(onClick = onClose) { Text("Tutup") }
         }
+        OutlinedTextField(value = q, onValueChange = { q = it }, label = { Text("Cari file") },
+            singleLine = true, modifier = Modifier.fillMaxWidth())
         if (path.size > 1) TextButton(onClick = { path = path.dropLast(1); ideSel = null; msg = "" }) { Text("Naik") }
         Column(Modifier.weight(1f).verticalScroll(rememberScrollState())) {
-            for (item in items) {
+            for (item in items.filter { it.isDir || it.name.contains(q, ignoreCase = true) }) {
                 val show = item.isDir || item.name.endsWith(".ide", true) || item.name.endsWith(".ipl", true)
                 if (show) {
                     Text(if (item.isDir) "[DIR] " + item.name else item.name,

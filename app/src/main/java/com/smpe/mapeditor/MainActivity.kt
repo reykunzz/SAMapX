@@ -7,6 +7,7 @@ import android.net.Uri
 import android.os.Bundle
 import android.provider.OpenableColumns
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -508,6 +509,8 @@ fun App(vm: EditorVM = viewModel()) {
     val scope = rememberCoroutineScope()
     var tab by remember { mutableIntStateOf(0) }
     var browsing by remember { mutableStateOf(false) }
+    var showExitConfirm by remember { mutableStateOf(false) }
+    BackHandler(enabled = vm.entries.isNotEmpty() && vm.dirty) { showExitConfirm = true }
     val prefs = remember { ctx.getSharedPreferences("smpe", Context.MODE_PRIVATE) }
     fun say(m: String) { scope.launch { snack.showSnackbar(m) } }
 
@@ -669,6 +672,15 @@ fun App(vm: EditorVM = viewModel()) {
                 else MapBrowser(vm, Uri.parse(t), onOpen = { u -> openUri(u); browsing = false }, onClose = { browsing = false }, onNew = { vm.newFile(); tab = 0; browsing = false })
             }
         }
+        if (showExitConfirm) AlertDialog(
+            onDismissRequest = { showExitConfirm = false },
+            title = { Text("Ada perubahan belum disimpan") },
+            text = { Text("Keluar sekarang akan membuang perubahan yang belum disimpan. Gunakan Simpan di menu atas dulu jika ingin menyimpannya.") },
+            confirmButton = {
+                TextButton(onClick = { showExitConfirm = false; (ctx as? android.app.Activity)?.finish() }) { Text("Keluar") }
+            },
+            dismissButton = { TextButton(onClick = { showExitConfirm = false }) { Text("Batal") } }
+        )
         if (vm.picker) ModelPicker(vm)
         vm.diag?.let { DiagDialog(vm, it) }
     }
@@ -695,8 +707,14 @@ fun Empty(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Image(painterResource(R.drawable.logo), null, Modifier.size(84.dp))
-            Text("Kelola dan edit map GTA San Andreas.", textAlign = TextAlign.Center, color = cs.onSurfaceVariant)
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                Image(painterResource(R.drawable.logo), null, Modifier.size(28.dp))
+                Spacer(Modifier.width(10.dp))
+                Column {
+                    Text("San Editor", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                    Text("Editor map GTA San Andreas", style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant)
+                }
+            }
 
             val folderReady = gameStatus.isNotBlank() && !gameStatus.startsWith("Gagal")
             Card(Modifier.fillMaxWidth(), shape = RoundedCornerShape(20.dp),
@@ -706,6 +724,15 @@ fun Empty(
                     StepRow(folderReady, "1. Pilih folder game", "Pilih folder files di kartu Folder GTA San Andreas.")
                     StepRow(false, "2. Pilih map", "Tekan Pilih map, lalu pilih file .ipl yang mau diedit.")
                     StepRow(false, "3. Edit dan simpan", "Pindahkan atau tambah objek, lalu tekan Simpan.")
+                }
+            }
+
+            if (gameStatus.startsWith("Gagal")) Card(Modifier.fillMaxWidth(), shape = RoundedCornerShape(20.dp),
+                colors = CardDefaults.cardColors(containerColor = cs.errorContainer)) {
+                Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text("Folder belum benar", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold, color = cs.onErrorContainer)
+                    Text("Pilih folder files yang berisi data, models, dan texdb.", style = MaterialTheme.typography.bodySmall, color = cs.onErrorContainer)
+                    OutlinedButton(onClick = onPickFolder) { Text("Pilih ulang") }
                 }
             }
 
@@ -738,9 +765,22 @@ fun Empty(
                     Button(onClick = onBrowse, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(14.dp)) {
                         Text("Pilih map")
                     }
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                        TextButton(onClick = onPickFolder) { Text("Ganti folder") }
+                        TextButton(onClick = onNew) { Text("Buat IPL baru") }
+                    }
                 }
             }
 
+            if (recents.isEmpty()) Card(Modifier.fillMaxWidth(), shape = RoundedCornerShape(20.dp),
+                colors = CardDefaults.cardColors(containerColor = cs.surfaceVariant)) {
+                Column(Modifier.fillMaxWidth().padding(20.dp), horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Icon(Icons.Default.List, null, tint = cs.onSurfaceVariant)
+                    Text("Belum ada file dibuka", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
+                    Text("File yang Anda buka akan muncul di sini.", style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant)
+                }
+            }
             if (recents.isNotEmpty()) Card(Modifier.fillMaxWidth(), shape = RoundedCornerShape(20.dp),
                 colors = CardDefaults.cardColors(containerColor = cs.surfaceVariant)) {
                 Column(Modifier.fillMaxWidth().padding(vertical = 8.dp)) {
@@ -751,6 +791,8 @@ fun Empty(
                     for (r in recents) {
                         Row(Modifier.fillMaxWidth().clickable { onRecent(r) }.padding(horizontal = 18.dp, vertical = 10.dp),
                             verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.Default.List, null, tint = cs.onSurfaceVariant, modifier = Modifier.size(18.dp))
+                            Spacer(Modifier.width(10.dp))
                             Text(r.name, Modifier.weight(1f), maxLines = 1, fontWeight = FontWeight.Medium)
                             Spacer(Modifier.width(10.dp))
                             Text(
@@ -845,6 +887,9 @@ fun ChangelogCard() {
         "Tambah model ke IDE: pilih model dari gta3.img, isi ID dan TXD, lalu tulis ke file IDE.",
         "Perbaikan: ID otomatis hanya memilih ID di bawah 20000. ID 20000 ke atas menyebabkan crash.",
         "Panduan penggunaan diperbarui sesuai fitur terbaru.",
+        "Halaman awal lebih rapi: header ringkas, kartu error, dan kartu kosong saat belum ada file.",
+        "Konfirmasi keluar saat ada perubahan yang belum disimpan.",
+        "Cari file di browser Pilih map.",
         "Perbaikan: gta3.img di dalam texdb/ kini ditemukan saat membuka folder game.",
         "Perbaikan: model yang hanya ada di gta3.img kini muncul di daftar Tambah model ke IDE.",
         "Grid: tombol Grid mengatur grid biru di tanah (menyala secara default).",
