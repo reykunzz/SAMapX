@@ -8,13 +8,14 @@ Catatan: IPL biner (bnry) belum didukung. Ini bukan port Ariane; terinspirasi da
 
 ## Panduan penggunaan
 
-1. **Siapkan folder map.** Buat folder (misalnya `map`) yang berisi `gta3.img`, folder `Maps`, dan folder `texdb`. Di Android 11 ke atas, `Android/data` tidak bisa dipilih, jadi salin dulu folder game ke `Download`.
-2. **Pilih folder GTA SA.** Di halaman awal, tekan **Pilih** pada kartu "Folder GTA San Andreas", lalu pilih folder `map`. Fungsinya agar model dan tekstur asli tampil di 3D.
-3. **Buka atau buat IPL.** Tekan **Buka File IPL** untuk membuka file `.ipl` teks, atau **Buat IPL baru** untuk file kosong. IPL biner (`bnry`) belum didukung.
-4. **Tab Objek.** Cari berdasarkan nama model atau ID, dan pakai filter Semua, Luar, Interior, atau LOD. Ketuk kartu objek untuk mengubah Model, ID, X, Y, Z, lalu tekan **Terapkan**. Tombol **Objek baru** di pojok kanan bawah menambah objek.
-5. **Tab 3D.** Geser satu jari untuk memutar kamera, cubit untuk zoom. Ketuk objek untuk memilihnya, lalu seret panah merah (X), hijau (Y), atau biru (Z) untuk menggeser. Toolbar berisi Putar, Geser, Fokus, Tampilkan semua, Urungkan, Ulangi, Snap, dan Inspector.
-6. **Inspector.** Tab **Objek** berisi tombol geser dan rotasi. Tab **Stream** menampilkan objek detail dari file stream biner, hanya untuk dilihat. Gunakan **Salin ke IPL** agar bisa diedit. Tab **Adegan** berisi Tambah objek, jarak pandang, balik tekstur, dan sembunyikan LOD.
-7. **Simpan.** Tombol **Simpan** menimpa file asli. Titik kuning berarti ada perubahan yang belum disimpan. **Simpan sebagai**, **Urungkan**, **Ulangi**, dan **Diagnosa file game** ada di menu titik tiga.
+1. **Pilih folder game.** Di halaman awal, tekan Ganti pada kartu Folder GTA San Andreas, lalu pilih folder files yang berisi data, models, dan texdb.
+2. **Pilih map.** Tekan Pilih map. Buka data, lalu maps, lalu pilih folder wilayah (misalnya LA). Tekan file .ipl untuk mengedit objek, atau file .ide untuk menambah model.
+3. **Tambah model ke IDE.** Di file .ide, cari model di kolom Cari model dari gta3.img. Hanya model yang ada di gta3.img dan belum punya ID yang ditampilkan. Isi ID (atau tekan ID otomatis, hasilnya di bawah 20000), isi nama TXD, lalu tekan Tambah ke IDE. File IDE lama dicadangkan otomatis.
+4. **Tambah objek ke IPL.** Buka file .ipl, lalu tekan Tambah objek dan pilih model yang sudah punya ID. Atur posisi, lalu Simpan.
+5. **Tampilan 3D.** Buka tab 3D. Geser satu jari untuk memutar kamera, cubit untuk zoom. Ketuk objek untuk memilihnya, lalu seret panah X, Y, atau Z untuk menggeser. Toolbar berisi Putar, Geser, Fokus, Grid, Tampilan atas, Pilih banyak, dan Inspector.
+6. **Inspector.** Tab Objek berisi tombol geser, rotasi, Kunci, dan Hapus. Tab Adegan berisi Tambah objek, Ganti model, dan Tanah.
+7. **Simpan.** Tombol Simpan menimpa file asli. Titik kuning berarti ada perubahan yang belum disimpan. Menu titik tiga berisi Simpan sebagai, Urungkan, Ulangi, dan Diagnosa file game.
+8. **Aturan penting.** Pakai ID di bawah 20000. ID 20000 ke atas membuat game crash. Pastikan nama model sama persis di IDE, IPL, dan gta3.img. Backup gta3.img sebelum mengubahnya.
 
 ## Tampilan atas dan pilih banyak (1.4.0)
 
@@ -33,7 +34,7 @@ Catatan: model impor hanya bisa dilihat dan ditempatkan di editor. Agar muncul d
 ## Changelog
 
 ### 1.7.0
-- Jelajah folder map: tombol Jelajah folder map di halaman awal menampilkan folder dan file di files/data (buka folder, pilih .ipl untuk diedit, .ide untuk tambah model).
+- Pilih map: tombol Pilih map di halaman awal menampilkan folder dan file di files/data (buka folder, pilih .ipl untuk diedit, .ide untuk tambah model).
 - Tambah model ke IDE: pilih model dari gta3.img yang belum punya ID, isi ID dan nama TXD, lalu aplikasi menulis satu baris ke blok objs. File IDE lama dicadangkan di penyimpanan aplikasi.
 - Model yang baru ditambahkan langsung muncul di Tambah objek tanpa perlu membuka ulang folder game.
 

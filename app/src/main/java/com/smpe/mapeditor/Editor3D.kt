@@ -448,7 +448,7 @@ fun Panel(vm: EditorVM, gl: GlScene, st: FloatArray, modifier: Modifier) {
         }
         if (tab == 2) {
         SectionCard("ADEGAN") {
-            Button(onClick = { vm.picker = true }, shape = RoundedCornerShape(14.dp), modifier = Modifier.fillMaxWidth()) { Text("Tambah objek") }
+            Button(onClick = { vm.picker = true }, shape = RoundedCornerShape(14.dp), modifier = Modifier.fillMaxWidth()) { Text("Taruh objek") }
             ReplaceModelCard(vm)
             Text("Jarak pandang: ${viewDist.toInt()} m", style = MaterialTheme.typography.labelMedium)
             Slider(value = viewDist, onValueChange = { viewDist = it; gl.viewDist = it; gl.requestRender() }, valueRange = 150f..2500f)
@@ -536,7 +536,7 @@ fun ModelPicker(vm: EditorVM) {
     AlertDialog(
         onDismissRequest = { vm.picker = false },
         confirmButton = { TextButton(onClick = { vm.picker = false }) { Text("Batal") } },
-        title = { Text("Tambah objek") },
+        title = { Text("Taruh objek") },
         text = {
             Column {
                 OutlinedTextField(value = q, onValueChange = { q = it }, singleLine = true, shape = RoundedCornerShape(14.dp),

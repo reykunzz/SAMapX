@@ -666,7 +666,7 @@ fun App(vm: EditorVM = viewModel()) {
                     Text("Pilih folder GTA SA dulu.")
                     TextButton(onClick = { browsing = false }) { Text("Tutup") }
                 }
-                else MapBrowser(vm, Uri.parse(t), onOpen = { u -> openUri(u); browsing = false }, onClose = { browsing = false })
+                else MapBrowser(vm, Uri.parse(t), onOpen = { u -> openUri(u); browsing = false }, onClose = { browsing = false }, onNew = { vm.newFile(); tab = 0; browsing = false })
             }
         }
         if (vm.picker) ModelPicker(vm)
@@ -698,6 +698,17 @@ fun Empty(
             Image(painterResource(R.drawable.logo), null, Modifier.size(84.dp))
             Text("Kelola dan edit map GTA San Andreas.", textAlign = TextAlign.Center, color = cs.onSurfaceVariant)
 
+            val folderReady = gameStatus.isNotBlank() && !gameStatus.startsWith("Gagal")
+            Card(Modifier.fillMaxWidth(), shape = RoundedCornerShape(20.dp),
+                colors = CardDefaults.cardColors(containerColor = cs.surfaceVariant)) {
+                Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Text("Langkah", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
+                    StepRow(folderReady, "1. Pilih folder game", "Pilih folder files di kartu Folder GTA San Andreas.")
+                    StepRow(false, "2. Pilih map", "Tekan Pilih map, lalu pilih file .ipl yang mau diedit.")
+                    StepRow(false, "3. Edit dan simpan", "Pindahkan atau tambah objek, lalu tekan Simpan.")
+                }
+            }
+
             Card(Modifier.fillMaxWidth(), shape = RoundedCornerShape(20.dp),
                 colors = CardDefaults.cardColors(containerColor = cs.surfaceVariant)) {
                 Row(Modifier.fillMaxWidth().padding(start = 18.dp, end = 10.dp, top = 12.dp, bottom = 12.dp),
@@ -706,7 +717,12 @@ fun Empty(
                     Spacer(Modifier.width(10.dp))
                     Column(Modifier.weight(1f)) {
                         Text("Folder GTA San Andreas", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
-                        Text(gameStatus.ifBlank { "Belum dipilih. Dipakai untuk model dan tekstur asli." },
+                        Text(
+                            when {
+                                gameStatus.isBlank() -> "Belum dipilih. Tekan Pilih."
+                                gameStatus.startsWith("Gagal") -> "Folder belum benar. Pilih folder files."
+                                else -> "Folder game terdeteksi \u2713"
+                            },
                             color = cs.onSurfaceVariant, style = MaterialTheme.typography.bodySmall, maxLines = 2)
                     }
                     TextButton(onClick = onPickFolder) { Text(if (gameStatus.isBlank()) "Pilih" else "Ganti") }
@@ -716,21 +732,11 @@ fun Empty(
             Card(Modifier.fillMaxWidth(), shape = RoundedCornerShape(20.dp),
                 colors = CardDefaults.cardColors(containerColor = cs.surfaceVariant)) {
                 Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Default.List, null, tint = cs.primary)
-                        Spacer(Modifier.width(10.dp))
-                        Text("Buka Map", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
-                    }
-                    Text("Pilih file IPL teks untuk mulai mengedit objek dan tampilan 3D.",
+                    Text("Pilih map", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
+                    Text("Pilih file map (.ipl) dari folder game. Dari sana Anda juga bisa mendaftarkan model dan membuat IPL baru.",
                         color = cs.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
-                    Button(onClick = onOpen, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(14.dp)) {
-                        Text("Buka File IPL")
-                    }
-                    OutlinedButton(onClick = onNew, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(14.dp)) {
-                        Text("Buat IPL baru")
-                    }
-                    OutlinedButton(onClick = onBrowse, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(14.dp)) {
-                        Text("Jelajah folder map")
+                    Button(onClick = onBrowse, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(14.dp)) {
+                        Text("Pilih map")
                     }
                 }
             }
@@ -767,13 +773,14 @@ fun Empty(
 @Composable
 fun GuideCard() {
     val steps = listOf(
-        "1. Siapkan folder map" to "Buat folder (misalnya map) yang berisi gta3.img, folder Maps, dan folder texdb. Di Android 11 ke atas, Android/data tidak bisa dipilih, jadi salin dulu folder game ke Download.",
-        "2. Pilih folder GTA SA" to "Di halaman awal, tekan Pilih pada kartu Folder GTA San Andreas, lalu pilih folder map tadi. Fungsinya agar model dan tekstur asli tampil di 3D.",
-        "3. Buka atau buat IPL" to "Tekan Buka File IPL untuk membuka file .ipl teks. Tekan Buat IPL baru untuk membuat file kosong. IPL biner (bnry) belum didukung.",
-        "4. Tab Objek" to "Cari berdasarkan nama model atau ID, dan pakai filter Semua, Luar, Interior, atau LOD. Ketuk kartu objek untuk mengubah Model, ID, X, Y, Z, lalu tekan Terapkan. Objek baru ditambah lewat tombol Objek baru.",
-        "5. Tab 3D" to "Geser satu jari untuk memutar kamera, cubit untuk zoom. Ketuk objek untuk memilihnya, lalu seret panah X, Y, atau Z untuk menggeser. Toolbar berisi Putar, Geser, Fokus, Tampilkan semua, Urungkan, Ulangi, Snap, dan Inspector.",
-        "6. Inspector" to "Tab Objek berisi tombol geser dan rotasi. Tab Stream menampilkan objek detail dari file stream biner, hanya untuk dilihat. Gunakan Salin ke IPL agar bisa diedit. Tab Adegan berisi Tambah objek, jarak pandang, balik tekstur, dan sembunyikan LOD.",
-        "7. Simpan" to "Tombol Simpan menimpa file asli. Titik kuning berarti ada perubahan yang belum disimpan. Simpan sebagai, Urungkan, Ulangi, dan Diagnosa file game ada di menu titik tiga."
+        "1. Pilih folder game" to "Di halaman awal, tekan Ganti pada kartu Folder GTA San Andreas, lalu pilih folder files yang berisi data, models, dan texdb. Jangan pilih texdb saja.",
+        "2. Pilih map" to "Tekan Pilih map. Buka data lalu maps, lalu pilih folder wilayah (misalnya LA). Tekan file .ipl untuk mengedit objek, atau file .ide untuk menambah model.",
+        "3. Tambah model ke IDE" to "Di file .ide, cari model di kolom Cari model dari gta3.img. Hanya model yang ada di gta3.img dan belum punya ID yang ditampilkan. Isi ID (atau tekan ID otomatis, hasilnya di bawah 20000), isi nama TXD, lalu tekan Tambah ke IDE. File IDE lama dicadangkan otomatis.",
+        "4. Taruh objek di IPL" to "Buka file .ipl, lalu tekan Tambah objek dan pilih model yang sudah punya ID. Atur posisi, lalu Simpan.",
+        "5. Tampilan 3D" to "Buka tab 3D. Geser satu jari untuk memutar kamera, cubit untuk zoom. Ketuk objek untuk memilihnya, lalu seret panah X, Y, atau Z untuk menggeser. Toolbar berisi Putar, Geser, Fokus, Grid, Tampilan atas, Pilih banyak, dan Inspector.",
+        "6. Inspector" to "Tab Objek berisi tombol geser, rotasi, Kunci, dan Hapus. Tab Adegan berisi Tambah objek, Ganti model, dan Tanah.",
+        "7. Simpan" to "Tombol Simpan menimpa file asli. Titik kuning berarti ada perubahan yang belum disimpan. Menu titik tiga berisi Simpan sebagai, Urungkan, Ulangi, dan Diagnosa file game.",
+        "8. Aturan penting" to "Pakai ID di bawah 20000. ID 20000 ke atas membuat game crash. Pastikan nama model sama persis di IDE, IPL, dan gta3.img. Backup gta3.img sebelum mengubahnya."
     )
     var open by remember { mutableStateOf(false) }
     Card(
@@ -834,9 +841,10 @@ fun ChangelogCard() {
         "Perbaikan: nama dan ID model impor diperiksa terhadap game. ID baru dipilih otomatis dan ekspor dibatalkan jika ada bentrok.",
         "Dihapus: impor DFF/TXD dan export paket custom. Gunakan model dari daftar game.",
         "Tambah objek: hanya model yang punya ID di IDE game yang ditampilkan.",
-        "Jelajah folder map: buka file IDE dan IPL dari daftar, tanpa memilih file satu per satu.",
+        "Pilih map: buka file IDE dan IPL dari daftar, tanpa memilih file satu per satu.",
         "Tambah model ke IDE: pilih model dari gta3.img, isi ID dan TXD, lalu tulis ke file IDE.",
         "Perbaikan: ID otomatis hanya memilih ID di bawah 20000. ID 20000 ke atas menyebabkan crash.",
+        "Panduan penggunaan diperbarui sesuai fitur terbaru.",
         "Perbaikan: gta3.img di dalam texdb/ kini ditemukan saat membuka folder game.",
         "Perbaikan: model yang hanya ada di gta3.img kini muncul di daftar Tambah model ke IDE.",
         "Grid: tombol Grid mengatur grid biru di tanah (menyala secara default).",
@@ -1211,6 +1219,19 @@ fun EditSheet(vm: EditorVM) {
                     colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.error)
                 ) { Icon(Icons.Default.Delete, null); Spacer(Modifier.width(6.dp)); Text("Hapus") }
             }
+        }
+    }
+}
+
+@Composable
+fun StepRow(done: Boolean, title: String, desc: String) {
+    val cs = MaterialTheme.colorScheme
+    Row(verticalAlignment = Alignment.Top) {
+        Text(if (done) "\u2713" else "\u25CB", color = if (done) cs.primary else cs.onSurfaceVariant,
+            fontWeight = FontWeight.Bold, modifier = Modifier.width(22.dp))
+        Column(Modifier.weight(1f)) {
+            Text(title, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
+            Text(desc, style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant)
         }
     }
 }

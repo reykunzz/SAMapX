@@ -85,7 +85,7 @@ fun addToIde(ctx: Context, docUri: Uri, ideName: String, newLine: String, id: In
 }
 
 @Composable
-fun MapBrowser(vm: EditorVM, tree: Uri, onOpen: (Uri) -> Unit, onClose: () -> Unit) {
+fun MapBrowser(vm: EditorVM, tree: Uri, onOpen: (Uri) -> Unit, onClose: () -> Unit, onNew: () -> Unit = {}) {
     val ctx = LocalContext.current
     val rootId = remember(tree) { DocumentsContract.getTreeDocumentId(tree) }
     var path by remember { mutableStateOf(listOf(Pair(rootId, ""))) }
@@ -99,6 +99,7 @@ fun MapBrowser(vm: EditorVM, tree: Uri, onOpen: (Uri) -> Unit, onClose: () -> Un
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text("files" + path.drop(1).joinToString("") { "/" + it.second }, Modifier.weight(1f),
                 style = MaterialTheme.typography.titleSmall, maxLines = 1)
+            TextButton(onClick = onNew) { Text("Buat IPL baru") }
             TextButton(onClick = onClose) { Text("Tutup") }
         }
         if (path.size > 1) TextButton(onClick = { path = path.dropLast(1); ideSel = null; msg = "" }) { Text("Naik") }
@@ -140,7 +141,7 @@ fun AddIdeCard(vm: EditorVM, tree: Uri, ide: DocItem, onMsg: (String) -> Unit) {
     LaunchedEffect(exact) { if (exact != null && model.isEmpty()) { model = exact; if (txd.isEmpty()) txd = exact } }
 
     Column(Modifier.fillMaxWidth().padding(top = 8.dp), verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(6.dp)) {
-        Text("Tambah model ke ${ide.name}", style = MaterialTheme.typography.titleSmall, fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold)
+        Text("Daftarkan model ke ${ide.name}", style = MaterialTheme.typography.titleSmall, fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold)
         OutlinedTextField(value = search, onValueChange = { search = it }, label = { Text("Cari model dari gta3.img") },
             singleLine = true, modifier = Modifier.fillMaxWidth())
         Column(Modifier.fillMaxWidth().height(160.dp).verticalScroll(rememberScrollState())) {
@@ -157,7 +158,7 @@ fun AddIdeCard(vm: EditorVM, tree: Uri, ide: DocItem, onMsg: (String) -> Unit) {
             if (model.isEmpty()) "  (ketuk nama model di daftar untuk memilihnya)" else "",
             style = MaterialTheme.typography.bodySmall)
         OutlinedTextField(value = idText, onValueChange = { idText = it.filter { ch -> ch.isDigit() } },
-            label = { Text("ID") }, singleLine = true, modifier = Modifier.fillMaxWidth())
+            label = { Text("ID (nomor unik, pakai di bawah 20000)") }, singleLine = true, modifier = Modifier.fillMaxWidth())
         OutlinedTextField(value = txd, onValueChange = { txd = it }, label = { Text("Nama TXD (kosong = nama model)") },
             singleLine = true, modifier = Modifier.fillMaxWidth())
         Row(horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(8.dp)) {
@@ -187,7 +188,7 @@ fun AddIdeCard(vm: EditorVM, tree: Uri, ide: DocItem, onMsg: (String) -> Unit) {
                         }
                     }
                 }
-            }, modifier = Modifier.weight(1f)) { Text("Tambah ke IDE") }
+            }, modifier = Modifier.weight(1f)) { Text("Daftarkan") }
         }
     }
 }
