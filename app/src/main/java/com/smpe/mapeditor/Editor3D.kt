@@ -649,19 +649,21 @@ fun ImportModelCard(vm: EditorVM, gl: GlScene) {
                     g.defs.containsKey(name) || g.customModels.containsKey(name) -> msg = "Nama '$name' sudah dipakai."
                     else -> {
                         val n = name; val tu = txdUri
+                        val used = vm.entries.filterIsInstance<Obj>().map { it.id }.toHashSet()
+                        var newId = 20000
+                        while (used.contains(newId)) newId++
+                        val id = newId
                         msg = "Mengimpor..."
                         scope.launch(Dispatchers.IO) {
                             val dff = try { ctx.contentResolver.openInputStream(du)?.use { it.readBytes() } } catch (e: Exception) { null }
                             val txd = tu?.let { try { ctx.contentResolver.openInputStream(it)?.use { s -> s.readBytes() } } catch (e: Exception) { null } }
                             val ok = dff != null && g.importModel(n, dff, txd)
+                            if (ok) { g.customIds[n] = id; CustomStore.save(ctx, n, id, dff!!, txd) }
                             withContext(Dispatchers.Main) {
                                 if (ok) {
-                                    val used = vm.entries.filterIsInstance<Obj>().map { it.id }.toHashSet()
-                                    var id = 20000
-                                    while (used.contains(id)) id++
                                     vm.sel = vm.add(n, id, gl.tx, gl.ty, gl.tz)
                                     gl.requestRender()
-                                    msg = "Model $n diimpor dan ditempatkan (ID $id)."
+                                    msg = "Model $n diimpor dan disimpan (ID $id). Belum masuk gta3.img, jadi jangan dimainkan di game dulu."
                                 } else {
                                     msg = "Gagal membaca DFF. Pastikan file format RenderWare (.dff)."
                                 }

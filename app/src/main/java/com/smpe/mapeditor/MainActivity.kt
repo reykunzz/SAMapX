@@ -206,6 +206,8 @@ class EditorVM : ViewModel() {
     fun ideText(): String {
         val seen = LinkedHashMap<Int, String>()
         for (e in entries) if (e is Obj && !seen.containsKey(e.id)) seen[e.id] = e.model.lowercase()
+        // Model impor ikut masuk IDE meski belum dipakai di IPL.
+        game?.customIds?.forEach { (name, id) -> if (!seen.containsKey(id)) seen[id] = name }
         return buildString {
             append("objs\n")
             for ((id, model) in seen) append("$id, $model, $model, 1, 300\n")
@@ -559,6 +561,7 @@ fun App(vm: EditorVM = viewModel()) {
         scope.launch(Dispatchers.IO) {
             try {
                 val g = GameData.open(ctx, u)
+                CustomStore.restore(ctx, g)
                 vm.game = g
                 vm.gameStatus = g.summary()
                 say("Data GTA SA siap: " + g.summary())
@@ -806,6 +809,9 @@ fun ChangelogCard() {
         "Grid tanah dan penggaris: tombol Grid di toolbar. Pilih 2 objek untuk melihat jaraknya.",
         "Kunci objek: objek terkunci tidak bisa digeser, diputar, atau diubah posisinya.",
         "Perbaikan: grid tidak lagi crash saat dinyalakan.",
+        "Model impor disimpan dan dipulihkan saat game dibuka lagi (tidak lagi berubah jadi kubus).",
+        "Simpan IDE menyertakan semua model impor.",
+        "Peringatan: model impor belum masuk gta3.img, jadi belum bisa dipakai di game.",
         "Grid: tombol Grid mengatur grid biru di tanah (menyala secara default).",
         "Pencarian model lengkap: daftar dari IDE, gta3.img, dan model impor.",
         "Ganti model: ganti semua objek bernama tertentu dalam satu langkah.",

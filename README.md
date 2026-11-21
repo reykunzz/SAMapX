@@ -32,6 +32,11 @@ Catatan: model impor hanya bisa dilihat dan ditempatkan di editor. Agar muncul d
 
 ## Changelog
 
+### 1.5.3
+- Model impor disimpan di penyimpanan aplikasi dan dipulihkan saat game dibuka lagi. Model tidak lagi berubah jadi kubus setelah aplikasi dibuka ulang.
+- Simpan IDE menyertakan semua model impor, termasuk yang belum dipakai di IPL.
+- Peringatan: model impor belum masuk gta3.img, jadi jangan dipakai di game dulu.
+
 ### 1.5.0
 - Perbaikan: grid tidak lagi crash saat dinyalakan.
 - Grid biru di tanah sekarang diatur tombol Grid (menyala secara default). Grid ganda sudah dihapus.

@@ -15,7 +15,7 @@ import java.util.concurrent.atomic.AtomicInteger
 import kotlin.math.max
 import kotlin.math.sqrt
 
-const val BUILD_TAG = "SanEditor-1.5.2"
+const val BUILD_TAG = "SanEditor-1.5.3"
 
 class ImgEntry(val offset: Long, val size: Int)
 class TexData(val key: String, val w: Int, val h: Int, val rgba: ByteArray)
@@ -493,6 +493,8 @@ class GameData private constructor(private val fis: FileInputStream, private val
 
     /** Model hasil impor DFF (di luar gta3.img). Tidak ikut di-purge. */
     val customModels = java.util.concurrent.ConcurrentHashMap<String, ModelData>()
+    /** ID IPL untuk tiap model impor (dipakai saat membuat IDE). */
+    val customIds = java.util.concurrent.ConcurrentHashMap<String, Int>()
 
     /** Semua nama model: dari IDE, gta3.img (.dff), dan impor. Pasangan (nama, ID); ID 0 kalau belum diketahui. */
     fun allModels(): List<Pair<String, Int>> {
