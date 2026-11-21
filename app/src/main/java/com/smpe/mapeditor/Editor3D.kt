@@ -451,6 +451,7 @@ fun Panel(vm: EditorVM, gl: GlScene, st: FloatArray, modifier: Modifier) {
             Button(onClick = { vm.picker = true }, shape = RoundedCornerShape(14.dp), modifier = Modifier.fillMaxWidth()) { Text("Tambah objek") }
             ImportModelCard(vm, gl)
             ReplaceModelCard(vm)
+            ExportCard(vm)
             Text("Jarak pandang: ${viewDist.toInt()} m", style = MaterialTheme.typography.labelMedium)
             Slider(value = viewDist, onValueChange = { viewDist = it; gl.viewDist = it; gl.requestRender() }, valueRange = 150f..2500f)
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -739,6 +740,32 @@ fun ReplaceModelCard(vm: EditorVM) {
             },
             shape = RoundedCornerShape(14.dp), modifier = Modifier.fillMaxWidth()
         ) { Text("Ganti semua") }
+        if (msg.isNotEmpty()) Text(msg, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+    }
+}
+
+@Composable
+fun ExportCard(vm: EditorVM) {
+    val ctx = LocalContext.current
+    val scope = rememberCoroutineScope()
+    var msg by remember { mutableStateOf("") }
+    Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text("Export paket mod", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
+        Text("Membuat IDE, IPL, dan DFF/TXD model impor dalam satu folder. Lalu disalin ke folder game dengan Termux.",
+            style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Button(
+            onClick = {
+                val g = vm.game
+                if (g == null) { msg = "Pilih folder GTA SA dulu."; return@Button }
+                val snap = vm.entries.toList()
+                msg = "Mengekspor..."
+                scope.launch(Dispatchers.IO) {
+                    val r = try { ModExport.export(ctx, g, snap) } catch (e: Exception) { "Gagal: ${e.message}" }
+                    withContext(Dispatchers.Main) { msg = r }
+                }
+            },
+            modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(14.dp)
+        ) { Text("Export paket mod") }
         if (msg.isNotEmpty()) Text(msg, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }

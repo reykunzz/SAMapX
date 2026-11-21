@@ -812,6 +812,7 @@ fun ChangelogCard() {
         "Model impor disimpan dan dipulihkan saat game dibuka lagi (tidak lagi berubah jadi kubus).",
         "Simpan IDE menyertakan semua model impor.",
         "Peringatan: model impor belum masuk gta3.img, jadi belum bisa dipakai di game.",
+        "Export paket mod: membuat IDE, IPL, dan DFF/TXD dalam struktur folder game.",
         "Grid: tombol Grid mengatur grid biru di tanah (menyala secara default).",
         "Pencarian model lengkap: daftar dari IDE, gta3.img, dan model impor.",
         "Ganti model: ganti semua objek bernama tertentu dalam satu langkah.",

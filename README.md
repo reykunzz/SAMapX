@@ -32,6 +32,11 @@ Catatan: model impor hanya bisa dilihat dan ditempatkan di editor. Agar muncul d
 
 ## Changelog
 
+### 1.6.0
+- Export paket mod: membuat IDE, IPL, dan DFF/TXD model impor dalam struktur folder game (data/maps/custom, models/gta3, texdb/txd).
+- Peringatan sebelum export jika ada objek dengan ID yang tidak dikenal.
+- Panduan pemasangan ada di BACA_DULU.txt di dalam folder export.
+
 ### 1.5.3
 - Model impor disimpan di penyimpanan aplikasi dan dipulihkan saat game dibuka lagi. Model tidak lagi berubah jadi kubus setelah aplikasi dibuka ulang.
 - Simpan IDE menyertakan semua model impor, termasuk yang belum dipakai di IPL.
