@@ -135,6 +135,10 @@ fun AddIdeCard(vm: EditorVM, tree: Uri, ide: DocItem, onMsg: (String) -> Unit) {
     val candidates = g?.defList?.filter { it.id == 0 && it.lc.contains(search.trim().lowercase().removeSuffix(".dff")) }
         ?.map { it.lc }?.take(20) ?: emptyList()
 
+    // Jika nama yang diketik sama persis dengan satu kandidat, langsung terpilih.
+    val exact = candidates.firstOrNull { it == search.trim().lowercase().removeSuffix(".dff") }
+    LaunchedEffect(exact) { if (exact != null && model.isEmpty()) { model = exact; if (txd.isEmpty()) txd = exact } }
+
     Column(Modifier.fillMaxWidth().padding(top = 8.dp), verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(6.dp)) {
         Text("Tambah model ke ${ide.name}", style = MaterialTheme.typography.titleSmall, fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold)
         OutlinedTextField(value = search, onValueChange = { search = it }, label = { Text("Cari model dari gta3.img") },
@@ -149,7 +153,9 @@ fun AddIdeCard(vm: EditorVM, tree: Uri, ide: DocItem, onMsg: (String) -> Unit) {
             "Tidak ada model yang bisa ditambahkan. Model yang sudah punya ID di IDE game tidak ditampilkan. " +
             "Model baru harus di-add dulu ke gta3.img dengan nama DFF yang belum dipakai game.",
             style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        Text("Terpilih: " + model.ifEmpty { "-" }, style = MaterialTheme.typography.bodySmall)
+        Text("Terpilih: " + model.ifEmpty { "-" } +
+            if (model.isEmpty()) "  (ketuk nama model di daftar untuk memilihnya)" else "",
+            style = MaterialTheme.typography.bodySmall)
         OutlinedTextField(value = idText, onValueChange = { idText = it.filter { ch -> ch.isDigit() } },
             label = { Text("ID") }, singleLine = true, modifier = Modifier.fillMaxWidth())
         OutlinedTextField(value = txd, onValueChange = { txd = it }, label = { Text("Nama TXD (kosong = nama model)") },

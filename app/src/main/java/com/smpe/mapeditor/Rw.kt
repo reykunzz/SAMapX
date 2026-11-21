@@ -15,7 +15,7 @@ import java.util.concurrent.atomic.AtomicInteger
 import kotlin.math.max
 import kotlin.math.sqrt
 
-const val BUILD_TAG = "SanEditor-1.7.3"
+const val BUILD_TAG = "SanEditor-1.7.5"
 
 class ImgEntry(val offset: Long, val size: Int)
 class TexData(val key: String, val w: Int, val h: Int, val rgba: ByteArray)
@@ -510,11 +510,11 @@ class GameData private constructor(private val fis: FileInputStream, private val
     /** ID sudah didefinisikan oleh IDE game. */
     fun idTaken(id: Int): Boolean = defList.any { it.id == id }
 
-    /** ID kosong berikutnya: di atas ID tertinggi yang dipakai, dimulai dari 20000. */
+    /** ID kosong berikutnya. Game ini crash untuk ID 20000 ke atas, jadi hanya memilih di bawah 20000. Mengembalikan 0 jika tidak ada. */
     fun nextFreeId(extra: Set<Int> = emptySet()): Int {
-        var id = maxOf(20000, defList.maxOfOrNull { it.id } ?: 0, customIds.values.maxOrNull() ?: 0) + 1
-        while (idTaken(id) || customIds.containsValue(id) || extra.contains(id)) id++
-        return id
+        var id = maxOf(18000, defList.filter { it.id in 1..19998 }.maxOfOrNull { it.id } ?: 0) + 1
+        while (id < 20000 && (idTaken(id) || customIds.containsValue(id) || extra.contains(id))) id++
+        return if (id < 20000) id else 0
     }
 
     /** Semua nama model: dari IDE, gta3.img (.dff), dan impor. Pasangan (nama, ID); ID 0 kalau belum diketahui. */

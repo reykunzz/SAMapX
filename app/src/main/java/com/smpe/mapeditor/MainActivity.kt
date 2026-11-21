@@ -836,6 +836,7 @@ fun ChangelogCard() {
         "Tambah objek: hanya model yang punya ID di IDE game yang ditampilkan.",
         "Jelajah folder map: buka file IDE dan IPL dari daftar, tanpa memilih file satu per satu.",
         "Tambah model ke IDE: pilih model dari gta3.img, isi ID dan TXD, lalu tulis ke file IDE.",
+        "Perbaikan: ID otomatis hanya memilih ID di bawah 20000. ID 20000 ke atas menyebabkan crash.",
         "Perbaikan: gta3.img di dalam texdb/ kini ditemukan saat membuka folder game.",
         "Perbaikan: model yang hanya ada di gta3.img kini muncul di daftar Tambah model ke IDE.",
         "Grid: tombol Grid mengatur grid biru di tanah (menyala secara default).",
