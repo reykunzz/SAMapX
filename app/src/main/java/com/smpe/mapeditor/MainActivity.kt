@@ -396,20 +396,20 @@ fun DrawScope.label(tm: TextMeasurer, text: String, x: Float, y: Float) {
 }
 
 // ---------- Theme ----------
-// Deep Emerald: latar hijau-hitam, aksen zamrud gelap, teks putih kehijauan lembut.
+// Dark Slate Soft: abu-abu kebiruan yang sedikit terang dan nyaman dilihat.
 private val Scheme = darkColorScheme(
-    primary = Color(0xFFC8402F), onPrimary = Color(0xFFF2E8D0),
-    primaryContainer = Color(0xFF5A1F16), onPrimaryContainer = Color(0xFFF2E8D0),
-    secondary = Color(0xFFA8A08C), onSecondary = Color(0xFF1E1A16),
-    secondaryContainer = Color(0xFF2A2520), onSecondaryContainer = Color(0xFFF2E8D0),
-    tertiary = Color(0xFFE3B54F),
-    background = Color(0xFF1E1A16), onBackground = Color(0xFFF2E8D0),
-    surface = Color(0xFF1E1A16), onSurface = Color(0xFFF2E8D0),
-    surfaceVariant = Color(0xFF2A2520), onSurfaceVariant = Color(0xFFA8A08C),
-    surfaceContainerLowest = Color(0xFF1A1714), surfaceContainerLow = Color(0xFF1E1A16),
-    surfaceContainer = Color(0xFF26221D), surfaceContainerHigh = Color(0xFF2A2520),
-    surfaceContainerHighest = Color(0xFF332D27),
-    outline = Color(0xFF3A342C), outlineVariant = Color(0xFF3A342C), error = Color(0xFFD86A6A)
+    primary = Color(0xFF607D91), onPrimary = Color(0xFFE5E9EC),
+    primaryContainer = Color(0xFF3F5668), onPrimaryContainer = Color(0xFFE5E9EC),
+    secondary = Color(0xFFA6B0B8), onSecondary = Color(0xFF1C2329),
+    secondaryContainer = Color(0xFF343D46), onSecondaryContainer = Color(0xFFE5E9EC),
+    tertiary = Color(0xFF7895A8),
+    background = Color(0xFF1C2329), onBackground = Color(0xFFE5E9EC),
+    surface = Color(0xFF1C2329), onSurface = Color(0xFFE5E9EC),
+    surfaceVariant = Color(0xFF292F36), onSurfaceVariant = Color(0xFFA6B0B8),
+    surfaceContainerLowest = Color(0xFF181E23), surfaceContainerLow = Color(0xFF222930),
+    surfaceContainer = Color(0xFF292F36), surfaceContainerHigh = Color(0xFF343D46),
+    surfaceContainerHighest = Color(0xFF3D4852),
+    outline = Color(0xFF414B55), outlineVariant = Color(0xFF414B55), error = Color(0xFFD87979)
 )
 
 val RussoOne = FontFamily(Font(R.font.russo_one, FontWeight.Normal))
@@ -718,7 +718,7 @@ fun Empty(
                     Column {
                         Text("SAN EDITOR", fontFamily = RussoOne, fontWeight = FontWeight.Normal, fontSize = 26.sp,
                             color = cs.onPrimary, letterSpacing = 1.sp,
-                            style = TextStyle(shadow = Shadow(color = Color(0xFF7A2216), offset = Offset(3f, 3f), blurRadius = 0f)))
+                            style = TextStyle(shadow = Shadow(color = Color(0xFF30404C), offset = Offset(3f, 3f), blurRadius = 0f)))
                         Text("Editor map GTA San Andreas", style = MaterialTheme.typography.bodySmall, color = cs.onPrimary)
                     }
                 }
