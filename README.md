@@ -32,6 +32,12 @@ Catatan: model impor hanya bisa dilihat dan ditempatkan di editor. Agar muncul d
 
 ## Changelog
 
+### 1.6.1
+- Nama model impor diperiksa terhadap IDE game dan gta3.img. Nama yang sudah dipakai ditolak.
+- ID model impor dipilih otomatis dari ID kosong di atas ID tertinggi game.
+- Ekspor dibatalkan jika ada bentrok nama atau ID, supaya game tidak crash.
+- Model impor yang bentrok saat dipulihkan dilewati.
+
 ### 1.6.0
 - Export paket mod: membuat IDE, IPL, dan DFF/TXD model impor dalam struktur folder game (data/maps/custom, models/gta3, texdb/txd).
 - Peringatan sebelum export jika ada objek dengan ID yang tidak dikenal.

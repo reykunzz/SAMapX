@@ -23,6 +23,17 @@ object ModExport {
         val defIds = g.defList.map { it.id }.toHashSet()
         val custom = g.customIds.toSortedMap()
 
+        // Bentrok nama atau ID dengan game akan membuat game crash, jadi ekspor dibatalkan.
+        val conflicts = ArrayList<String>()
+        for ((name, id) in custom) {
+            if (g.defList.any { it.lc == name }) conflicts += "$name: nama sudah ada di game"
+            if (g.defList.any { it.id == id && it.lc != name }) conflicts += "$name: ID $id sudah dipakai game"
+            if (g.imgIndex.keys.any { it.equals("$name.dff", ignoreCase = true) }) conflicts += "$name: ada di gta3.img"
+        }
+        if (conflicts.isNotEmpty())
+            return "EKSPOR DIBATALKAN, ada bentrok:\n" + conflicts.joinToString("\n") +
+                "\nImpor ulang model dengan nama yang belum dipakai."
+
         // IDE: satu baris per model impor yang filenya masih tersimpan.
         val ide = StringBuilder("objs\n")
         var models = 0

@@ -647,13 +647,11 @@ fun ImportModelCard(vm: EditorVM, gl: GlScene) {
                     du == null -> msg = "Pilih file DFF dulu."
                     name.isEmpty() -> msg = "Isi nama model."
                     g == null -> msg = "Pilih folder GTA SA dulu."
-                    g.defs.containsKey(name) || g.customModels.containsKey(name) -> msg = "Nama '$name' sudah dipakai."
+                    g.nameTaken(name) -> msg = "Nama '$name' sudah dipakai game atau model lain. Pilih nama lain."
                     else -> {
                         val n = name; val tu = txdUri
                         val used = vm.entries.filterIsInstance<Obj>().map { it.id }.toHashSet()
-                        var newId = 20000
-                        while (used.contains(newId)) newId++
-                        val id = newId
+                        val id = g.nextFreeId(used)
                         msg = "Mengimpor..."
                         scope.launch(Dispatchers.IO) {
                             val dff = try { ctx.contentResolver.openInputStream(du)?.use { it.readBytes() } } catch (e: Exception) { null }

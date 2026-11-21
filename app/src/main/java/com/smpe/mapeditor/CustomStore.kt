@@ -31,6 +31,8 @@ object CustomStore {
             val dffFile = File(d, "$name.dff")
             if (!dffFile.exists()) continue
             val txdFile = File(d, "$name.txd")
+            // Lewati model yang namanya atau ID-nya sudah dipakai game, supaya tidak bentrok dengan IDE asli.
+            if (g.nameTaken(name) || g.idTaken(id)) continue
             if (g.importModel(name, dffFile.readBytes(), if (txdFile.exists()) txdFile.readBytes() else null)) {
                 g.customIds[name] = id
                 n++
