@@ -15,7 +15,7 @@ import java.util.concurrent.atomic.AtomicInteger
 import kotlin.math.max
 import kotlin.math.sqrt
 
-const val BUILD_TAG = "SanEditor-1.7.2"
+const val BUILD_TAG = "SanEditor-1.7.3"
 
 class ImgEntry(val offset: Long, val size: Int)
 class TexData(val key: String, val w: Int, val h: Int, val rgba: ByteArray)
@@ -770,9 +770,13 @@ class GameData private constructor(private val fis: FileInputStream, private val
                 for (f in ides) ctx.contentResolver.openInputStream(f.uri)?.use { g.parseIde(it.bufferedReader().readText()) }
                 for (n in names.filter { it.endsWith(".ide") }) g.readEntry(n)?.let { g.parseIde(String(it, Charsets.ISO_8859_1).replace("\u0000", "")) }
                 if (g.defList.isEmpty()) {
-                    for (n in names.filter { it.endsWith(".dff") }) { val d = ObjDef(0, n.removeSuffix(".dff"), ""); if (g.defs.put(d.lc, d) == null) g.defList.add(d) }
                     g.idsKnown = false
                     rep.append("IDE tidak ditemukan: daftar model diambil dari nama DFF (ID = 0, isi manual)\n")
+                }
+                // Model yang hanya ada di gta3.img (belum punya ID di IDE) selalu ikut daftar dengan ID 0.
+                for (n in names.filter { it.endsWith(".dff") }) {
+                    val d = ObjDef(0, n.removeSuffix(".dff"), "")
+                    if (g.defs.put(d.lc, d) == null) g.defList.add(d)
                 }
                 g.defList.sortBy { it.lc }
                 rep.append("Model terdaftar: ").append(g.defList.size).append("\n")

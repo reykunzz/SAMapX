@@ -837,6 +837,7 @@ fun ChangelogCard() {
         "Jelajah folder map: buka file IDE dan IPL dari daftar, tanpa memilih file satu per satu.",
         "Tambah model ke IDE: pilih model dari gta3.img, isi ID dan TXD, lalu tulis ke file IDE.",
         "Perbaikan: gta3.img di dalam texdb/ kini ditemukan saat membuka folder game.",
+        "Perbaikan: model yang hanya ada di gta3.img kini muncul di daftar Tambah model ke IDE.",
         "Grid: tombol Grid mengatur grid biru di tanah (menyala secara default).",
         "Pencarian model lengkap: daftar dari IDE, gta3.img, dan model impor.",
         "Ganti model: ganti semua objek bernama tertentu dalam satu langkah.",
