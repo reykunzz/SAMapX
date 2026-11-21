@@ -15,7 +15,7 @@ import java.util.concurrent.atomic.AtomicInteger
 import kotlin.math.max
 import kotlin.math.sqrt
 
-const val BUILD_TAG = "SanEditor-1.7.1"
+const val BUILD_TAG = "SanEditor-1.7.2"
 
 class ImgEntry(val offset: Long, val size: Int)
 class TexData(val key: String, val w: Int, val h: Int, val rgba: ByteArray)
@@ -712,7 +712,11 @@ class GameData private constructor(private val fis: FileInputStream, private val
                         val n = f.name?.lowercase() ?: continue
                         if (f.isDirectory) {
                             if (dirs.size < 40) dirs.add(n)
-                            if (n == "texdb") texdb = f else if (depth < 6 && n !in skip) walk(f, depth + 1)
+                            if (n == "texdb") {
+                                texdb = f
+                                // Di instalasi Android, gta3.img ada di dalam texdb/ (bukan di root).
+                                if (img == null) f.listFiles().firstOrNull { c -> c.name?.lowercase() == "gta3.img" }?.let { img = it }
+                            } else if (depth < 6 && n !in skip) walk(f, depth + 1)
                         } else {
                             val ext = n.substringAfterLast('.', "")
                             exts[ext] = (exts[ext] ?: 0) + 1
