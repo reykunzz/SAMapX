@@ -1,5 +1,6 @@
 package com.smpe.mapeditor
 
+import android.content.Intent
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.AlertDialog
@@ -487,6 +488,7 @@ fun nameOf(ctx: android.content.Context, u: Uri): String {
 @Composable
 fun App(vm: EditorVM = viewModel()) {
     val ctx = LocalContext.current
+    remember { I18n.load(ctx) }
     val snack = remember { SnackbarHostState() }
     // Menu awal: potret. Setelah file IPL dibuka (editor 3D): landscape.
     val activity = ctx as? android.app.Activity
@@ -722,7 +724,7 @@ fun Empty(
                         Text("SAN EDITOR", fontFamily = RussoOne, fontWeight = FontWeight.Normal, fontSize = 26.sp,
                             color = Color(0xFFE6EBF2), letterSpacing = 1.sp,
                             style = TextStyle(shadow = Shadow(color = Color(0xFF0B0E13), offset = Offset(0f, 4f), blurRadius = 8f)))
-                        Text("Editor map GTA San Andreas", style = MaterialTheme.typography.bodySmall, color = Color(0xFF8A96A6))
+                        Text(I18n.t("Editor map GTA San Andreas"), style = MaterialTheme.typography.bodySmall, color = Color(0xFF8A96A6))
                     }
                 }
             }
@@ -730,29 +732,30 @@ fun Empty(
             var showGuide by remember { mutableStateOf(false) }
             var showChangelog by remember { mutableStateOf(false) }
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                OutlinedButton(onClick = { showGuide = true }, modifier = Modifier.weight(1f), shape = RoundedCornerShape(14.dp)) { Text("Panduan") }
-                OutlinedButton(onClick = { showChangelog = true }, modifier = Modifier.weight(1f), shape = RoundedCornerShape(14.dp)) { Text("Changelog") }
+                OutlinedButton(onClick = { showGuide = true }, modifier = Modifier.weight(1f), shape = RoundedCornerShape(14.dp)) { Text(I18n.t("Panduan")) }
+                OutlinedButton(onClick = { showChangelog = true }, modifier = Modifier.weight(1f), shape = RoundedCornerShape(14.dp)) { Text(I18n.t("Changelog")) }
             }
             if (showGuide) GuideDialog { showGuide = false }
             if (showChangelog) ChangelogDialog { showChangelog = false }
+            SupportSection()
 
             val folderReady = gameStatus.isNotBlank() && !gameStatus.startsWith("Gagal")
             Card(Modifier.fillMaxWidth(), shape = RoundedCornerShape(20.dp),
                 colors = CardDefaults.cardColors(containerColor = cs.surfaceVariant)) {
                 Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Text("Langkah", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
-                    StepRow(folderReady, "1. Pilih folder game", "Pilih folder files di kartu Folder GTA San Andreas.")
-                    StepRow(false, "2. Pilih map", "Tekan Pilih map, lalu pilih file .ipl yang mau diedit.")
-                    StepRow(false, "3. Edit dan simpan", "Pindahkan atau tambah objek, lalu tekan Simpan.")
+                    Text(I18n.t("Langkah"), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
+                    StepRow(folderReady, I18n.t("1. Pilih folder game"), I18n.t("Pilih folder files di kartu Folder GTA San Andreas."))
+                    StepRow(false, I18n.t("2. Pilih map"), I18n.t("Tekan Pilih map, lalu pilih file .ipl yang mau diedit."))
+                    StepRow(false, I18n.t("3. Edit dan simpan"), I18n.t("Pindahkan atau tambah objek, lalu tekan Simpan."))
                 }
             }
 
             if (gameStatus.startsWith("Gagal")) Card(Modifier.fillMaxWidth(), shape = RoundedCornerShape(20.dp),
                 colors = CardDefaults.cardColors(containerColor = cs.errorContainer)) {
                 Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text("Folder belum benar", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold, color = cs.onErrorContainer)
-                    Text("Pilih folder files yang berisi data, models, dan texdb.", style = MaterialTheme.typography.bodySmall, color = cs.onErrorContainer)
-                    OutlinedButton(onClick = onPickFolder) { Text("Pilih ulang") }
+                    Text(I18n.t("Folder belum benar"), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold, color = cs.onErrorContainer)
+                    Text(I18n.t("Pilih folder files yang berisi data, models, dan texdb."), style = MaterialTheme.typography.bodySmall, color = cs.onErrorContainer)
+                    OutlinedButton(onClick = onPickFolder) { Text(I18n.t("Pilih ulang")) }
                 }
             }
 
@@ -763,34 +766,34 @@ fun Empty(
                     Icon(Icons.Default.Place, null, tint = cs.primary)
                     Spacer(Modifier.width(10.dp))
                     Column(Modifier.weight(1f)) {
-                        Text("Folder GTA San Andreas", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
+                        Text(I18n.t("Folder GTA San Andreas"), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
                         Text(
                             when {
-                                gameStatus.isBlank() -> "Belum dipilih. Tekan Pilih."
-                                gameStatus.startsWith("Gagal") -> "Folder belum benar. Pilih folder files."
+                                gameStatus.isBlank() -> I18n.t("Belum dipilih. Tekan Pilih.")
+                                gameStatus.startsWith("Gagal") -> I18n.t("Folder belum benar. Pilih folder files.")
                                 else -> "Folder game terdeteksi \u2713"
                             },
                             color = cs.onSurfaceVariant, style = MaterialTheme.typography.bodySmall, maxLines = 2)
                     }
-                    TextButton(onClick = onPickFolder) { Text(if (gameStatus.isBlank()) "Pilih" else "Ganti") }
+                    TextButton(onClick = onPickFolder) { Text(if (gameStatus.isBlank()) "Pilih" else I18n.t("Ganti")) }
                 }
             }
 
             Card(Modifier.fillMaxWidth(), shape = RoundedCornerShape(20.dp),
                 colors = CardDefaults.cardColors(containerColor = cs.surfaceVariant)) {
                 Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text("Pilih map", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
-                    Text("Pilih file map (.ipl) dari folder game. Dari sana Anda juga bisa mendaftarkan model dan membuat IPL baru.",
+                    Text(I18n.t("Pilih map"), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
+                    Text(I18n.t("Pilih file map (.ipl) dari folder game. Dari sana Anda juga bisa mendaftarkan model dan membuat IPL baru."),
                         color = cs.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
                     Button(onClick = onBrowse,
                         modifier = Modifier.fillMaxWidth().height(56.dp),
                         shape = RoundedCornerShape(14.dp),
                         elevation = androidx.compose.material3.ButtonDefaults.buttonElevation(defaultElevation = 8.dp, pressedElevation = 2.dp)) {
-                        Text("Pilih map", fontWeight = FontWeight.SemiBold, fontSize = 16.sp)
+                        Text(I18n.t("Pilih map"), fontWeight = FontWeight.SemiBold, fontSize = 16.sp)
                     }
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                        TextButton(onClick = onPickFolder) { Text("Ganti folder") }
-                        TextButton(onClick = onNew) { Text("Buat IPL baru") }
+                        TextButton(onClick = onPickFolder) { Text(I18n.t("Ganti folder")) }
+                        TextButton(onClick = onNew) { Text(I18n.t("Buat IPL baru")) }
                     }
                 }
             }
@@ -800,16 +803,16 @@ fun Empty(
                 Column(Modifier.fillMaxWidth().padding(20.dp), horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     Icon(Icons.Default.List, null, tint = cs.onSurfaceVariant)
-                    Text("Belum ada file dibuka", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
-                    Text("File yang Anda buka akan muncul di sini.", style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant)
+                    Text(I18n.t("Belum ada file dibuka"), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
+                    Text(I18n.t("File yang Anda buka akan muncul di sini."), style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant)
                 }
             }
             if (recents.isNotEmpty()) Card(Modifier.fillMaxWidth(), shape = RoundedCornerShape(20.dp),
                 colors = CardDefaults.cardColors(containerColor = cs.surfaceVariant)) {
                 Column(Modifier.fillMaxWidth().padding(vertical = 8.dp)) {
                     Row(Modifier.fillMaxWidth().padding(start = 18.dp, end = 6.dp), verticalAlignment = Alignment.CenterVertically) {
-                        Text("File terakhir", Modifier.weight(1f), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
-                        TextButton(onClick = onClearRecents) { Text("Hapus daftar", style = MaterialTheme.typography.labelMedium) }
+                        Text(I18n.t("File terakhir"), Modifier.weight(1f), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
+                        TextButton(onClick = onClearRecents) { Text(I18n.t("Hapus daftar"), style = MaterialTheme.typography.labelMedium) }
                     }
                     for (r in recents) {
                         Row(Modifier.fillMaxWidth().clickable { onRecent(r) }.padding(horizontal = 18.dp, vertical = 10.dp),
@@ -1245,6 +1248,9 @@ private val changelogItems = listOf(
         "Logo baru dan tema slate gelap dengan kesan 3D.",
         "Panduan dan changelog dipindah ke atas. Tombol Pilih map dibuat lebih 3D.",
         "Panduan dan changelog sekarang tampil sebagai pop-up dari tombol di halaman awal.",
+        "Dukungan developer lewat Saweria.",
+        "Pengaturan bahasa: Bahasa Indonesia dan English (halaman awal dan pop-up).",
+        "Kritik dan saran lewat email atau Facebook.",
         "Konfirmasi keluar saat ada perubahan yang belum disimpan.",
         "Cari file di browser Pilih map.",
         "Perbaikan: gta3.img di dalam texdb/ kini ditemukan saat membuka folder game.",
@@ -1260,7 +1266,7 @@ private val changelogItems = listOf(
 fun GuideDialog(onClose: () -> Unit) {
     AlertDialog(
         onDismissRequest = onClose,
-        title = { Text("Panduan penggunaan") },
+        title = { Text(I18n.t("Panduan penggunaan")) },
         text = {
             Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 for ((title, body) in guideSteps) Column {
@@ -1269,7 +1275,7 @@ fun GuideDialog(onClose: () -> Unit) {
                 }
             }
         },
-        confirmButton = { TextButton(onClick = onClose) { Text("Tutup") } }
+        confirmButton = { TextButton(onClick = onClose) { Text(I18n.t("Tutup")) } }
     )
 }
 
@@ -1277,12 +1283,66 @@ fun GuideDialog(onClose: () -> Unit) {
 fun ChangelogDialog(onClose: () -> Unit) {
     AlertDialog(
         onDismissRequest = onClose,
-        title = { Text("Changelog") },
+        title = { Text(I18n.t("Changelog")) },
         text = {
             Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 for (item in changelogItems) Text("• " + item, style = MaterialTheme.typography.bodySmall)
             }
         },
-        confirmButton = { TextButton(onClick = onClose) { Text("Tutup") } }
+        confirmButton = { TextButton(onClick = onClose) { Text(I18n.t("Tutup")) } }
+    )
+}
+
+@Composable
+fun SupportSection() {
+    val ctx = LocalContext.current
+    var showCritic by remember { mutableStateOf(false) }
+    var showLang by remember { mutableStateOf(false) }
+    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+        OutlinedButton(onClick = { ctx.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://saweria.co/ReyyXSA"))) },
+            modifier = Modifier.weight(1f), shape = RoundedCornerShape(14.dp)) { Text(I18n.t("Dukung")) }
+        OutlinedButton(onClick = { showCritic = true }, modifier = Modifier.weight(1f), shape = RoundedCornerShape(14.dp)) { Text(I18n.t("Kritik & saran")) }
+        OutlinedButton(onClick = { showLang = true }, modifier = Modifier.weight(1f), shape = RoundedCornerShape(14.dp)) { Text(I18n.t("Bahasa")) }
+    }
+    if (showCritic) CriticDialog(ctx) { showCritic = false }
+    if (showLang) LanguageDialog(ctx) { showLang = false }
+}
+
+@Composable
+fun CriticDialog(ctx: Context, onClose: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = onClose,
+        title = { Text(I18n.t("Kritik & saran")) },
+        text = { Text(I18n.t("Kirim kritik atau saran lewat email atau Facebook.")) },
+        confirmButton = {
+            TextButton(onClick = {
+                val mail = Intent(Intent.ACTION_SENDTO, Uri.parse("mailto:reysaputra567@gmail.com?subject=" + Uri.encode("Kritik & saran San Editor")))
+                ctx.startActivity(mail); onClose()
+            }) { Text(I18n.t("Email")) }
+        },
+        dismissButton = {
+            TextButton(onClick = {
+                ctx.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://www.facebook.com/share/1DXWyJB8i5/"))); onClose()
+            }) { Text("Facebook") }
+        }
+    )
+}
+
+@Composable
+fun LanguageDialog(ctx: Context, onClose: () -> Unit) {
+    val options = listOf("id" to "Bahasa Indonesia", "en" to "English")
+    AlertDialog(
+        onDismissRequest = onClose,
+        title = { Text(I18n.t("Bahasa")) },
+        text = {
+            Column {
+                for ((code, label) in options) {
+                    TextButton(onClick = { I18n.set(ctx, code); onClose() }, modifier = Modifier.fillMaxWidth()) {
+                        Text(label, fontWeight = if (I18n.lang == code) FontWeight.Bold else FontWeight.Normal)
+                    }
+                }
+            }
+        },
+        confirmButton = { TextButton(onClick = onClose) { Text(I18n.t("Tutup")) } }
     )
 }
