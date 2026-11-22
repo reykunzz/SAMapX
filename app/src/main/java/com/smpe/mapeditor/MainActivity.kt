@@ -396,20 +396,20 @@ fun DrawScope.label(tm: TextMeasurer, text: String, x: Float, y: Float) {
 }
 
 // ---------- Theme ----------
-// Dark Slate Soft: abu-abu kebiruan yang sedikit terang dan nyaman dilihat.
+// Deep Emerald: latar hijau-hitam, aksen zamrud gelap, teks putih kehijauan lembut.
 private val Scheme = darkColorScheme(
-    primary = Color(0xFF607D91), onPrimary = Color(0xFFE5E9EC),
-    primaryContainer = Color(0xFF3F5668), onPrimaryContainer = Color(0xFFE5E9EC),
-    secondary = Color(0xFFA6B0B8), onSecondary = Color(0xFF1C2329),
-    secondaryContainer = Color(0xFF343D46), onSecondaryContainer = Color(0xFFE5E9EC),
-    tertiary = Color(0xFF7895A8),
-    background = Color(0xFF1C2329), onBackground = Color(0xFFE5E9EC),
-    surface = Color(0xFF1C2329), onSurface = Color(0xFFE5E9EC),
-    surfaceVariant = Color(0xFF292F36), onSurfaceVariant = Color(0xFFA6B0B8),
-    surfaceContainerLowest = Color(0xFF181E23), surfaceContainerLow = Color(0xFF222930),
-    surfaceContainer = Color(0xFF292F36), surfaceContainerHigh = Color(0xFF343D46),
-    surfaceContainerHighest = Color(0xFF3D4852),
-    outline = Color(0xFF414B55), outlineVariant = Color(0xFF414B55), error = Color(0xFFD87979)
+    primary = Color(0xFFA9BFD6), onPrimary = Color(0xFF141A22),
+    primaryContainer = Color(0xFF2F3B4A), onPrimaryContainer = Color(0xFFE6EBF2),
+    secondary = Color(0xFF8A96A6), onSecondary = Color(0xFF141A22),
+    secondaryContainer = Color(0xFF2A323E), onSecondaryContainer = Color(0xFFE6EBF2),
+    tertiary = Color(0xFF7FB7C9),
+    background = Color(0xFF1A1F27), onBackground = Color(0xFFE6EBF2),
+    surface = Color(0xFF1F252E), onSurface = Color(0xFFE6EBF2),
+    surfaceVariant = Color(0xFF2A313B), onSurfaceVariant = Color(0xFF8A96A6),
+    surfaceContainerLowest = Color(0xFF151A21), surfaceContainerLow = Color(0xFF1C222A),
+    surfaceContainer = Color(0xFF232A34), surfaceContainerHigh = Color(0xFF2A313B),
+    surfaceContainerHighest = Color(0xFF333B47),
+    outline = Color(0xFF3B4553), outlineVariant = Color(0xFF3B4553), error = Color(0xFFD9797A)
 )
 
 val RussoOne = FontFamily(Font(R.font.russo_one, FontWeight.Normal))
@@ -711,15 +711,15 @@ fun Empty(
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Card(Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = cs.primary)) {
+                colors = CardDefaults.cardColors(containerColor = Color(0xFF2F3945))) {
                 Row(Modifier.fillMaxWidth().padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
                     Image(painterResource(R.drawable.logo), null, Modifier.size(44.dp))
                     Spacer(Modifier.width(12.dp))
                     Column {
                         Text("SAN EDITOR", fontFamily = RussoOne, fontWeight = FontWeight.Normal, fontSize = 26.sp,
-                            color = cs.onPrimary, letterSpacing = 1.sp,
-                            style = TextStyle(shadow = Shadow(color = Color(0xFF30404C), offset = Offset(3f, 3f), blurRadius = 0f)))
-                        Text("Editor map GTA San Andreas", style = MaterialTheme.typography.bodySmall, color = cs.onPrimary)
+                            color = Color(0xFFE6EBF2), letterSpacing = 1.sp,
+                            style = TextStyle(shadow = Shadow(color = Color(0xFF0B0E13), offset = Offset(0f, 4f), blurRadius = 8f)))
+                        Text("Editor map GTA San Andreas", style = MaterialTheme.typography.bodySmall, color = Color(0xFF8A96A6))
                     }
                 }
             }
@@ -898,6 +898,8 @@ fun ChangelogCard() {
         "Halaman awal lebih rapi: header ringkas, kartu error, dan kartu kosong saat belum ada file.",
         "Tema baru: merah bata, krem, dan arang hangat dengan judul bergaya tebal.",
         "Judul memakai font Russo One. Perbaikan kompilasi impor Shadow.",
+        "Warna utama diganti ke merah marun yang lebih gelap.",
+        "Logo baru dan tema slate gelap dengan kesan 3D.",
         "Konfirmasi keluar saat ada perubahan yang belum disimpan.",
         "Cari file di browser Pilih map.",
         "Perbaikan: gta3.img di dalam texdb/ kini ditemukan saat membuka folder game.",
