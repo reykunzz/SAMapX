@@ -1,5 +1,7 @@
 package com.smpe.mapeditor
 
+import androidx.compose.runtime.rememberCoroutineScope
+import android.widget.Toast
 import android.content.Intent
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.TextButton
@@ -489,6 +491,12 @@ fun nameOf(ctx: android.content.Context, u: Uri): String {
 fun App(vm: EditorVM = viewModel()) {
     val ctx = LocalContext.current
     remember { I18n.load(ctx) }
+    var updateRel by remember { mutableStateOf<UpdateChecker.Release?>(null) }
+    LaunchedEffect(Unit) {
+        val r = withContext(Dispatchers.IO) { runCatching { UpdateChecker.fetchLatest() }.getOrNull() }
+        val skip = ctx.getSharedPreferences("smpe", Context.MODE_PRIVATE).getString("skip_update", "")
+        if (r != null && UpdateChecker.isNewer(r.version, UpdateChecker.currentVersion(ctx)) && r.version != skip) updateRel = r
+    }
     val snack = remember { SnackbarHostState() }
     // Menu awal: potret. Setelah file IPL dibuka (editor 3D): landscape.
     val activity = ctx as? android.app.Activity
@@ -689,6 +697,7 @@ fun App(vm: EditorVM = viewModel()) {
             },
             dismissButton = { TextButton(onClick = { showExitConfirm = false }) { Text("Batal") } }
         )
+        updateRel?.let { UpdateDialog(ctx, it) { updateRel = null } }
         if (vm.picker) ModelPicker(vm)
         vm.diag?.let { DiagDialog(vm, it) }
     }
@@ -1252,13 +1261,26 @@ fun SupportSection() {
     val ctx = LocalContext.current
     var showCritic by remember { mutableStateOf(false) }
     var showLang by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
+    var manualRel by remember { mutableStateOf<UpdateChecker.Release?>(null) }
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+        OutlinedButton(onClick = {
+            scope.launch {
+                val r = withContext(Dispatchers.IO) { runCatching { UpdateChecker.fetchLatest() }.getOrNull() }
+                when {
+                    r == null -> Toast.makeText(ctx, I18n.t("Gagal cek update. Periksa koneksi."), Toast.LENGTH_SHORT).show()
+                    UpdateChecker.isNewer(r.version, UpdateChecker.currentVersion(ctx)) -> manualRel = r
+                    else -> Toast.makeText(ctx, I18n.t("Anda sudah memakai versi terbaru."), Toast.LENGTH_SHORT).show()
+                }
+            }
+        }, modifier = Modifier.weight(1f), shape = RoundedCornerShape(14.dp)) { Text(I18n.t("Cek update")) }
         OutlinedButton(onClick = { ctx.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://saweria.co/ReyyXSA"))) },
             modifier = Modifier.weight(1f), shape = RoundedCornerShape(14.dp)) { Text(I18n.t("Dukung")) }
         OutlinedButton(onClick = { showCritic = true }, modifier = Modifier.weight(1f), shape = RoundedCornerShape(14.dp)) { Text(I18n.t("Kritik & saran")) }
         OutlinedButton(onClick = { showLang = true }, modifier = Modifier.weight(1f), shape = RoundedCornerShape(14.dp)) { Text(I18n.t("Bahasa")) }
     }
     if (showCritic) CriticDialog(ctx) { showCritic = false }
+    manualRel?.let { UpdateDialog(ctx, it) { manualRel = null } }
     if (showLang) LanguageDialog(ctx) { showLang = false }
 }
 
@@ -1298,5 +1320,29 @@ fun LanguageDialog(ctx: Context, onClose: () -> Unit) {
             }
         },
         confirmButton = { TextButton(onClick = onClose) { Text(I18n.t("Tutup")) } }
+    )
+}
+
+@Composable
+fun UpdateDialog(ctx: Context, rel: UpdateChecker.Release, onClose: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = onClose,
+        title = { Text(I18n.t("Ada update baru") + " v" + rel.version) },
+        text = { Text(I18n.t("Versi terbaru tersedia di GitHub.")) },
+        confirmButton = {
+            TextButton(onClick = {
+                ctx.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(rel.apkUrl ?: rel.pageUrl)))
+                onClose()
+            }) { Text(I18n.t("Unduh")) }
+        },
+        dismissButton = {
+            Row {
+                TextButton(onClick = {
+                    ctx.getSharedPreferences("smpe", Context.MODE_PRIVATE).edit().putString("skip_update", rel.version).apply()
+                    onClose()
+                }) { Text(I18n.t("Jangan tampilkan untuk versi ini")) }
+                TextButton(onClick = onClose) { Text(I18n.t("Nanti")) }
+            }
+        }
     )
 }

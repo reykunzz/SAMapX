@@ -21,6 +21,15 @@ object I18n {
     fun t(key: String): String = if (lang == "en") (en[key] ?: key) else key
 
     private val en: Map<String, String> = mapOf(
+        "Cek update" to "Check for update",
+        "Ada update baru" to "Update available",
+        "Versi terbaru tersedia di GitHub." to "A newer version is available on GitHub.",
+        "Unduh" to "Download",
+        "Nanti" to "Later",
+        "Jangan tampilkan untuk versi ini" to "Don't show for this version",
+        "Gagal cek update. Periksa koneksi." to "Update check failed. Check your connection.",
+        "Anda sudah memakai versi terbaru." to "You are already using the latest version.",
+        "Update baru: cek otomatis dari GitHub saat aplikasi dibuka." to "New update check: automatic check from GitHub when the app opens.",
         "Kartu objek lebih kecil dan tombol kamera berbentuk panah." to "Smaller object card and arrow-style camera buttons.",
         "Naik" to "Up",
         "Turun" to "Down",

@@ -31,8 +31,17 @@ Di tab 3D, buka panel **Adegan**, lalu di bagian **Impor model baru**:
 
 Catatan: model impor hanya bisa dilihat dan ditempatkan di editor. Agar muncul di game, file DFF dan TXD harus dimasukkan ke dalam gta3.img atau mod loader. Gunakan **Simpan IDE** untuk membuat file IDE pendamping.
 
+## Cara rilis update
+
+1. Naikkan `versionCode` dan `versionName` di `app/build.gradle.kts`.
+2. Commit dan push ke `main`.
+3. Buat tag: `git tag v1.8.4 && git push origin v1.8.4`.
+4. Workflow membuat GitHub Release dan melampirkan APK otomatis. Aplikasi akan mendeteksinya saat dibuka.
+
 ## Changelog
 
+- **1.8.5**: Alamat update GitHub diperbarui ke akun reykunzz.
+- **1.8.4**: Cek update otomatis dari GitHub, dan tombol Cek update manual.
 - **1.8.3**: Kartu objek dibuat lebih kecil. Tombol kamera berbentuk panah.
 - **1.8.2**: Tombol arah kamera (kiri, kanan, maju, mundur, naik, turun). Objek hanya bergeser kalau digeser cukup jauh. Kartu nama objek lebih kecil.
 - **1.8.1**: Editor 3D, panduan, dan changelog sekarang dua bahasa (Indonesia dan English). Changelog dipersingkat.
