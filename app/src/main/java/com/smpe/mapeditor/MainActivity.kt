@@ -1,5 +1,8 @@
 package com.smpe.mapeditor
 
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.AlertDialog
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import android.content.pm.ActivityInfo
@@ -724,8 +727,14 @@ fun Empty(
                 }
             }
 
-            GuideCard()
-            ChangelogCard()
+            var showGuide by remember { mutableStateOf(false) }
+            var showChangelog by remember { mutableStateOf(false) }
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                OutlinedButton(onClick = { showGuide = true }, modifier = Modifier.weight(1f), shape = RoundedCornerShape(14.dp)) { Text("Panduan") }
+                OutlinedButton(onClick = { showChangelog = true }, modifier = Modifier.weight(1f), shape = RoundedCornerShape(14.dp)) { Text("Changelog") }
+            }
+            if (showGuide) GuideDialog { showGuide = false }
+            if (showChangelog) ChangelogDialog { showChangelog = false }
 
             val folderReady = gameStatus.isNotBlank() && !gameStatus.startsWith("Gagal")
             Card(Modifier.fillMaxWidth(), shape = RoundedCornerShape(20.dp),
@@ -824,121 +833,6 @@ fun Empty(
     }
 }
 
-@Composable
-fun GuideCard() {
-    val steps = listOf(
-        "1. Pilih folder game" to "Di halaman awal, tekan Ganti pada kartu Folder GTA San Andreas, lalu pilih folder files yang berisi data, models, dan texdb. Jangan pilih texdb saja.",
-        "2. Pilih map" to "Tekan Pilih map. Buka data lalu maps, lalu pilih folder wilayah (misalnya LA). Tekan file .ipl untuk mengedit objek, atau file .ide untuk menambah model.",
-        "3. Tambah model ke IDE" to "Di file .ide, cari model di kolom Cari model dari gta3.img. Hanya model yang ada di gta3.img dan belum punya ID yang ditampilkan. Isi ID (atau tekan ID otomatis, hasilnya di bawah 20000), isi nama TXD, lalu tekan Tambah ke IDE. File IDE lama dicadangkan otomatis.",
-        "4. Taruh objek di IPL" to "Buka file .ipl, lalu tekan Tambah objek dan pilih model yang sudah punya ID. Atur posisi, lalu Simpan.",
-        "5. Tampilan 3D" to "Buka tab 3D. Geser satu jari untuk memutar kamera, cubit untuk zoom. Ketuk objek untuk memilihnya, lalu seret panah X, Y, atau Z untuk menggeser. Toolbar berisi Putar, Geser, Fokus, Grid, Tampilan atas, Pilih banyak, dan Inspector.",
-        "6. Inspector" to "Tab Objek berisi tombol geser, rotasi, Kunci, dan Hapus. Tab Adegan berisi Tambah objek, Ganti model, dan Tanah.",
-        "7. Simpan" to "Tombol Simpan menimpa file asli. Titik kuning berarti ada perubahan yang belum disimpan. Menu titik tiga berisi Simpan sebagai, Urungkan, Ulangi, dan Diagnosa file game.",
-        "8. Aturan penting" to "Pakai ID di bawah 20000. ID 20000 ke atas membuat game crash. Pastikan nama model sama persis di IDE, IPL, dan gta3.img. Backup gta3.img sebelum mengubahnya."
-    )
-    var open by remember { mutableStateOf(false) }
-    Card(
-        Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
-    ) {
-        Column(Modifier.fillMaxWidth()) {
-            Row(Modifier.fillMaxWidth().clickable { open = !open }.padding(horizontal = 18.dp, vertical = 14.dp),
-                verticalAlignment = Alignment.CenterVertically) {
-                Text("Panduan penggunaan", Modifier.weight(1f), style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.primary)
-                Text(if (open) "Tutup" else "Lihat", style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant)
-            }
-            if (open) Column(Modifier.fillMaxWidth().padding(start = 18.dp, end = 18.dp, bottom = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                for ((title, body) in steps) Column {
-                    Text(title, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
-                    Text(body, style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant)
-                }
-            }
-        }
-    }
-}
-
-@Composable
-fun ChangelogCard() {
-    val items = listOf(
-        "Editor peta IPL GTA San Andreas.",
-        "Tampilan objek 3D dan pemilihan objek.",
-        "Inspector untuk melihat dan mengubah posisi objek, dengan tab Objek, Stream, dan Adegan.",
-        "Transformasi objek: Putar dan Geser.",
-        "Fokus kamera ke objek dan tampilkan semua objek.",
-        "Undo dan Redo.",
-        "Snap posisi.",
-        "Zoom viewport dengan mouse wheel.",
-        "Buka dan simpan file IPL.",
-        "Daftar objek 2 kolom dengan filter Luar, Interior, dan LOD.",
-        "Kartu objek terpilih di viewport (Salin, Hapus, Tutup).",
-        "Daftar file terakhir di halaman awal.",
-        "Buat IPL baru dari halaman awal.",
-        "Orientasi: potret di menu, landscape saat editor terbuka.",
-        "Zoom tanpa batas di tampilan 3D.",
-        "Geser objek bebas dengan sentuhan: seret objek yang sudah dipilih.",
-        "Simpan IDE: membuat file .ide pendamping dari IPL.",
-        "Impor model baru: pilih DFF (dan TXD opsional), lalu tempatkan di 3D.",
-        "Tampilan atas: kamera tegak lurus ke bawah, seperti minimap.",
-        "Pilih banyak objek: ketuk beberapa objek, lalu geser, putar, atau hapus sekaligus.",
-        "Grid tanah dan penggaris: tombol Grid di toolbar. Pilih 2 objek untuk melihat jaraknya.",
-        "Kunci objek: objek terkunci tidak bisa digeser, diputar, atau diubah posisinya.",
-        "Perbaikan: grid tidak lagi crash saat dinyalakan.",
-        "Model impor disimpan dan dipulihkan saat game dibuka lagi (tidak lagi berubah jadi kubus).",
-        "Simpan IDE menyertakan semua model impor.",
-        "Peringatan: model impor belum masuk gta3.img, jadi belum bisa dipakai di game.",
-        "Export paket mod: membuat IDE, IPL, dan DFF/TXD dalam struktur folder game.",
-        "Perbaikan: nama dan ID model impor diperiksa terhadap game. ID baru dipilih otomatis dan ekspor dibatalkan jika ada bentrok.",
-        "Dihapus: impor DFF/TXD dan export paket custom. Gunakan model dari daftar game.",
-        "Tambah objek: hanya model yang punya ID di IDE game yang ditampilkan.",
-        "Pilih map: buka file IDE dan IPL dari daftar, tanpa memilih file satu per satu.",
-        "Tambah model ke IDE: pilih model dari gta3.img, isi ID dan TXD, lalu tulis ke file IDE.",
-        "Perbaikan: ID otomatis hanya memilih ID di bawah 20000. ID 20000 ke atas menyebabkan crash.",
-        "Panduan penggunaan diperbarui sesuai fitur terbaru.",
-        "Halaman awal lebih rapi: header ringkas, kartu error, dan kartu kosong saat belum ada file.",
-        "Tema baru: merah bata, krem, dan arang hangat dengan judul bergaya tebal.",
-        "Judul memakai font Russo One. Perbaikan kompilasi impor Shadow.",
-        "Warna utama diganti ke merah marun yang lebih gelap.",
-        "Logo baru dan tema slate gelap dengan kesan 3D.",
-        "Panduan dan changelog dipindah ke atas. Tombol Pilih map dibuat lebih 3D.",
-        "Konfirmasi keluar saat ada perubahan yang belum disimpan.",
-        "Cari file di browser Pilih map.",
-        "Perbaikan: gta3.img di dalam texdb/ kini ditemukan saat membuka folder game.",
-        "Perbaikan: model yang hanya ada di gta3.img kini muncul di daftar Tambah model ke IDE.",
-        "Grid: tombol Grid mengatur grid biru di tanah (menyala secara default).",
-        "Pencarian model lengkap: daftar dari IDE, gta3.img, dan model impor.",
-        "Ganti model: ganti semua objek bernama tertentu dalam satu langkah.",
-        "Draf otomatis: perubahan yang belum disimpan bisa dipulihkan saat aplikasi dibuka lagi.",
-        "Undo lebih jelas: tombol Batalkan menampilkan aksi yang akan dibatalkan."
-    )
-    var open by remember { mutableStateOf(false) }
-    Card(
-        Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
-    ) {
-        Column(Modifier.fillMaxWidth()) {
-            Row(Modifier.fillMaxWidth().clickable { open = !open }.padding(horizontal = 18.dp, vertical = 14.dp),
-                verticalAlignment = Alignment.CenterVertically) {
-                Text("Changelog", Modifier.weight(1f), style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.primary)
-                Text(if (open) "Tutup" else "Lihat", style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant)
-            }
-            if (open) Column(Modifier.fillMaxWidth().padding(start = 18.dp, end = 18.dp, bottom = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                for (t in items) Text("• $t", style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant)
-            }
-        }
-    }
-}
-
-/** Header ringkas: logo, tab Objek/3D, Buka, Simpan, menu titik tiga. */
 @Composable
 fun AppHeader(
     hasFile: Boolean, tab: Int, onTab: (Int) -> Unit, dirty: Boolean,
@@ -1296,4 +1190,99 @@ fun StepRow(done: Boolean, title: String, desc: String) {
             Text(desc, style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant)
         }
     }
+}
+
+private val guideSteps = listOf(
+        "1. Pilih folder game" to "Di halaman awal, tekan Ganti pada kartu Folder GTA San Andreas, lalu pilih folder files yang berisi data, models, dan texdb. Jangan pilih texdb saja.",
+        "2. Pilih map" to "Tekan Pilih map. Buka data lalu maps, lalu pilih folder wilayah (misalnya LA). Tekan file .ipl untuk mengedit objek, atau file .ide untuk menambah model.",
+        "3. Tambah model ke IDE" to "Di file .ide, cari model di kolom Cari model dari gta3.img. Hanya model yang ada di gta3.img dan belum punya ID yang ditampilkan. Isi ID (atau tekan ID otomatis, hasilnya di bawah 20000), isi nama TXD, lalu tekan Tambah ke IDE. File IDE lama dicadangkan otomatis.",
+        "4. Taruh objek di IPL" to "Buka file .ipl, lalu tekan Tambah objek dan pilih model yang sudah punya ID. Atur posisi, lalu Simpan.",
+        "5. Tampilan 3D" to "Buka tab 3D. Geser satu jari untuk memutar kamera, cubit untuk zoom. Ketuk objek untuk memilihnya, lalu seret panah X, Y, atau Z untuk menggeser. Toolbar berisi Putar, Geser, Fokus, Grid, Tampilan atas, Pilih banyak, dan Inspector.",
+        "6. Inspector" to "Tab Objek berisi tombol geser, rotasi, Kunci, dan Hapus. Tab Adegan berisi Tambah objek, Ganti model, dan Tanah.",
+        "7. Simpan" to "Tombol Simpan menimpa file asli. Titik kuning berarti ada perubahan yang belum disimpan. Menu titik tiga berisi Simpan sebagai, Urungkan, Ulangi, dan Diagnosa file game.",
+        "8. Aturan penting" to "Pakai ID di bawah 20000. ID 20000 ke atas membuat game crash. Pastikan nama model sama persis di IDE, IPL, dan gta3.img. Backup gta3.img sebelum mengubahnya."
+)
+
+private val changelogItems = listOf(
+        "Editor peta IPL GTA San Andreas.",
+        "Tampilan objek 3D dan pemilihan objek.",
+        "Inspector untuk melihat dan mengubah posisi objek, dengan tab Objek, Stream, dan Adegan.",
+        "Transformasi objek: Putar dan Geser.",
+        "Fokus kamera ke objek dan tampilkan semua objek.",
+        "Undo dan Redo.",
+        "Snap posisi.",
+        "Zoom viewport dengan mouse wheel.",
+        "Buka dan simpan file IPL.",
+        "Daftar objek 2 kolom dengan filter Luar, Interior, dan LOD.",
+        "Kartu objek terpilih di viewport (Salin, Hapus, Tutup).",
+        "Daftar file terakhir di halaman awal.",
+        "Buat IPL baru dari halaman awal.",
+        "Orientasi: potret di menu, landscape saat editor terbuka.",
+        "Zoom tanpa batas di tampilan 3D.",
+        "Geser objek bebas dengan sentuhan: seret objek yang sudah dipilih.",
+        "Simpan IDE: membuat file .ide pendamping dari IPL.",
+        "Impor model baru: pilih DFF (dan TXD opsional), lalu tempatkan di 3D.",
+        "Tampilan atas: kamera tegak lurus ke bawah, seperti minimap.",
+        "Pilih banyak objek: ketuk beberapa objek, lalu geser, putar, atau hapus sekaligus.",
+        "Grid tanah dan penggaris: tombol Grid di toolbar. Pilih 2 objek untuk melihat jaraknya.",
+        "Kunci objek: objek terkunci tidak bisa digeser, diputar, atau diubah posisinya.",
+        "Perbaikan: grid tidak lagi crash saat dinyalakan.",
+        "Model impor disimpan dan dipulihkan saat game dibuka lagi (tidak lagi berubah jadi kubus).",
+        "Simpan IDE menyertakan semua model impor.",
+        "Peringatan: model impor belum masuk gta3.img, jadi belum bisa dipakai di game.",
+        "Export paket mod: membuat IDE, IPL, dan DFF/TXD dalam struktur folder game.",
+        "Perbaikan: nama dan ID model impor diperiksa terhadap game. ID baru dipilih otomatis dan ekspor dibatalkan jika ada bentrok.",
+        "Dihapus: impor DFF/TXD dan export paket custom. Gunakan model dari daftar game.",
+        "Tambah objek: hanya model yang punya ID di IDE game yang ditampilkan.",
+        "Pilih map: buka file IDE dan IPL dari daftar, tanpa memilih file satu per satu.",
+        "Tambah model ke IDE: pilih model dari gta3.img, isi ID dan TXD, lalu tulis ke file IDE.",
+        "Perbaikan: ID otomatis hanya memilih ID di bawah 20000. ID 20000 ke atas menyebabkan crash.",
+        "Panduan penggunaan diperbarui sesuai fitur terbaru.",
+        "Halaman awal lebih rapi: header ringkas, kartu error, dan kartu kosong saat belum ada file.",
+        "Tema baru: merah bata, krem, dan arang hangat dengan judul bergaya tebal.",
+        "Judul memakai font Russo One. Perbaikan kompilasi impor Shadow.",
+        "Warna utama diganti ke merah marun yang lebih gelap.",
+        "Logo baru dan tema slate gelap dengan kesan 3D.",
+        "Panduan dan changelog dipindah ke atas. Tombol Pilih map dibuat lebih 3D.",
+        "Panduan dan changelog sekarang tampil sebagai pop-up dari tombol di halaman awal.",
+        "Konfirmasi keluar saat ada perubahan yang belum disimpan.",
+        "Cari file di browser Pilih map.",
+        "Perbaikan: gta3.img di dalam texdb/ kini ditemukan saat membuka folder game.",
+        "Perbaikan: model yang hanya ada di gta3.img kini muncul di daftar Tambah model ke IDE.",
+        "Grid: tombol Grid mengatur grid biru di tanah (menyala secara default).",
+        "Pencarian model lengkap: daftar dari IDE, gta3.img, dan model impor.",
+        "Ganti model: ganti semua objek bernama tertentu dalam satu langkah.",
+        "Draf otomatis: perubahan yang belum disimpan bisa dipulihkan saat aplikasi dibuka lagi.",
+        "Undo lebih jelas: tombol Batalkan menampilkan aksi yang akan dibatalkan."
+)
+
+@Composable
+fun GuideDialog(onClose: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = onClose,
+        title = { Text("Panduan penggunaan") },
+        text = {
+            Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                for ((title, body) in guideSteps) Column {
+                    Text(title, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
+                    Text(body, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+            }
+        },
+        confirmButton = { TextButton(onClick = onClose) { Text("Tutup") } }
+    )
+}
+
+@Composable
+fun ChangelogDialog(onClose: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = onClose,
+        title = { Text("Changelog") },
+        text = {
+            Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                for (item in changelogItems) Text("• " + item, style = MaterialTheme.typography.bodySmall)
+            }
+        },
+        confirmButton = { TextButton(onClick = onClose) { Text("Tutup") } }
+    )
 }
