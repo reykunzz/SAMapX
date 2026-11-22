@@ -724,6 +724,9 @@ fun Empty(
                 }
             }
 
+            GuideCard()
+            ChangelogCard()
+
             val folderReady = gameStatus.isNotBlank() && !gameStatus.startsWith("Gagal")
             Card(Modifier.fillMaxWidth(), shape = RoundedCornerShape(20.dp),
                 colors = CardDefaults.cardColors(containerColor = cs.surfaceVariant)) {
@@ -770,8 +773,11 @@ fun Empty(
                     Text("Pilih map", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
                     Text("Pilih file map (.ipl) dari folder game. Dari sana Anda juga bisa mendaftarkan model dan membuat IPL baru.",
                         color = cs.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
-                    Button(onClick = onBrowse, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(14.dp)) {
-                        Text("Pilih map")
+                    Button(onClick = onBrowse,
+                        modifier = Modifier.fillMaxWidth().height(56.dp),
+                        shape = RoundedCornerShape(14.dp),
+                        elevation = androidx.compose.material3.ButtonDefaults.buttonElevation(defaultElevation = 8.dp, pressedElevation = 2.dp)) {
+                        Text("Pilih map", fontWeight = FontWeight.SemiBold, fontSize = 16.sp)
                     }
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                         TextButton(onClick = onPickFolder) { Text("Ganti folder") }
@@ -812,8 +818,6 @@ fun Empty(
                 }
             }
 
-            GuideCard()
-            ChangelogCard()
             Text("Developed by ReyyXSA", style = MaterialTheme.typography.labelMedium, color = cs.onSurfaceVariant)
             Spacer(Modifier.height(4.dp))
         }
@@ -900,6 +904,7 @@ fun ChangelogCard() {
         "Judul memakai font Russo One. Perbaikan kompilasi impor Shadow.",
         "Warna utama diganti ke merah marun yang lebih gelap.",
         "Logo baru dan tema slate gelap dengan kesan 3D.",
+        "Panduan dan changelog dipindah ke atas. Tombol Pilih map dibuat lebih 3D.",
         "Konfirmasi keluar saat ada perubahan yang belum disimpan.",
         "Cari file di browser Pilih map.",
         "Perbaikan: gta3.img di dalam texdb/ kini ditemukan saat membuka folder game.",
@@ -919,7 +924,7 @@ fun ChangelogCard() {
         Column(Modifier.fillMaxWidth()) {
             Row(Modifier.fillMaxWidth().clickable { open = !open }.padding(horizontal = 18.dp, vertical = 14.dp),
                 verticalAlignment = Alignment.CenterVertically) {
-                Text("Changelog · San Editor UI V4", Modifier.weight(1f), style = MaterialTheme.typography.titleSmall,
+                Text("Changelog", Modifier.weight(1f), style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.primary)
                 Text(if (open) "Tutup" else "Lihat", style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant)
