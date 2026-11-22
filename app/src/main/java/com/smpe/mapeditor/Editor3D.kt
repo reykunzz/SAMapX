@@ -2,6 +2,10 @@
 
 package com.smpe.mapeditor
 
+import androidx.compose.material3.Surface
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.Spacer
 import android.opengl.GLSurfaceView
 import android.net.Uri
 import android.content.Context
@@ -72,7 +76,8 @@ fun GlEditor(vm: EditorVM, game: GameData) {
             Modifier.fillMaxSize())
         val selObj = vm.entries.getOrNull(vm.sel) as? Obj
         if (selObj != null && (!showPanel || containerWidth >= 700.dp)) {
-            SelCard(vm, gl, selObj, Modifier.align(Alignment.BottomCenter).padding(start = 8.dp, end = 8.dp, bottom = 46.dp))
+            SelCard(vm, gl, selObj, Modifier.align(Alignment.BottomEnd).padding(end = 8.dp, bottom = 46.dp))
+            CameraPad(gl, Modifier.align(Alignment.CenterEnd).padding(end = 10.dp))
         }
         if (showPanel) {
             Column(
@@ -210,7 +215,7 @@ fun Viewport(
                                     c.consume()
                                 }
                             } else if (freeHit) {
-                                if (moved) {
+                                if (moved && Math.hypot((c.position.x - down.position.x).toDouble(), (c.position.y - down.position.y).toDouble()) > 24.0 * density) {
                                     if (!started) {
                                         started = true; vm.beginEdit("Geser objek"); fdx = 0f; fdy = 0f
                                         for ((j, idx) in grp.withIndex()) {
@@ -512,7 +517,7 @@ fun SelCard(vm: EditorVM, gl: GlScene, o: Obj, modifier: Modifier) {
     Surface(modifier, shape = RoundedCornerShape(18.dp), color = cs.surface.copy(alpha = 0.96f),
         border = BorderStroke(1.dp, cs.primary)) {
         Row(Modifier.padding(start = 14.dp, end = 6.dp, top = 5.dp, bottom = 5.dp), verticalAlignment = Alignment.CenterVertically) {
-            Column(Modifier.widthIn(max = 240.dp)) {
+            Column(Modifier.widthIn(max = 170.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(o.model, fontWeight = FontWeight.Bold, fontSize = 14.sp, maxLines = 1, modifier = Modifier.weight(1f, fill = false))
                     Spacer(Modifier.width(6.dp))
@@ -763,5 +768,50 @@ fun ExportCard(vm: EditorVM) {
             modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(14.dp)
         ) { Text(I18n.t("Export paket mod")) }
         if (msg.isNotEmpty()) Text(msg, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+    }
+}
+
+/** Tombol arah kamera: geser titik pandang kiri/kanan, maju/mundur, naik/turun. */
+@Composable
+fun CameraPad(gl: GlScene, modifier: Modifier) {
+    fun move(dRight: Float, dFwd: Float, dUp: Float) {
+        val step = maxOf(1f, gl.dist * 0.08f)
+        val cs = cos(gl.yaw); val sn = sin(gl.yaw)
+        // kanan = (cs, sn), depan = (-sn, cs)
+        gl.tx += (cs * dRight - sn * dFwd) * step
+        gl.ty += (sn * dRight + cs * dFwd) * step
+        gl.tz += dUp * step
+        gl.requestRender()
+    }
+    Column(modifier, horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+            CamBtn(I18n.t("Naik")) { move(0f, 0f, 1f) }
+            CamBtn(I18n.t("Maju")) { move(0f, 1f, 0f) }
+            CamBtn(I18n.t("Turun")) { move(0f, 0f, -1f) }
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+            CamBtn(I18n.t("Kiri")) { move(-1f, 0f, 0f) }
+            Spacer(Modifier.size(64.dp, 36.dp))
+            CamBtn(I18n.t("Kanan")) { move(1f, 0f, 0f) }
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+            Spacer(Modifier.size(64.dp, 36.dp))
+            CamBtn(I18n.t("Mundur")) { move(0f, -1f, 0f) }
+            Spacer(Modifier.size(64.dp, 36.dp))
+        }
+    }
+}
+
+@Composable
+fun CamBtn(label: String, onClick: () -> Unit) {
+    val cs = MaterialTheme.colorScheme
+    Surface(
+        modifier = Modifier.size(64.dp, 36.dp).clickable(onClick = onClick),
+        shape = RoundedCornerShape(10.dp), color = cs.surface.copy(alpha = 0.92f),
+        border = BorderStroke(1.dp, cs.outline)
+    ) {
+        Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+            Text(label, style = MaterialTheme.typography.labelMedium, color = cs.onSurface, maxLines = 1)
+        }
     }
 }

@@ -21,6 +21,13 @@ object I18n {
     fun t(key: String): String = if (lang == "en") (en[key] ?: key) else key
 
     private val en: Map<String, String> = mapOf(
+        "Naik" to "Up",
+        "Turun" to "Down",
+        "Maju" to "Forward",
+        "Mundur" to "Back",
+        "Kiri" to "Left",
+        "Kanan" to "Right",
+        "Kamera: tombol arah dan geser objek lebih aman." to "Camera: direction buttons and safer object dragging.",
         "Pilih map" to "Select map",
         "Ganti folder" to "Change folder",
         "Buat IPL baru" to "New IPL",

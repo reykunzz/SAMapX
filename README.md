@@ -33,6 +33,7 @@ Catatan: model impor hanya bisa dilihat dan ditempatkan di editor. Agar muncul d
 
 ## Changelog
 
+- **1.8.2**: Tombol arah kamera (kiri, kanan, maju, mundur, naik, turun). Objek hanya bergeser kalau digeser cukup jauh. Kartu nama objek lebih kecil.
 - **1.8.1**: Editor 3D, panduan, dan changelog sekarang dua bahasa (Indonesia dan English). Changelog dipersingkat.
 - **1.8.0**: Dukungan Saweria, pilihan bahasa, dan kritik dan saran lewat email atau Facebook.
 - **1.7.14**: Panduan dan changelog tampil sebagai pop-up.
