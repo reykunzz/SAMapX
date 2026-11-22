@@ -112,18 +112,18 @@ fun ViewToolbar(
             horizontalArrangement = Arrangement.spacedBy(2.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            TbBtn(UiIcons.Rotate, "Putar", selected = !panMode) { setPan(false) }
-            TbBtn(UiIcons.Pan, "Geser", selected = panMode) { setPan(true) }
+            TbBtn(UiIcons.Rotate, I18n.t("Putar"), selected = !panMode) { setPan(false) }
+            TbBtn(UiIcons.Pan, I18n.t("Geser"), selected = panMode) { setPan(true) }
             TbDivider()
-            TbBtn(UiIcons.Focus, "Fokus ke objek", onClick = onFocus)
-            TbBtn(UiIcons.FitAll, "Tampilkan semua", onClick = onAll)
-            TbBtn(Icons.Default.KeyboardArrowUp, "Tampilan atas", selected = topDown, onClick = onTopDown)
-            TbBtn(Icons.Default.Done, "Pilih banyak", selected = multi, onClick = onMulti)
+            TbBtn(UiIcons.Focus, I18n.t("Fokus ke objek"), onClick = onFocus)
+            TbBtn(UiIcons.FitAll, I18n.t("Tampilkan semua"), onClick = onAll)
+            TbBtn(Icons.Default.KeyboardArrowUp, I18n.t("Tampilan atas"), selected = topDown, onClick = onTopDown)
+            TbBtn(Icons.Default.Done, I18n.t("Pilih banyak"), selected = multi, onClick = onMulti)
             TbDivider()
-            TbBtn(UiIcons.Undo, "Urungkan", enabled = canUndo, onClick = onUndo)
+            TbBtn(UiIcons.Undo, I18n.t("Urungkan"), enabled = canUndo, onClick = onUndo)
             if (canUndo && undoLabel.isNotEmpty()) Text("Batalkan: $undoLabel", fontSize = 11.sp, maxLines = 1,
                 color = Color.White.copy(alpha = 0.85f), modifier = Modifier.padding(horizontal = 4.dp))
-            TbBtn(UiIcons.Redo, "Ulangi", enabled = canRedo, onClick = onRedo)
+            TbBtn(UiIcons.Redo, I18n.t("Ulangi"), enabled = canRedo, onClick = onRedo)
             TbDivider()
             Box(
                 Modifier.height(30.dp).clip(RoundedCornerShape(15.dp))
@@ -131,7 +131,7 @@ fun ViewToolbar(
                     .clickable(role = Role.Button, onClick = onGrid).padding(horizontal = 10.dp),
                 contentAlignment = Alignment.Center
             ) {
-                Text("Grid", fontSize = 12.sp, fontWeight = FontWeight.Medium,
+                Text(I18n.t("Grid"), fontSize = 12.sp, fontWeight = FontWeight.Medium,
                     color = if (gridOn) MaterialTheme.colorScheme.onPrimary else Color.White.copy(alpha = 0.85f), maxLines = 1)
             }
             if (snap != null) {
@@ -144,13 +144,13 @@ fun ViewToolbar(
                     contentAlignment = Alignment.Center
                 ) {
                     val v = if (snap == snap.toInt().toFloat()) snap.toInt().toString() else snap.toString()
-                    Text(if (snap == 0f) "Snap off" else "Snap $v", fontSize = 12.sp, fontWeight = FontWeight.Medium,
+                    Text(if (snap == 0f) I18n.t("Snap off") else "Snap $v", fontSize = 12.sp, fontWeight = FontWeight.Medium,
                         color = if (snap > 0f) cs.onPrimary else Color.White.copy(alpha = 0.85f), maxLines = 1)
                 }
             }
             if (panelVisible != null) {
                 TbDivider()
-                TbBtn(UiIcons.Panel, "Inspector", selected = panelVisible, onClick = onTogglePanel)
+                TbBtn(UiIcons.Panel, I18n.t("Inspector"), selected = panelVisible, onClick = onTogglePanel)
             }
         }
     }

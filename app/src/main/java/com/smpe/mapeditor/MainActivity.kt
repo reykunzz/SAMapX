@@ -1207,59 +1207,11 @@ private val guideSteps = listOf(
 )
 
 private val changelogItems = listOf(
-        "Editor peta IPL GTA San Andreas.",
-        "Tampilan objek 3D dan pemilihan objek.",
-        "Inspector untuk melihat dan mengubah posisi objek, dengan tab Objek, Stream, dan Adegan.",
-        "Transformasi objek: Putar dan Geser.",
-        "Fokus kamera ke objek dan tampilkan semua objek.",
-        "Undo dan Redo.",
-        "Snap posisi.",
-        "Zoom viewport dengan mouse wheel.",
-        "Buka dan simpan file IPL.",
-        "Daftar objek 2 kolom dengan filter Luar, Interior, dan LOD.",
-        "Kartu objek terpilih di viewport (Salin, Hapus, Tutup).",
-        "Daftar file terakhir di halaman awal.",
-        "Buat IPL baru dari halaman awal.",
-        "Orientasi: potret di menu, landscape saat editor terbuka.",
-        "Zoom tanpa batas di tampilan 3D.",
-        "Geser objek bebas dengan sentuhan: seret objek yang sudah dipilih.",
-        "Simpan IDE: membuat file .ide pendamping dari IPL.",
-        "Impor model baru: pilih DFF (dan TXD opsional), lalu tempatkan di 3D.",
-        "Tampilan atas: kamera tegak lurus ke bawah, seperti minimap.",
-        "Pilih banyak objek: ketuk beberapa objek, lalu geser, putar, atau hapus sekaligus.",
-        "Grid tanah dan penggaris: tombol Grid di toolbar. Pilih 2 objek untuk melihat jaraknya.",
-        "Kunci objek: objek terkunci tidak bisa digeser, diputar, atau diubah posisinya.",
-        "Perbaikan: grid tidak lagi crash saat dinyalakan.",
-        "Model impor disimpan dan dipulihkan saat game dibuka lagi (tidak lagi berubah jadi kubus).",
-        "Simpan IDE menyertakan semua model impor.",
-        "Peringatan: model impor belum masuk gta3.img, jadi belum bisa dipakai di game.",
-        "Export paket mod: membuat IDE, IPL, dan DFF/TXD dalam struktur folder game.",
-        "Perbaikan: nama dan ID model impor diperiksa terhadap game. ID baru dipilih otomatis dan ekspor dibatalkan jika ada bentrok.",
-        "Dihapus: impor DFF/TXD dan export paket custom. Gunakan model dari daftar game.",
-        "Tambah objek: hanya model yang punya ID di IDE game yang ditampilkan.",
-        "Pilih map: buka file IDE dan IPL dari daftar, tanpa memilih file satu per satu.",
-        "Tambah model ke IDE: pilih model dari gta3.img, isi ID dan TXD, lalu tulis ke file IDE.",
-        "Perbaikan: ID otomatis hanya memilih ID di bawah 20000. ID 20000 ke atas menyebabkan crash.",
-        "Panduan penggunaan diperbarui sesuai fitur terbaru.",
-        "Halaman awal lebih rapi: header ringkas, kartu error, dan kartu kosong saat belum ada file.",
-        "Tema baru: merah bata, krem, dan arang hangat dengan judul bergaya tebal.",
-        "Judul memakai font Russo One. Perbaikan kompilasi impor Shadow.",
-        "Warna utama diganti ke merah marun yang lebih gelap.",
-        "Logo baru dan tema slate gelap dengan kesan 3D.",
-        "Panduan dan changelog dipindah ke atas. Tombol Pilih map dibuat lebih 3D.",
-        "Panduan dan changelog sekarang tampil sebagai pop-up dari tombol di halaman awal.",
-        "Dukungan developer lewat Saweria.",
-        "Pengaturan bahasa: Bahasa Indonesia dan English (halaman awal dan pop-up).",
-        "Kritik dan saran lewat email atau Facebook.",
-        "Konfirmasi keluar saat ada perubahan yang belum disimpan.",
-        "Cari file di browser Pilih map.",
-        "Perbaikan: gta3.img di dalam texdb/ kini ditemukan saat membuka folder game.",
-        "Perbaikan: model yang hanya ada di gta3.img kini muncul di daftar Tambah model ke IDE.",
-        "Grid: tombol Grid mengatur grid biru di tanah (menyala secara default).",
-        "Pencarian model lengkap: daftar dari IDE, gta3.img, dan model impor.",
-        "Ganti model: ganti semua objek bernama tertentu dalam satu langkah.",
-        "Draf otomatis: perubahan yang belum disimpan bisa dipulihkan saat aplikasi dibuka lagi.",
-        "Undo lebih jelas: tombol Batalkan menampilkan aksi yang akan dibatalkan."
+    "Editor IPL dengan tampilan 3D dan inspector.",
+    "Tambah model dari gta3.img ke IDE, lalu taruh objek di IPL.",
+    "Pilih banyak objek, grid, kunci objek, dan tampilan atas.",
+    "Halaman awal baru dengan bahasa Indonesia dan English.",
+    "Perbaikan: ID otomatis di bawah 20000, gta3.img di texdb terbaca."
 )
 
 @Composable
@@ -1270,8 +1222,8 @@ fun GuideDialog(onClose: () -> Unit) {
         text = {
             Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 for ((title, body) in guideSteps) Column {
-                    Text(title, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
-                    Text(body, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(I18n.t(title), style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
+                    Text(I18n.t(body), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
         },
@@ -1286,7 +1238,7 @@ fun ChangelogDialog(onClose: () -> Unit) {
         title = { Text(I18n.t("Changelog")) },
         text = {
             Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                for (item in changelogItems) Text("• " + item, style = MaterialTheme.typography.bodySmall)
+                for (item in changelogItems) Text("• " + I18n.t(item), style = MaterialTheme.typography.bodySmall)
             }
         },
         confirmButton = { TextButton(onClick = onClose) { Text(I18n.t("Tutup")) } }

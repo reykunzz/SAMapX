@@ -86,12 +86,12 @@ fun GlEditor(vm: EditorVM, game: GameData) {
                         .padding(start = 14.dp, end = 8.dp, top = 8.dp, bottom = 4.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text("INSPECTOR", Modifier.weight(1f), style = MaterialTheme.typography.labelLarge,
+                    Text(I18n.t("INSPECTOR"), Modifier.weight(1f), style = MaterialTheme.typography.labelLarge,
                         color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Black)
                     TextButton(onClick = { panelExpanded = !panelExpanded }) {
-                        Text(if (panelExpanded) "Minimize" else "Buka")
+                        Text(if (panelExpanded) I18n.t("Minimize") else I18n.t("Buka"))
                     }
-                    TextButton(onClick = { showPanel = false }) { Text("Tutup") }
+                    TextButton(onClick = { showPanel = false }) { Text(I18n.t("Tutup")) }
                 }
                 if (panelExpanded) {
                     HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.35f))
@@ -352,9 +352,9 @@ fun Panel(vm: EditorVM, gl: GlScene, st: FloatArray, modifier: Modifier) {
         verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
         if (tab == 0) {
-        SectionCard("OBJEK TERPILIH") {
+        SectionCard(I18n.t("OBJEK TERPILIH")) {
             if (o == null) {
-                Text("Ketuk objek di tampilan 3D untuk memilihnya.", style = MaterialTheme.typography.bodySmall,
+                Text(I18n.t("Ketuk objek di tampilan 3D untuk memilihnya."), style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant)
             } else {
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -364,31 +364,31 @@ fun Panel(vm: EditorVM, gl: GlScene, st: FloatArray, modifier: Modifier) {
                     Text("ID ${o.id}", style = MaterialTheme.typography.labelMedium)
                 }
                 AxisRow(o.x, o.y, o.z)
-                Text("Seret panah merah (X), hijau (Y), biru (Z) di layar 3D untuk menggeser objek.", style = MaterialTheme.typography.labelSmall,
+                Text(I18n.t("Seret panah merah (X), hijau (Y), biru (Z) di layar 3D untuk menggeser objek."), style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
         val sobj = vm.extra.getOrNull(vm.selStream)
         if (sobj != null) {
-            SectionCard("OBJEK STREAM (DILIHAT SAJA)") {
+            SectionCard(I18n.t("OBJEK STREAM (DILIHAT SAJA)")) {
                 Text(sobj.model + "  (ID " + sobj.id + ")", fontWeight = FontWeight.Bold)
                 AxisRow(sobj.x, sobj.y, sobj.z)
                 Button(onClick = { vm.adoptStream(); gl.requestRender() }, shape = RoundedCornerShape(14.dp), modifier = Modifier.fillMaxWidth()) {
-                    Text("Salin ke IPL agar bisa diedit")
+                    Text(I18n.t("Salin ke IPL agar bisa diedit"))
                 }
-                Text("Objek aslinya tetap ada di stream, jadi hasilnya objek tambahan.", style = MaterialTheme.typography.labelSmall,
+                Text(I18n.t("Objek aslinya tetap ada di stream, jadi hasilnya objek tambahan."), style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
         if (vm.selSet.size > 1) GroupCard(vm, gl, step)
         if (o != null) {
-            SectionCard("GERAKKAN") {
+            SectionCard(I18n.t("GERAKKAN")) {
                 Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     for (s in listOf(0.1f, 1f, 5f, 20f)) FilterChip(selected = step == s, onClick = { step = s }, label = { Text(s.toString()) })
                 }
                 Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Text("Snap seret:", style = MaterialTheme.typography.labelMedium)
-                    for (s in listOf(0f, 0.5f, 1f, 5f)) FilterChip(selected = vm.snap == s, onClick = { vm.snap = s }, label = { Text(if (s == 0f) "Off" else s.toString()) })
+                    Text(I18n.t("Snap seret:"), style = MaterialTheme.typography.labelMedium)
+                    for (s in listOf(0f, 0.5f, 1f, 5f)) FilterChip(selected = vm.snap == s, onClick = { vm.snap = s }, label = { Text(if (s == 0f) I18n.t("Off") else s.toString()) })
                 }
                 Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                     Nudge("X-", Modifier.weight(1f)) { vm.update(i, o.copy(x = o.x - step)) }
@@ -405,7 +405,7 @@ fun Panel(vm: EditorVM, gl: GlScene, st: FloatArray, modifier: Modifier) {
                     Nudge("+90", Modifier.weight(1f)) { vm.update(i, rotZ(o, 90f)) }
                 }
             }
-            SectionCard("EDIT NILAI") {
+            SectionCard(I18n.t("EDIT NILAI")) {
                 val key = listOf(i, o.x, o.y, o.z, o.model, o.id)
                 var fm by remember(key) { mutableStateOf(o.model) }
                 var fid by remember(key) { mutableStateOf(o.id.toString()) }
@@ -413,8 +413,8 @@ fun Panel(vm: EditorVM, gl: GlScene, st: FloatArray, modifier: Modifier) {
                 var fy by remember(key) { mutableStateOf(String.format(Locale.US, "%.3f", o.y)) }
                 var fz by remember(key) { mutableStateOf(String.format(Locale.US, "%.3f", o.z)) }
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Field("Model", fm, Modifier.weight(2f), num = false) { fm = it }
-                    Field("ID", fid, Modifier.weight(1f)) { fid = it }
+                    Field(I18n.t("Model"), fm, Modifier.weight(2f), num = false) { fm = it }
+                    Field(I18n.t("ID"), fid, Modifier.weight(1f)) { fid = it }
                 }
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     Field("X", fx, Modifier.weight(1f)) { fx = it }
@@ -425,39 +425,39 @@ fun Panel(vm: EditorVM, gl: GlScene, st: FloatArray, modifier: Modifier) {
                     vm.update(i, o.copy(
                         model = fm.trim().ifEmpty { o.model }, id = fid.toIntOrNull() ?: o.id,
                         x = fx.toFloatOrNull() ?: o.x, y = fy.toFloatOrNull() ?: o.y, z = fz.toFloatOrNull() ?: o.z))
-                }, shape = RoundedCornerShape(14.dp), modifier = Modifier.fillMaxWidth()) { Text("Terapkan") }
+                }, shape = RoundedCornerShape(14.dp), modifier = Modifier.fillMaxWidth()) { Text(I18n.t("Terapkan")) }
             }
             Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                Nudge("Ke tengah", Modifier.weight(1f)) { vm.update(i, o.copy(x = gl.tx, y = gl.ty, z = gl.tz)) }
-                Nudge("Salin", Modifier.weight(1f)) { vm.duplicate(i) }
-                Nudge(if (o.locked) "Buka kunci" else "Kunci", Modifier.weight(1f)) { vm.setLocked(i, !o.locked); gl.requestRender() }
-                Nudge("Hapus", Modifier.weight(1f)) { vm.remove(i) }
+                Nudge(I18n.t("Ke tengah"), Modifier.weight(1f)) { vm.update(i, o.copy(x = gl.tx, y = gl.ty, z = gl.tz)) }
+                Nudge(I18n.t("Salin"), Modifier.weight(1f)) { vm.duplicate(i) }
+                Nudge(if (o.locked) I18n.t("Buka kunci") else I18n.t("Kunci"), Modifier.weight(1f)) { vm.setLocked(i, !o.locked); gl.requestRender() }
+                Nudge(I18n.t("Hapus"), Modifier.weight(1f)) { vm.remove(i) }
             }
         }
         }
         if (tab == 1) {
-        SectionCard("IPL STREAM (DETAIL PETA)") {
-            Text(vm.streamNote.ifEmpty { "IPL teks hanya memuat sebagian objek (banyak LOD). Detail bangunan ada di file stream biner dalam gta3.img. Hanya untuk dilihat, tidak ikut disimpan." },
+        SectionCard(I18n.t("IPL STREAM (DETAIL PETA)")) {
+            Text(vm.streamNote.ifEmpty { I18n.t("IPL teks hanya memuat sebagian objek (banyak LOD). Detail bangunan ada di file stream biner dalam gta3.img. Hanya untuk dilihat, tidak ikut disimpan.") },
                 style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                Nudge("Stream ini", Modifier.weight(1f)) { loadStream(false) }
-                Nudge("Semua (berat)", Modifier.weight(1f)) { loadStream(true) }
-                Nudge("Kosongkan", Modifier.weight(1f)) { vm.extra = emptyList(); vm.streamNote = ""; gl.requestRender() }
+                Nudge(I18n.t("Stream ini"), Modifier.weight(1f)) { loadStream(false) }
+                Nudge(I18n.t("Semua (berat)"), Modifier.weight(1f)) { loadStream(true) }
+                Nudge(I18n.t("Kosongkan"), Modifier.weight(1f)) { vm.extra = emptyList(); vm.streamNote = ""; gl.requestRender() }
             }
         }
         }
         if (tab == 2) {
-        SectionCard("ADEGAN") {
-            Button(onClick = { vm.picker = true }, shape = RoundedCornerShape(14.dp), modifier = Modifier.fillMaxWidth()) { Text("Taruh objek") }
+        SectionCard(I18n.t("ADEGAN")) {
+            Button(onClick = { vm.picker = true }, shape = RoundedCornerShape(14.dp), modifier = Modifier.fillMaxWidth()) { Text(I18n.t("Taruh objek")) }
             ReplaceModelCard(vm)
             Text("Jarak pandang: ${viewDist.toInt()} m", style = MaterialTheme.typography.labelMedium)
             Slider(value = viewDist, onValueChange = { viewDist = it; gl.viewDist = it; gl.requestRender() }, valueRange = 150f..2500f)
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("Balik tekstur vertikal", Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium)
+                Text(I18n.t("Balik tekstur vertikal"), Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium)
                 Switch(checked = flipV, onCheckedChange = { flipV = it; gl.flipV = it; gl.requestRender() })
             }
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("Sembunyikan model LOD", Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium)
+                Text(I18n.t("Sembunyikan model LOD"), Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium)
                 Switch(checked = hideLod, onCheckedChange = { hideLod = it; gl.hideLod = it; gl.requestRender() })
             }
         }
@@ -522,9 +522,9 @@ fun SelCard(vm: EditorVM, gl: GlScene, o: Obj, modifier: Modifier) {
                     fontFamily = FontFamily.Monospace, color = cs.onSurfaceVariant, maxLines = 1)
             }
             Spacer(Modifier.width(8.dp))
-            TbBtn(UiIcons.Copy, "Salin") { vm.duplicate(vm.sel); gl.requestRender() }
-            TbBtn(Icons.Default.Delete, "Hapus", tint = cs.error) { vm.remove(vm.sel); gl.requestRender() }
-            TbBtn(Icons.Default.Close, "Tutup") { vm.clearSel(); gl.requestRender() }
+            TbBtn(UiIcons.Copy, I18n.t("Salin")) { vm.duplicate(vm.sel); gl.requestRender() }
+            TbBtn(Icons.Default.Delete, I18n.t("Hapus"), tint = cs.error) { vm.remove(vm.sel); gl.requestRender() }
+            TbBtn(Icons.Default.Close, I18n.t("Tutup")) { vm.clearSel(); gl.requestRender() }
         }
     }
 }
@@ -535,12 +535,12 @@ fun ModelPicker(vm: EditorVM) {
     var q by remember { mutableStateOf("") }
     AlertDialog(
         onDismissRequest = { vm.picker = false },
-        confirmButton = { TextButton(onClick = { vm.picker = false }) { Text("Batal") } },
-        title = { Text("Taruh objek") },
+        confirmButton = { TextButton(onClick = { vm.picker = false }) { Text(I18n.t("Batal")) } },
+        title = { Text(I18n.t("Taruh objek")) },
         text = {
             Column {
                 OutlinedTextField(value = q, onValueChange = { q = it }, singleLine = true, shape = RoundedCornerShape(14.dp),
-                    placeholder = { Text("Cari nama model atau ID") }, modifier = Modifier.fillMaxWidth())
+                    placeholder = { Text(I18n.t("Cari nama model atau ID")) }, modifier = Modifier.fillMaxWidth())
                 val key = q.trim().lowercase()
                 val res = if (g == null || key.isEmpty()) emptyList() else g.allModels().filter { it.second > 0 && (it.first.contains(key) || it.second.toString() == key) }.take(150)
                 if (key.isEmpty()) Text(
@@ -565,9 +565,9 @@ fun DiagDialog(vm: EditorVM, text: String) {
     val clip = LocalClipboardManager.current
     AlertDialog(
         onDismissRequest = { vm.diag = null },
-        confirmButton = { TextButton(onClick = { clip.setText(AnnotatedString(text)) }) { Text("Salin") } },
-        dismissButton = { TextButton(onClick = { vm.diag = null }) { Text("Tutup") } },
-        title = { Text("Diagnosa file game") },
+        confirmButton = { TextButton(onClick = { clip.setText(AnnotatedString(text)) }) { Text(I18n.t("Salin")) } },
+        dismissButton = { TextButton(onClick = { vm.diag = null }) { Text(I18n.t("Tutup")) } },
+        title = { Text(I18n.t("Diagnosa file game")) },
         text = {
             SelectionContainer {
                 Text(text, fontSize = 10.sp, modifier = Modifier.heightIn(max = 400.dp).verticalScroll(rememberScrollState()))
@@ -584,13 +584,13 @@ fun BoxScope.GamePrompt(vm: EditorVM, onPick: () -> Unit) {
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
     ) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Text("Tampilkan model GTA asli", fontWeight = FontWeight.Bold)
-            Text("Pilih folder game (berisi gta3.img, Maps, dan texdb). Mendukung GTA SA mobile (tekstur dari texdb) maupun PC. Di Android 11+ folder Android/data tidak bisa dipilih, salin dulu ke Download/GTASA.",
+            Text(I18n.t("Tampilkan model GTA asli"), fontWeight = FontWeight.Bold)
+            Text(I18n.t("Pilih folder game (berisi gta3.img, Maps, dan texdb). Mendukung GTA SA mobile (tekstur dari texdb) maupun PC. Di Android 11+ folder Android/data tidak bisa dipilih, salin dulu ke Download/GTASA."),
                 style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             if (vm.gameStatus.isNotEmpty()) Text(vm.gameStatus, style = MaterialTheme.typography.labelSmall)
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Button(onClick = onPick, shape = RoundedCornerShape(14.dp)) { Text("Pilih folder GTA SA") }
-                OutlinedButton(onClick = { vm.diag = GameData.lastReport.ifEmpty { "Belum ada laporan. Pilih folder GTA SA dulu." } }, shape = RoundedCornerShape(14.dp)) { Text("Diagnosa") }
+                Button(onClick = onPick, shape = RoundedCornerShape(14.dp)) { Text(I18n.t("Pilih folder GTA SA")) }
+                OutlinedButton(onClick = { vm.diag = GameData.lastReport.ifEmpty { I18n.t("Belum ada laporan. Pilih folder GTA SA dulu.") } }, shape = RoundedCornerShape(14.dp)) { Text(I18n.t("Diagnosa")) }
             }
         }
     }
@@ -625,17 +625,17 @@ fun ImportModelCard(vm: EditorVM, gl: GlScene) {
         if (u != null) txdUri = u
     }
     Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text("Impor model baru (DFF + TXD)", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
+        Text(I18n.t("Impor model baru (DFF + TXD)"), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
         OutlinedButton(onClick = { pickDff.launch(arrayOf("*/*")) }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(14.dp)) {
-            Text(dffUri?.let { "DFF: " + fileNameOf(ctx, it) } ?: "Pilih file .dff")
+            Text(dffUri?.let { "DFF: " + fileNameOf(ctx, it) } ?: I18n.t("Pilih file .dff"))
         }
         OutlinedButton(onClick = { pickTxd.launch(arrayOf("*/*")) }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(14.dp)) {
-            Text(txdUri?.let { "TXD: " + fileNameOf(ctx, it) } ?: "Pilih file .txd (opsional)")
+            Text(txdUri?.let { "TXD: " + fileNameOf(ctx, it) } ?: I18n.t("Pilih file .txd (opsional)"))
         }
         OutlinedTextField(
             value = name,
             onValueChange = { name = it.lowercase().filter { c -> c.isLetterOrDigit() || c == '_' }.take(24) },
-            label = { Text("Nama model") }, singleLine = true, modifier = Modifier.fillMaxWidth()
+            label = { Text(I18n.t("Nama model")) }, singleLine = true, modifier = Modifier.fillMaxWidth()
         )
         Button(
             onClick = {
@@ -644,7 +644,7 @@ fun ImportModelCard(vm: EditorVM, gl: GlScene) {
                 when {
                     du == null -> msg = "Pilih file DFF dulu."
                     name.isEmpty() -> msg = "Isi nama model."
-                    g == null -> msg = "Pilih folder GTA SA dulu."
+                    g == null -> msg = I18n.t("Pilih folder GTA SA dulu.")
                     g.nameTaken(name) -> msg = "Nama '$name' sudah dipakai game atau model lain. Pilih nama lain."
                     else -> {
                         val n = name; val tu = txdUri
@@ -671,7 +671,7 @@ fun ImportModelCard(vm: EditorVM, gl: GlScene) {
             },
             enabled = dffUri != null,
             modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(14.dp)
-        ) { Text("Impor & tempatkan") }
+        ) { Text(I18n.t("Impor & tempatkan")) }
         if (msg.isNotEmpty()) Text(msg, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }
@@ -679,7 +679,7 @@ fun ImportModelCard(vm: EditorVM, gl: GlScene) {
 @Composable
 fun GroupCard(vm: EditorVM, gl: GlScene, step: Float) {
     SectionCard("${vm.selSet.size} OBJEK DIPILIH") {
-        Text("Ketuk objek untuk menambah atau mengeluarkan dari pilihan. Seret salah satu objek yang dipilih untuk menggeser semuanya.",
+        Text(I18n.t("Ketuk objek untuk menambah atau mengeluarkan dari pilihan. Seret salah satu objek yang dipilih untuk menggeser semuanya."),
             style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             Nudge("X -", Modifier.weight(1f)) { vm.shiftGroup(0, -step); gl.requestRender() }
@@ -708,12 +708,12 @@ fun GroupCard(vm: EditorVM, gl: GlScene, step: Float) {
             }
         }
         Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            Nudge("Kunci semua", Modifier.weight(1f)) { vm.setLockedGroup(true); gl.requestRender() }
-            Nudge("Buka semua", Modifier.weight(1f)) { vm.setLockedGroup(false); gl.requestRender() }
+            Nudge(I18n.t("Kunci semua"), Modifier.weight(1f)) { vm.setLockedGroup(true); gl.requestRender() }
+            Nudge(I18n.t("Buka semua"), Modifier.weight(1f)) { vm.setLockedGroup(false); gl.requestRender() }
         }
         Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            Nudge("Batal pilih", Modifier.weight(1f)) { vm.clearSel(); gl.requestRender() }
-            Nudge("Hapus semua", Modifier.weight(1f)) { vm.removeGroup(); gl.requestRender() }
+            Nudge(I18n.t("Batal pilih"), Modifier.weight(1f)) { vm.clearSel(); gl.requestRender() }
+            Nudge(I18n.t("Hapus semua"), Modifier.weight(1f)) { vm.removeGroup(); gl.requestRender() }
         }
     }
 }
@@ -724,10 +724,10 @@ fun ReplaceModelCard(vm: EditorVM) {
     var to by remember { mutableStateOf("") }
     var msg by remember { mutableStateOf("") }
     Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text("Ganti model", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
+        Text(I18n.t("Ganti model"), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Field("Dari", from, Modifier.weight(1f)) { from = it }
-            Field("Menjadi", to, Modifier.weight(1f)) { to = it }
+            Field(I18n.t("Dari"), from, Modifier.weight(1f)) { from = it }
+            Field(I18n.t("Menjadi"), to, Modifier.weight(1f)) { to = it }
         }
         Button(
             onClick = {
@@ -735,7 +735,7 @@ fun ReplaceModelCard(vm: EditorVM) {
                 msg = if (n > 0) "$n objek diganti." else "Tidak ada objek yang cocok (atau terkunci)."
             },
             shape = RoundedCornerShape(14.dp), modifier = Modifier.fillMaxWidth()
-        ) { Text("Ganti semua") }
+        ) { Text(I18n.t("Ganti semua")) }
         if (msg.isNotEmpty()) Text(msg, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }
@@ -746,13 +746,13 @@ fun ExportCard(vm: EditorVM) {
     val scope = rememberCoroutineScope()
     var msg by remember { mutableStateOf("") }
     Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text("Export paket mod", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
-        Text("Membuat IDE, IPL, dan DFF/TXD model impor dalam satu folder. Lalu disalin ke folder game dengan Termux.",
+        Text(I18n.t("Export paket mod"), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
+        Text(I18n.t("Membuat IDE, IPL, dan DFF/TXD model impor dalam satu folder. Lalu disalin ke folder game dengan Termux."),
             style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         Button(
             onClick = {
                 val g = vm.game
-                if (g == null) { msg = "Pilih folder GTA SA dulu."; return@Button }
+                if (g == null) { msg = I18n.t("Pilih folder GTA SA dulu."); return@Button }
                 val snap = vm.entries.toList()
                 msg = "Mengekspor..."
                 scope.launch(Dispatchers.IO) {
@@ -761,7 +761,7 @@ fun ExportCard(vm: EditorVM) {
                 }
             },
             modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(14.dp)
-        ) { Text("Export paket mod") }
+        ) { Text(I18n.t("Export paket mod")) }
         if (msg.isNotEmpty()) Text(msg, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }
