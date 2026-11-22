@@ -21,6 +21,7 @@ object I18n {
     fun t(key: String): String = if (lang == "en") (en[key] ?: key) else key
 
     private val en: Map<String, String> = mapOf(
+        "Kartu objek lebih kecil dan tombol kamera berbentuk panah." to "Smaller object card and arrow-style camera buttons.",
         "Naik" to "Up",
         "Turun" to "Down",
         "Maju" to "Forward",

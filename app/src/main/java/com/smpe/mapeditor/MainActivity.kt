@@ -1212,7 +1212,8 @@ private val changelogItems = listOf(
     "Pilih banyak objek, grid, kunci objek, dan tampilan atas.",
     "Halaman awal baru dengan bahasa Indonesia dan English.",
     "Perbaikan: ID otomatis di bawah 20000, gta3.img di texdb terbaca.",
-    "Kamera: tombol arah dan geser objek lebih aman."
+    "Kamera: tombol arah dan geser objek lebih aman.",
+    "Kartu objek lebih kecil dan tombol kamera berbentuk panah."
 )
 
 @Composable

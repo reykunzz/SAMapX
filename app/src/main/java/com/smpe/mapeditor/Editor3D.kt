@@ -2,6 +2,8 @@
 
 package com.smpe.mapeditor
 
+import androidx.compose.material3.Icon
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.material3.Surface
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
@@ -514,23 +516,24 @@ fun AxisBox(label: String, v: Float, modifier: Modifier) {
 @Composable
 fun SelCard(vm: EditorVM, gl: GlScene, o: Obj, modifier: Modifier) {
     val cs = MaterialTheme.colorScheme
-    Surface(modifier, shape = RoundedCornerShape(18.dp), color = cs.surface.copy(alpha = 0.96f),
-        border = BorderStroke(1.dp, cs.primary)) {
-        Row(Modifier.padding(start = 14.dp, end = 6.dp, top = 5.dp, bottom = 5.dp), verticalAlignment = Alignment.CenterVertically) {
-            Column(Modifier.widthIn(max = 170.dp)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(o.model, fontWeight = FontWeight.Bold, fontSize = 14.sp, maxLines = 1, modifier = Modifier.weight(1f, fill = false))
-                    Spacer(Modifier.width(6.dp))
-                    Text("${o.id}", fontSize = 11.sp, fontFamily = FontFamily.Monospace, color = cs.primary)
-                }
-                Text(String.format(Locale.US, "%.1f · %.1f · %.1f", o.x, o.y, o.z), fontSize = 11.sp,
-                    fontFamily = FontFamily.Monospace, color = cs.onSurfaceVariant, maxLines = 1)
-            }
-            Spacer(Modifier.width(8.dp))
-            TbBtn(UiIcons.Copy, I18n.t("Salin")) { vm.duplicate(vm.sel); gl.requestRender() }
-            TbBtn(Icons.Default.Delete, I18n.t("Hapus"), tint = cs.error) { vm.remove(vm.sel); gl.requestRender() }
-            TbBtn(Icons.Default.Close, I18n.t("Tutup")) { vm.clearSel(); gl.requestRender() }
+    Surface(modifier, shape = RoundedCornerShape(12.dp), color = cs.surface.copy(alpha = 0.92f),
+        border = BorderStroke(1.dp, cs.outline)) {
+        Row(Modifier.padding(start = 10.dp, end = 2.dp, top = 3.dp, bottom = 3.dp), verticalAlignment = Alignment.CenterVertically) {
+            Text(o.model, fontWeight = FontWeight.SemiBold, fontSize = 12.sp, maxLines = 1, modifier = Modifier.widthIn(max = 120.dp))
+            Spacer(Modifier.width(6.dp))
+            Text("${o.id}", fontSize = 10.sp, fontFamily = FontFamily.Monospace, color = cs.primary)
+            Spacer(Modifier.width(2.dp))
+            MiniBtn(UiIcons.Copy, cs.onSurface) { vm.duplicate(vm.sel); gl.requestRender() }
+            MiniBtn(Icons.Default.Delete, cs.error) { vm.remove(vm.sel); gl.requestRender() }
+            MiniBtn(Icons.Default.Close, cs.onSurfaceVariant) { vm.clearSel(); gl.requestRender() }
         }
+    }
+}
+
+@Composable
+fun MiniBtn(icon: ImageVector, tint: Color, onClick: () -> Unit) {
+    Box(Modifier.size(28.dp).clickable(onClick = onClick), contentAlignment = Alignment.Center) {
+        Icon(icon, null, tint = tint, modifier = Modifier.size(16.dp))
     }
 }
 
@@ -771,7 +774,7 @@ fun ExportCard(vm: EditorVM) {
     }
 }
 
-/** Tombol arah kamera: geser titik pandang kiri/kanan, maju/mundur, naik/turun. */
+/** Tombol arah kamera berbentuk panah: naik/turun di kiri, maju/mundur/kiri/kanan di kanan. */
 @Composable
 fun CameraPad(gl: GlScene, modifier: Modifier) {
     fun move(dRight: Float, dFwd: Float, dUp: Float) {
@@ -783,35 +786,32 @@ fun CameraPad(gl: GlScene, modifier: Modifier) {
         gl.tz += dUp * step
         gl.requestRender()
     }
-    Column(modifier, horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-            CamBtn(I18n.t("Naik")) { move(0f, 0f, 1f) }
-            CamBtn(I18n.t("Maju")) { move(0f, 1f, 0f) }
-            CamBtn(I18n.t("Turun")) { move(0f, 0f, -1f) }
+    Row(modifier, horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
+        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            CamBtn("\u2191") { move(0f, 0f, 1f) }
+            CamBtn("\u2193") { move(0f, 0f, -1f) }
         }
-        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-            CamBtn(I18n.t("Kiri")) { move(-1f, 0f, 0f) }
-            Spacer(Modifier.size(64.dp, 36.dp))
-            CamBtn(I18n.t("Kanan")) { move(1f, 0f, 0f) }
-        }
-        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-            Spacer(Modifier.size(64.dp, 36.dp))
-            CamBtn(I18n.t("Mundur")) { move(0f, -1f, 0f) }
-            Spacer(Modifier.size(64.dp, 36.dp))
+        Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            CamBtn("\u25B2") { move(0f, 1f, 0f) }
+            Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                CamBtn("\u25C0") { move(-1f, 0f, 0f) }
+                CamBtn("\u25B6") { move(1f, 0f, 0f) }
+            }
+            CamBtn("\u25BC") { move(0f, -1f, 0f) }
         }
     }
 }
 
 @Composable
-fun CamBtn(label: String, onClick: () -> Unit) {
+fun CamBtn(symbol: String, onClick: () -> Unit) {
     val cs = MaterialTheme.colorScheme
     Surface(
-        modifier = Modifier.size(64.dp, 36.dp).clickable(onClick = onClick),
-        shape = RoundedCornerShape(10.dp), color = cs.surface.copy(alpha = 0.92f),
+        modifier = Modifier.size(40.dp).clickable(onClick = onClick),
+        shape = RoundedCornerShape(10.dp), color = cs.surface.copy(alpha = 0.9f),
         border = BorderStroke(1.dp, cs.outline)
     ) {
         Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
-            Text(label, style = MaterialTheme.typography.labelMedium, color = cs.onSurface, maxLines = 1)
+            Text(symbol, fontSize = 15.sp, color = cs.onSurface)
         }
     }
 }
