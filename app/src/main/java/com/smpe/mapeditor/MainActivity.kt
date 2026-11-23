@@ -686,7 +686,7 @@ fun App(vm: EditorVM = viewModel()) {
                     val g = vm.game
                     if (g != null) Box(Modifier.fillMaxSize()) {
                         GlEditor(vm, g)
-                        Box(Modifier.align(Alignment.TopStart).fillMaxWidth()) { headerFn(true) }
+                        Box(Modifier.align(Alignment.TopEnd)) { headerFn(true) }
                     }
                     else Box(Modifier.fillMaxSize()) { View3D(vm); GamePrompt(vm) { pickTree.launch(null) } }
                 }
@@ -894,7 +894,7 @@ fun AppHeader(
             if (!overlay) {
                 Image(painterResource(R.drawable.logo), null, Modifier.size(26.dp))
                 Spacer(Modifier.width(6.dp))
-            } else Spacer(Modifier.weight(1f))
+            }
             if (hasFile) {
                 HeaderTab("Objek", tab == 0) { onTab(0) }
                 HeaderTab("3D", tab == 1) { onTab(1) }
@@ -1262,7 +1262,8 @@ private val changelogItems = listOf(
     "Rotasi lebih halus, geser objek perlu ditahan sebentar, dan tombol kamera bisa diatur kecepatannya.",
     "Mode Objek: kamera berpusat di objek yang dipilih.",
     "Pratinjau texture model saat menambah objek.",
-    "Tampilan 3D layar penuh: header transparan, toolbar dan Inspector di kiri atas."
+    "Tampilan 3D layar penuh: header transparan, toolbar dan Inspector di kiri atas.",
+    "Perbaikan: toolbar atas di tab 3D bisa ditekan."
 )
 
 @Composable
