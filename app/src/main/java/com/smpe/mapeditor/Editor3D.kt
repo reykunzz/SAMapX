@@ -889,8 +889,12 @@ fun CameraPad(vm: EditorVM, gl: GlScene, modifier: Modifier) {
             }
         }
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-            if (vm.camMode != 0) CamBtn("\u2190") { backToExplore() }
-            CamBtn("${speedLevel + 1}x") { speedLevel = (speedLevel + 1) % speeds.size }
+            if (vm.camMode == 1) {
+                CamBtn("\u21BA") { vm.rotateSel(-15f) }
+                CamBtn("\u21BB") { vm.rotateSel(15f) }
+            }
+            if (vm.camMode != 0) CamBtn("\u2190", repeat = false) { backToExplore() }
+            CamBtn("${speedLevel + 1}x", repeat = false) { speedLevel = (speedLevel + 1) % speeds.size }
             Joystick { ax, ay -> orbit(ax * 0.035f, -ay * 0.025f) }
         }
     }
@@ -934,10 +938,22 @@ fun Joystick(onDelta: (Float, Float) -> Unit) {
 }
 
 @Composable
-fun CamBtn(symbol: String, onClick: () -> Unit) {
+fun CamBtn(symbol: String, repeat: Boolean = true, onClick: () -> Unit) {
     val cs = MaterialTheme.colorScheme
+    val scope = rememberCoroutineScope()
+    val curClick by rememberUpdatedState(onClick)
     Surface(
-        modifier = Modifier.size(40.dp).clickable(onClick = onClick),
+        modifier = Modifier.size(40.dp).pointerInput(repeat) {
+            detectTapGestures(onPress = {
+                curClick()
+                val job = if (repeat) scope.launch {
+                    delay(300)
+                    while (true) { curClick(); delay(60) }
+                } else null
+                tryAwaitRelease()
+                job?.cancel()
+            })
+        },
         shape = RoundedCornerShape(10.dp), color = cs.surface.copy(alpha = 0.9f),
         border = BorderStroke(1.dp, cs.outline)
     ) {
