@@ -630,10 +630,7 @@ fun App(vm: EditorVM = viewModel()) {
         if (saved != null && vm.game == null) loadGame(Uri.parse(saved))
     }
 
-    Scaffold(
-        containerColor = MaterialTheme.colorScheme.background,
-        snackbarHost = { SnackbarHost(snack) },
-        topBar = {
+    val headerFn: @Composable (Boolean) -> Unit = { ov ->
             AppHeader(
                 hasFile = vm.entries.isNotEmpty(), tab = tab, onTab = { tab = it },
                 dirty = vm.dirty,
@@ -653,8 +650,15 @@ fun App(vm: EditorVM = viewModel()) {
                         }
                     })
                     DropdownMenuItem(text = { Text("Pilih folder GTA SA") }, onClick = { close(); pickTree.launch(null) })
-                }
+                },
+                overlay = ov
             )
+    }
+    Scaffold(
+        containerColor = MaterialTheme.colorScheme.background,
+        snackbarHost = { SnackbarHost(snack) },
+        topBar = {
+            if (!(tab == 1 && vm.game != null && vm.entries.isNotEmpty())) headerFn(false)
         },
         floatingActionButton = {
             if (vm.entries.isNotEmpty() && !(tab == 1 && vm.game != null)) ExtendedFloatingActionButton(
@@ -680,7 +684,10 @@ fun App(vm: EditorVM = viewModel()) {
                 tab == 0 -> ListView(vm)
                 tab == 1 -> {
                     val g = vm.game
-                    if (g != null) GlEditor(vm, g)
+                    if (g != null) Box(Modifier.fillMaxSize()) {
+                        GlEditor(vm, g)
+                        Box(Modifier.align(Alignment.TopStart).fillMaxWidth()) { headerFn(true) }
+                    }
                     else Box(Modifier.fillMaxSize()) { View3D(vm); GamePrompt(vm) { pickTree.launch(null) } }
                 }
                 else -> { /* tab 0 and 1 are handled above */ }
@@ -874,24 +881,27 @@ fun Empty(
 fun AppHeader(
     hasFile: Boolean, tab: Int, onTab: (Int) -> Unit, dirty: Boolean,
     onOpen: () -> Unit, onSave: () -> Unit,
-    menu: @Composable ColumnScope.(close: () -> Unit) -> Unit
+    menu: @Composable ColumnScope.(close: () -> Unit) -> Unit,
+    overlay: Boolean = false
 ) {
     val cs = MaterialTheme.colorScheme
     var menuOpen by remember { mutableStateOf(false) }
-    Surface(color = cs.background) {
+    Surface(color = if (overlay) Color.Transparent else cs.background) {
         Row(
             Modifier.statusBarsPadding().height(44.dp).padding(horizontal = 8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Image(painterResource(R.drawable.logo), null, Modifier.size(26.dp))
-            Spacer(Modifier.width(6.dp))
+            if (!overlay) {
+                Image(painterResource(R.drawable.logo), null, Modifier.size(26.dp))
+                Spacer(Modifier.width(6.dp))
+            } else Spacer(Modifier.weight(1f))
             if (hasFile) {
                 HeaderTab("Objek", tab == 0) { onTab(0) }
                 HeaderTab("3D", tab == 1) { onTab(1) }
             } else {
                 Text("San Editor", fontWeight = FontWeight.Black, color = cs.primary)
             }
-            Spacer(Modifier.weight(1f))
+            if (!overlay) Spacer(Modifier.weight(1f))
             val pad = PaddingValues(horizontal = 10.dp)
             TextButton(onClick = onOpen, contentPadding = pad) { Text("Buka") }
             if (hasFile) TextButton(onClick = onSave, contentPadding = pad) {
@@ -1251,7 +1261,8 @@ private val changelogItems = listOf(
     "Pop-up update menampilkan catatan rilis.",
     "Rotasi lebih halus, geser objek perlu ditahan sebentar, dan tombol kamera bisa diatur kecepatannya.",
     "Mode Objek: kamera berpusat di objek yang dipilih.",
-    "Pratinjau texture model saat menambah objek."
+    "Pratinjau texture model saat menambah objek.",
+    "Tampilan 3D layar penuh: header transparan, toolbar dan Inspector di kiri atas."
 )
 
 @Composable

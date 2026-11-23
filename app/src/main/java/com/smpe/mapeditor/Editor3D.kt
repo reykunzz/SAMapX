@@ -2,6 +2,7 @@
 
 package com.smpe.mapeditor
 
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material.icons.filled.List
 import androidx.compose.foundation.layout.width
 import androidx.compose.ui.graphics.asImageBitmap
@@ -89,7 +90,7 @@ fun GlEditor(vm: EditorVM, game: GameData) {
         }
         if (showPanel) {
             Column(
-                Modifier.align(Alignment.TopStart).padding(start = 8.dp, top = 58.dp, bottom = 8.dp)
+                Modifier.align(Alignment.TopStart).statusBarsPadding().padding(start = 8.dp, top = 58.dp, bottom = 8.dp)
                     .width(panelWidth)
                     .heightIn(max = containerHeight - 76.dp)
                     .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.97f), RoundedCornerShape(16.dp))
@@ -282,7 +283,7 @@ fun Viewport(
             onUndo = { vm.undo(); gl.requestRender() },
             onRedo = { vm.redo(); gl.requestRender() },
             panelVisible = panelVisible, onTogglePanel = togglePanel,
-            modifier = Modifier.align(Alignment.TopStart).padding(8.dp),
+            modifier = Modifier.align(Alignment.TopStart).statusBarsPadding().padding(start = 8.dp, top = 6.dp),
             snap = vm.snap,
             onSnap = {
                 val order = listOf(0f, 0.5f, 1f, 5f)

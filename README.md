@@ -40,6 +40,7 @@ Catatan: model impor hanya bisa dilihat dan ditempatkan di editor. Agar muncul d
 
 ## Changelog
 
+- **1.9.0**: Tampilan 3D layar penuh. Header transparan tanpa logo, toolbar dan Inspector di kiri atas.
 - **1.8.10**: Pratinjau texture model di daftar Tambah objek.
 - **1.8.9**: Mode Objek: kamera berpusat di objek, tombol arah menggeser dan memutar objek. Geser objek perlu ditahan lebih lama.
 - **1.8.8**: Nama file APK rilis sekarang SanEditor-v<versi>.apk.
