@@ -40,6 +40,8 @@ Catatan: model impor hanya bisa dilihat dan ditempatkan di editor. Agar muncul d
 
 ## Changelog
 
+- **1.9.9**: Tap objek hanya memilih. Geser hanya bisa setelah menekan tombol Edit (pensil).
+- **1.9.8**: Tombol Edit dihapus. Objek yang sudah dipilih langsung bisa digeser dengan jari.
 - **1.9.7**: Tombol Edit di kartu objek. Objek hanya bisa digeser setelah Edit diaktifkan.
 - **1.9.6**: Mode Jelajah: objek yang sudah dipilih langsung bisa digeser tanpa menahan.
 - **1.9.5**: Mode Jelajah: pilih objek cukup dengan sentuh. Mode Kamera dan Objek tetap perlu ditahan.

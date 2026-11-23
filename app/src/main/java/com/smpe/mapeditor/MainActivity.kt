@@ -1275,7 +1275,7 @@ private val changelogItems = listOf(
     "Mode Jelajah, Kamera, dan Objek dipisah. Pilih objek dengan tahan. Joystick untuk putar kamera.",
     "Tambah objek: pilih model dari gambar yang bisa digulir, tanpa mengetik ID.",
     "Tombol panah kiri untuk kembali ke mode Jelajah setelah mengedit objek.",
-    "Tombol Edit di kartu objek: aktifkan dulu, lalu objek bisa digeser dengan jari."
+    "Di mode Jelajah, tap objek hanya memilihnya. Tekan Edit (pensil) untuk menggesernya."
 )
 
 @Composable
