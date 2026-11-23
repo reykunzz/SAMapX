@@ -159,8 +159,10 @@ class EditorVM : ViewModel() {
     var multi by mutableStateOf(false)
     var topDown by mutableStateOf(false)
     var gridOn by mutableStateOf(true)
-    /** 0 = Jelajah (kamera bebas), 1 = Objek (kamera berpusat di objek, tombol arah menggeser objek). */
+    /** 0 = Jelajah, 1 = Objek (kamera berpusat di objek, arah menggeser objek), 2 = Kamera (kamera bebas). */
     var camMode by mutableIntStateOf(0)
+    /** Posisi kamera sebelum masuk mode Objek/Kamera: tx, ty, tz, dist, yaw, pitch. */
+    var savedCam by mutableStateOf<FloatArray?>(null)
     /** Naik setiap ada perubahan; dipakai untuk autosave draf. */
     var rev by mutableIntStateOf(0)
     /** Label aksi terakhir yang bisa dibatalkan, mis. "Geser X". */
@@ -903,8 +905,8 @@ fun AppHeader(
             }
             if (!overlay) Spacer(Modifier.weight(1f))
             val pad = PaddingValues(horizontal = 10.dp)
-            TextButton(onClick = onOpen, contentPadding = pad) { Text("Buka") }
-            if (hasFile) TextButton(onClick = onSave, contentPadding = pad) {
+            if (!overlay) TextButton(onClick = onOpen, contentPadding = pad) { Text("Buka") }
+            if (hasFile && !overlay) TextButton(onClick = onSave, contentPadding = pad) {
                 Text("Simpan")
                 if (dirty) {
                     Spacer(Modifier.width(4.dp))
@@ -916,6 +918,10 @@ fun AppHeader(
                     Icon(Icons.Default.MoreVert, "Menu")
                 }
                 DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
+                    if (overlay) {
+                        DropdownMenuItem(text = { Text("Buka") }, onClick = { menuOpen = false; onOpen() })
+                        if (hasFile) DropdownMenuItem(text = { Text(if (dirty) "Simpan \u2022" else "Simpan") }, onClick = { menuOpen = false; onSave() })
+                    }
                     menu { menuOpen = false }
                 }
             }
@@ -1263,7 +1269,8 @@ private val changelogItems = listOf(
     "Mode Objek: kamera berpusat di objek yang dipilih.",
     "Pratinjau texture model saat menambah objek.",
     "Tampilan 3D layar penuh: header transparan, toolbar dan Inspector di kiri atas.",
-    "Perbaikan: toolbar atas di tab 3D bisa ditekan."
+    "Perbaikan: toolbar atas di tab 3D bisa ditekan.",
+    "Mode Jelajah, Kamera, dan Objek dipisah. Pilih objek dengan tahan. Joystick untuk putar kamera."
 )
 
 @Composable

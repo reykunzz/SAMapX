@@ -2,6 +2,10 @@
 
 package com.smpe.mapeditor
 
+import kotlin.math.roundToInt
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.foundation.border
+import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material.icons.filled.List
 import androidx.compose.foundation.layout.width
@@ -262,7 +266,8 @@ fun Viewport(
                             last = c.position
                         }
                     }
-                    if (!moved) {
+                    val held = android.os.SystemClock.uptimeMillis() - down.uptimeMillis
+                    if (!moved && held >= 400L) {
                         val i = gl.pick(down.position.x, down.position.y, 40f * density)
                         if (i >= 0) { vm.tapSelect(i); vm.selStream = -1 }
                         else if (i <= -2) { vm.selStream = -(i + 2); vm.selSet.clear(); vm.sel = -1 }
@@ -792,7 +797,7 @@ fun ExportCard(vm: EditorVM) {
     }
 }
 
-/** Tombol kamera. Mode Jelajah: kamera bergerak. Mode Objek: tombol arah menggeser objek yang dipilih. */
+/** Panel kamera: pilihan mode (Jelajah, Kamera, Objek), tombol arah, joystick analog untuk putar kamera. */
 @Composable
 fun CameraPad(vm: EditorVM, gl: GlScene, modifier: Modifier) {
     var speedLevel by remember { mutableIntStateOf(1) }
@@ -814,26 +819,47 @@ fun CameraPad(vm: EditorVM, gl: GlScene, modifier: Modifier) {
         }
         gl.requestRender()
     }
-    fun rotate(dYaw: Float, dPitch: Float) {
-        if (vm.camMode == 1 && vm.sel >= 0) {
-            if (dYaw != 0f) vm.rotateSel(Math.toDegrees(dYaw.toDouble()).toFloat())
-        } else {
-            gl.yaw += dYaw
-            if (!gl.topDown) gl.pitch = (gl.pitch + dPitch).coerceIn(0.05f, 1.5f)
+    fun orbit(dYaw: Float, dPitch: Float) {
+        gl.yaw += dYaw
+        if (!gl.topDown) gl.pitch = (gl.pitch + dPitch).coerceIn(0.05f, 1.5f)
+        gl.requestRender()
+    }
+    fun setMode(newMode: Int) {
+        if (vm.camMode == 0 && newMode != 0) {
+            vm.savedCam = floatArrayOf(gl.tx, gl.ty, gl.tz, gl.dist, gl.yaw, gl.pitch)
         }
+        vm.camMode = newMode
+        if (newMode == 1) vm.sel.let { }
         gl.requestRender()
     }
     Column(modifier, horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(6.dp)) {
-        Surface(
-            modifier = Modifier.clickable { vm.camMode = 1 - vm.camMode },
-            shape = RoundedCornerShape(10.dp),
-            color = if (vm.camMode == 1) cs0.primary else cs0.surface.copy(alpha = 0.9f),
-            border = BorderStroke(1.dp, cs0.outline)
-        ) {
-            Text(if (vm.camMode == 1) I18n.t("Mode objek") else I18n.t("Mode jelajah"),
-                modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
-                style = MaterialTheme.typography.labelMedium,
-                color = if (vm.camMode == 1) cs0.onPrimary else cs0.onSurface)
+        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+            listOf(0 to I18n.t("Jelajah"), 2 to I18n.t("Kamera"), 1 to I18n.t("Objek")).forEach { (mode, label) ->
+                val on = vm.camMode == mode
+                Surface(
+                    modifier = Modifier.clickable { setMode(mode) },
+                    shape = RoundedCornerShape(10.dp),
+                    color = if (on) cs0.primary else cs0.surface.copy(alpha = 0.9f),
+                    border = BorderStroke(1.dp, cs0.outline)
+                ) {
+                    Text(label, modifier = Modifier.padding(horizontal = 8.dp, vertical = 5.dp),
+                        style = MaterialTheme.typography.labelMedium,
+                        color = if (on) cs0.onPrimary else cs0.onSurface)
+                }
+            }
+        }
+        if (vm.camMode == 0 && vm.savedCam != null) {
+            Surface(
+                modifier = Modifier.clickable {
+                    val c = vm.savedCam!!
+                    gl.tx = c[0]; gl.ty = c[1]; gl.tz = c[2]; gl.dist = c[3]; gl.yaw = c[4]; gl.pitch = c[5]
+                    vm.savedCam = null
+                    gl.requestRender()
+                },
+                shape = RoundedCornerShape(10.dp), color = cs0.surface.copy(alpha = 0.9f), border = BorderStroke(1.dp, cs0.outline)
+            ) {
+                Text(I18n.t("Kembali"), modifier = Modifier.padding(horizontal = 8.dp, vertical = 5.dp), style = MaterialTheme.typography.labelMedium, color = cs0.onSurface)
+            }
         }
         Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -849,13 +875,47 @@ fun CameraPad(vm: EditorVM, gl: GlScene, modifier: Modifier) {
                 CamBtn("\u25BC") { move(0f, -1f, 0f) }
             }
         }
-        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-            CamBtn("\u21BA") { rotate(-0.1f, 0f) }
-            CamBtn("\u21BB") { rotate(0.1f, 0f) }
-            CamBtn("\u2227") { rotate(0f, 0.06f) }
-            CamBtn("\u2228") { rotate(0f, -0.06f) }
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
             CamBtn("${speedLevel + 1}x") { speedLevel = (speedLevel + 1) % speeds.size }
+            Joystick { ax, ay -> orbit(ax * 0.035f, -ay * 0.025f) }
         }
+    }
+}
+
+/** Joystick analog: tahan dan geser untuk memutar kamera terus-menerus. Nilai -1..1 per frame. */
+@Composable
+fun Joystick(onDelta: (Float, Float) -> Unit) {
+    val cs = MaterialTheme.colorScheme
+    val radiusPx = with(LocalDensity.current) { 40.dp.toPx() }
+    var knob by remember { mutableStateOf(Offset.Zero) }
+    val curOnDelta by rememberUpdatedState(onDelta)
+    LaunchedEffect(Unit) {
+        while (true) {
+            delay(16)
+            val k = knob
+            if (k != Offset.Zero) curOnDelta(k.x / radiusPx, k.y / radiusPx)
+        }
+    }
+    Box(
+        Modifier.size(96.dp).clip(CircleShape).background(cs.surface.copy(alpha = 0.9f))
+            .border(1.dp, cs.outline, CircleShape)
+            .pointerInput(Unit) {
+                detectDragGestures(
+                    onDragStart = { knob = Offset.Zero },
+                    onDragEnd = { knob = Offset.Zero },
+                    onDragCancel = { knob = Offset.Zero },
+                    onDrag = { change, drag ->
+                        change.consume()
+                        val nk = knob + drag
+                        val len = nk.getDistance()
+                        knob = if (len > radiusPx) nk * (radiusPx / len) else nk
+                    }
+                )
+            },
+        contentAlignment = Alignment.Center
+    ) {
+        Box(Modifier.offset { IntOffset(knob.x.roundToInt(), knob.y.roundToInt()) }
+            .size(34.dp).clip(CircleShape).background(cs.primary))
     }
 }
 

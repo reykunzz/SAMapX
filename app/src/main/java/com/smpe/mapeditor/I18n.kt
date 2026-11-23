@@ -21,6 +21,10 @@ object I18n {
     fun t(key: String): String = if (lang == "en") (en[key] ?: key) else key
 
     private val en: Map<String, String> = mapOf(
+        "Jelajah" to "Explore",
+        "Kamera" to "Camera",
+        "Objek" to "Object",
+        "Kembali" to "Back",
         "Tampilan 3D layar penuh: header transparan, toolbar dan Inspector di kiri atas." to "Full-screen 3D view: transparent header, toolbar and Inspector at top-left.",
         "Pratinjau texture model saat menambah objek." to "Texture preview when adding objects.",
         "Mode objek" to "Object mode",
