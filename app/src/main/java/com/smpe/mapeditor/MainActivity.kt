@@ -1270,7 +1270,9 @@ private val changelogItems = listOf(
     "Pratinjau texture model saat menambah objek.",
     "Tampilan 3D layar penuh: header transparan, toolbar dan Inspector di kiri atas.",
     "Perbaikan: toolbar atas di tab 3D bisa ditekan.",
-    "Mode Jelajah, Kamera, dan Objek dipisah. Pilih objek dengan tahan. Joystick untuk putar kamera."
+    "Mode Jelajah, Kamera, dan Objek dipisah. Pilih objek dengan tahan. Joystick untuk putar kamera.",
+    "Tambah objek: pilih model dari gambar yang bisa digulir, tanpa mengetik ID.",
+    "Tombol panah kiri untuk kembali ke mode Jelajah setelah mengedit objek."
 )
 
 @Composable

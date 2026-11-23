@@ -21,6 +21,7 @@ object I18n {
     fun t(key: String): String = if (lang == "en") (en[key] ?: key) else key
 
     private val en: Map<String, String> = mapOf(
+        "Pilih model dari gambar, lalu ketuk untuk menaruh objek." to "Pick a model from the images, then tap to place the object.",
         "Jelajah" to "Explore",
         "Kamera" to "Camera",
         "Objek" to "Object",

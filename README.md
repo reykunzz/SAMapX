@@ -40,6 +40,8 @@ Catatan: model impor hanya bisa dilihat dan ditempatkan di editor. Agar muncul d
 
 ## Changelog
 
+- **1.9.4**: Tombol Kembali diganti panah kiri. Setelah mengedit objek, panah kembali ke mode Jelajah dan posisi kamera sebelumnya.
+- **1.9.3**: Tambah objek memakai kisi gambar yang bisa digulir. Ketuk gambar untuk menaruh objek, tanpa mengetik ID.
 - **1.9.2**: Mode Jelajah, Kamera, dan Objek dipisah. Pilih objek dengan tahan. Joystick untuk putar kamera. Buka dan Simpan pindah ke menu ⋮ di tab 3D.
 - **1.9.1**: Perbaikan toolbar atas di tab 3D yang tidak bisa ditekan.
 - **1.9.0**: Tampilan 3D layar penuh. Header transparan tanpa logo, toolbar dan Inspector di kiri atas.

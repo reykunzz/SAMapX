@@ -2,6 +2,11 @@
 
 package com.smpe.mapeditor
 
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import kotlin.math.roundToInt
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.foundation.border
@@ -560,6 +565,11 @@ fun MiniBtn(icon: ImageVector, tint: Color, onClick: () -> Unit) {
 fun ModelPicker(vm: EditorVM) {
     val g = vm.game
     var q by remember { mutableStateOf("") }
+    val key = q.trim().lowercase()
+    val res = if (g == null) emptyList() else g.allModels()
+        .filter { it.second > 0 && (key.isEmpty() || it.first.contains(key) || it.second.toString() == key) }
+        .sortedBy { it.first }
+        .take(400)
     AlertDialog(
         onDismissRequest = { vm.picker = false },
         confirmButton = { TextButton(onClick = { vm.picker = false }) { Text(I18n.t("Batal")) } },
@@ -568,21 +578,25 @@ fun ModelPicker(vm: EditorVM) {
             Column {
                 OutlinedTextField(value = q, onValueChange = { q = it }, singleLine = true, shape = RoundedCornerShape(14.dp),
                     placeholder = { Text(I18n.t("Cari nama model atau ID")) }, modifier = Modifier.fillMaxWidth())
-                val key = q.trim().lowercase()
-                val res = if (g == null || key.isEmpty()) emptyList() else g.allModels().filter { it.second > 0 && (it.first.contains(key) || it.second.toString() == key) }.take(150)
-                if (key.isEmpty()) Text(
-                    if (g != null && !g.idsKnown) "File .ide tidak ditemukan: daftar dari nama model, ID = 0. Ubah ID lewat Edit nilai." else "Ketik nama model, misalnya lamppost.",
-                    Modifier.padding(top = 10.dp), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                LazyColumn(Modifier.heightIn(max = 320.dp)) {
+                Spacer(Modifier.height(8.dp))
+                LazyVerticalGrid(
+                    columns = GridCells.Adaptive(96.dp),
+                    modifier = Modifier.fillMaxWidth().heightIn(max = 420.dp),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    verticalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
                     items(res) { d ->
-                        Row(Modifier.fillMaxWidth().clickable {
-                            val s = vm.gl
-                            vm.sel = vm.add(d.first, d.second, s?.tx ?: 0f, s?.ty ?: 0f, s?.tz ?: 10f)
-                            vm.picker = false
-                        }.padding(vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-                            ModelThumb(vm.game, d.first)
-                            Spacer(Modifier.width(10.dp))
-                            Text("${d.first}   (${d.second})")
+                        Column(
+                            Modifier.clip(RoundedCornerShape(10.dp)).clickable {
+                                val s = vm.gl
+                                vm.sel = vm.add(d.first, d.second, s?.tx ?: 0f, s?.ty ?: 0f, s?.tz ?: 10f)
+                                vm.picker = false
+                            }.padding(4.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            ModelThumb(g, d.first, 84.dp)
+                            Text(d.first, maxLines = 1, overflow = TextOverflow.Ellipsis,
+                                style = MaterialTheme.typography.labelSmall)
                         }
                     }
                 }
@@ -832,9 +846,15 @@ fun CameraPad(vm: EditorVM, gl: GlScene, modifier: Modifier) {
         if (newMode == 1) vm.sel.let { }
         gl.requestRender()
     }
+    fun backToExplore() {
+        vm.savedCam?.let { c -> gl.tx = c[0]; gl.ty = c[1]; gl.tz = c[2]; gl.dist = c[3]; gl.yaw = c[4]; gl.pitch = c[5] }
+        vm.savedCam = null
+        vm.camMode = 0
+        gl.requestRender()
+    }
     Column(modifier, horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(6.dp)) {
         Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-            listOf(0 to I18n.t("Jelajah"), 2 to I18n.t("Kamera"), 1 to I18n.t("Objek")).forEach { (mode, label) ->
+            listOf(2 to I18n.t("Kamera"), 1 to I18n.t("Objek")).forEach { (mode, label) ->
                 val on = vm.camMode == mode
                 Surface(
                     modifier = Modifier.clickable { setMode(mode) },
@@ -846,19 +866,6 @@ fun CameraPad(vm: EditorVM, gl: GlScene, modifier: Modifier) {
                         style = MaterialTheme.typography.labelMedium,
                         color = if (on) cs0.onPrimary else cs0.onSurface)
                 }
-            }
-        }
-        if (vm.camMode == 0 && vm.savedCam != null) {
-            Surface(
-                modifier = Modifier.clickable {
-                    val c = vm.savedCam!!
-                    gl.tx = c[0]; gl.ty = c[1]; gl.tz = c[2]; gl.dist = c[3]; gl.yaw = c[4]; gl.pitch = c[5]
-                    vm.savedCam = null
-                    gl.requestRender()
-                },
-                shape = RoundedCornerShape(10.dp), color = cs0.surface.copy(alpha = 0.9f), border = BorderStroke(1.dp, cs0.outline)
-            ) {
-                Text(I18n.t("Kembali"), modifier = Modifier.padding(horizontal = 8.dp, vertical = 5.dp), style = MaterialTheme.typography.labelMedium, color = cs0.onSurface)
             }
         }
         Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -876,6 +883,7 @@ fun CameraPad(vm: EditorVM, gl: GlScene, modifier: Modifier) {
             }
         }
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+            if (vm.camMode != 0) CamBtn("\u2190") { backToExplore() }
             CamBtn("${speedLevel + 1}x") { speedLevel = (speedLevel + 1) % speeds.size }
             Joystick { ax, ay -> orbit(ax * 0.035f, -ay * 0.025f) }
         }
@@ -935,14 +943,14 @@ fun CamBtn(symbol: String, onClick: () -> Unit) {
 
 /** Pratinjau texture model dari DFF (texture diambil dari texdb). Dimuat sekali lalu disimpan di cache. */
 @Composable
-fun ModelThumb(g: GameData?, name: String) {
+fun ModelThumb(g: GameData?, name: String, thumb: Dp = 44.dp) {
     val bmp by produceState<androidx.compose.ui.graphics.ImageBitmap?>(initialValue = null, g, name) {
         value = withContext(Dispatchers.IO) {
             g?.loadModel(name)?.parts?.firstOrNull { it.tex != null }?.tex?.let { texToBitmap(it) }
         }
     }
     val b = bmp
-    Box(Modifier.size(44.dp).clip(RoundedCornerShape(8.dp)).background(MaterialTheme.colorScheme.surfaceVariant),
+    Box(Modifier.size(thumb).clip(RoundedCornerShape(8.dp)).background(MaterialTheme.colorScheme.surfaceVariant),
         contentAlignment = Alignment.Center) {
         if (b != null) Image(b, null, Modifier.fillMaxSize())
         else Icon(Icons.Default.List, null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(18.dp))
