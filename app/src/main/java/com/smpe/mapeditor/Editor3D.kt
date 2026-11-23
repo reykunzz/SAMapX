@@ -2,6 +2,7 @@
 
 package com.smpe.mapeditor
 
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.foundation.lazy.grid.items
@@ -208,7 +209,7 @@ fun Viewport(
                     var startVal = 0f
                     var acc = 0f
                     var last = down.position
-                    val grp = if (axis < 0 && !pm.value) vm.groupIdx().filter { (vm.entries.getOrNull(it) as? Obj)?.locked != true } else emptyList()
+                    val grp = if (axis < 0 && !pm.value && vm.dragEdit) vm.groupIdx().filter { (vm.entries.getOrNull(it) as? Obj)?.locked != true } else emptyList()
                     val freeHit = grp.isNotEmpty() && gl.pick(down.position.x, down.position.y, 24f * density) in grp
                     val gx = FloatArray(grp.size); val gy = FloatArray(grp.size)
                     var fdx = 0f; var fdy = 0f
@@ -240,7 +241,10 @@ fun Viewport(
                                     c.consume()
                                 }
                             } else if (freeHit) {
-                                if (moved && c.uptimeMillis - down.uptimeMillis > 500L && Math.hypot((c.position.x - down.position.x).toDouble(), (c.position.y - down.position.y).toDouble()) > 32.0 * density) {
+                                val dragHold = false
+                                val dragDist = Math.hypot((c.position.x - down.position.x).toDouble(), (c.position.y - down.position.y).toDouble())
+                                // Mode Jelajah: objek yang sudah dipilih langsung bisa digeser. Mode Kamera/Objek: harus ditahan dulu.
+                                if (moved && (!dragHold || c.uptimeMillis - down.uptimeMillis > 500L) && dragDist > (if (dragHold) 32.0 else 12.0) * density) {
                                     if (!started) {
                                         started = true; vm.beginEdit("Geser objek"); fdx = 0f; fdy = 0f
                                         for ((j, idx) in grp.withIndex()) {
@@ -272,7 +276,8 @@ fun Viewport(
                         }
                     }
                     val held = android.os.SystemClock.uptimeMillis() - down.uptimeMillis
-                    if (!moved && held >= 400L) {
+                    // Mode Jelajah: cukup sentuh. Mode Kamera/Objek: harus ditahan agar tidak salah pilih.
+                    if (!moved && (vm.camMode == 0 || held >= 400L)) {
                         val i = gl.pick(down.position.x, down.position.y, 40f * density)
                         if (i >= 0) { vm.tapSelect(i); vm.selStream = -1 }
                         else if (i <= -2) { vm.selStream = -(i + 2); vm.selSet.clear(); vm.sel = -1 }
@@ -547,6 +552,7 @@ fun SelCard(vm: EditorVM, gl: GlScene, o: Obj, modifier: Modifier) {
             Spacer(Modifier.width(6.dp))
             Text("${o.id}", fontSize = 10.sp, fontFamily = FontFamily.Monospace, color = cs.primary)
             Spacer(Modifier.width(2.dp))
+            MiniBtn(Icons.Default.Edit, if (vm.dragEdit) cs.primary else cs.onSurfaceVariant) { vm.dragEdit = !vm.dragEdit; gl.requestRender() }
             MiniBtn(UiIcons.Copy, cs.onSurface) { vm.duplicate(vm.sel); gl.requestRender() }
             MiniBtn(Icons.Default.Delete, cs.error) { vm.remove(vm.sel); gl.requestRender() }
             MiniBtn(Icons.Default.Close, cs.onSurfaceVariant) { vm.clearSel(); gl.requestRender() }

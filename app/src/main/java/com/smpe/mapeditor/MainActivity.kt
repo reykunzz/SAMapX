@@ -161,6 +161,8 @@ class EditorVM : ViewModel() {
     var gridOn by mutableStateOf(true)
     /** 0 = Jelajah, 1 = Objek (kamera berpusat di objek, arah menggeser objek), 2 = Kamera (kamera bebas). */
     var camMode by mutableIntStateOf(0)
+    /** Tombol Edit di kartu objek: jika aktif, objek yang dipilih bisa digeser dengan jari. */
+    var dragEdit by mutableStateOf(false)
     /** Posisi kamera sebelum masuk mode Objek/Kamera: tx, ty, tz, dist, yaw, pitch. */
     var savedCam by mutableStateOf<FloatArray?>(null)
     /** Naik setiap ada perubahan; dipakai untuk autosave draf. */
@@ -273,11 +275,11 @@ class EditorVM : ViewModel() {
     }
     fun remove(i: Int) { snapshot("Hapus objek"); entries.removeAt(i); sel = -1; selSet.clear(); dirty = true }
 
-    fun clearSel() { selSet.clear(); sel = -1 }
+    fun clearSel() { selSet.clear(); sel = -1; dragEdit = false }
 
     /** Ketuk objek: mode biasa memilih satu objek, mode Pilih banyak menambah/mengeluarkan dari pilihan. */
     fun tapSelect(i: Int) {
-        if (!multi) { selSet.clear(); sel = i; return }
+        if (!multi) { selSet.clear(); sel = i; dragEdit = false; return }
         if (selSet.contains(i)) selSet.remove(i) else selSet.add(i)
         sel = if (selSet.size == 1) selSet[0] else -1
     }
@@ -1272,7 +1274,8 @@ private val changelogItems = listOf(
     "Perbaikan: toolbar atas di tab 3D bisa ditekan.",
     "Mode Jelajah, Kamera, dan Objek dipisah. Pilih objek dengan tahan. Joystick untuk putar kamera.",
     "Tambah objek: pilih model dari gambar yang bisa digulir, tanpa mengetik ID.",
-    "Tombol panah kiri untuk kembali ke mode Jelajah setelah mengedit objek."
+    "Tombol panah kiri untuk kembali ke mode Jelajah setelah mengedit objek.",
+    "Tombol Edit di kartu objek: aktifkan dulu, lalu objek bisa digeser dengan jari."
 )
 
 @Composable
