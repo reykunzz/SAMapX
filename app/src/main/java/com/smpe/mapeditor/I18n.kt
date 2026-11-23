@@ -21,6 +21,11 @@ object I18n {
     fun t(key: String): String = if (lang == "en") (en[key] ?: key) else key
 
     private val en: Map<String, String> = mapOf(
+        "Pratinjau texture model saat menambah objek." to "Texture preview when adding objects.",
+        "Mode objek" to "Object mode",
+        "Mode jelajah" to "Explore mode",
+        "Mode Objek: kamera berpusat di objek yang dipilih." to "Object mode: the camera centers on the selected object.",
+        "Mode Objek: kamera berpusat di objek, tombol arah menggeser objek. Geser objek perlu ditahan lebih lama." to "Object mode: camera centers on the object, direction buttons move the object. Dragging objects needs a longer hold.",
         "Rotasi lebih halus, geser objek perlu ditahan sebentar, dan tombol kamera bisa diatur kecepatannya." to "Smoother rotation, objects need a short hold before moving, and camera buttons have adjustable speed.",
         "Pop-up update menampilkan catatan rilis." to "Update pop-up shows the release notes.",
         "Cek update" to "Check for update",

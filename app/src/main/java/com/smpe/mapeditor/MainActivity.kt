@@ -159,6 +159,8 @@ class EditorVM : ViewModel() {
     var multi by mutableStateOf(false)
     var topDown by mutableStateOf(false)
     var gridOn by mutableStateOf(true)
+    /** 0 = Jelajah (kamera bebas), 1 = Objek (kamera berpusat di objek, tombol arah menggeser objek). */
+    var camMode by mutableIntStateOf(0)
     /** Naik setiap ada perubahan; dipakai untuk autosave draf. */
     var rev by mutableIntStateOf(0)
     /** Label aksi terakhir yang bisa dibatalkan, mis. "Geser X". */
@@ -304,6 +306,28 @@ class EditorVM : ViewModel() {
             entries[i] = rotZ(o, deg).copy(src = null)
         }
         dirty = true
+    }
+
+    /** Geser objek yang dipilih sejauh (dx, dy, dz) dalam koordinat dunia. */
+    fun shiftSel(dx: Float, dy: Float, dz: Float) {
+        val i = sel
+        val o = entries.getOrNull(i) as? Obj ?: return
+        if (o.locked) return
+        snapshot("Geser")
+        entries[i] = o.copy(x = o.x + dx, y = o.y + dy, z = o.z + dz, src = null)
+        dirty = true
+        rev++
+    }
+
+    /** Putar objek yang dipilih saat ini sebesar deg derajat (sumbu Z). */
+    fun rotateSel(deg: Float) {
+        val i = sel
+        val o = entries.getOrNull(i) as? Obj ?: return
+        if (o.locked) return
+        snapshot("Putar")
+        entries[i] = rotZ(o, deg).copy(src = null)
+        dirty = true
+        rev++
     }
 
     fun removeGroup() {
@@ -1225,7 +1249,9 @@ private val changelogItems = listOf(
     "Kamera: tombol arah dan geser objek lebih aman.",
     "Kartu objek lebih kecil dan tombol kamera berbentuk panah.",
     "Pop-up update menampilkan catatan rilis.",
-    "Rotasi lebih halus, geser objek perlu ditahan sebentar, dan tombol kamera bisa diatur kecepatannya."
+    "Rotasi lebih halus, geser objek perlu ditahan sebentar, dan tombol kamera bisa diatur kecepatannya.",
+    "Mode Objek: kamera berpusat di objek yang dipilih.",
+    "Pratinjau texture model saat menambah objek."
 )
 
 @Composable

@@ -40,6 +40,8 @@ Catatan: model impor hanya bisa dilihat dan ditempatkan di editor. Agar muncul d
 
 ## Changelog
 
+- **1.8.10**: Pratinjau texture model di daftar Tambah objek.
+- **1.8.9**: Mode Objek: kamera berpusat di objek, tombol arah menggeser dan memutar objek. Geser objek perlu ditahan lebih lama.
 - **1.8.8**: Nama file APK rilis sekarang SanEditor-v<versi>.apk.
 - **1.8.7**: Rotasi kamera lebih halus. Geser objek perlu ditahan sebentar. Tombol kamera punya kecepatan dan tombol putar.
 - **1.8.6**: Pop-up update menampilkan catatan rilis.

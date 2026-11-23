@@ -2,6 +2,11 @@
 
 package com.smpe.mapeditor
 
+import androidx.compose.material.icons.filled.List
+import androidx.compose.foundation.layout.width
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.foundation.Image
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.material3.Icon
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -80,7 +85,7 @@ fun GlEditor(vm: EditorVM, game: GameData) {
         val selObj = vm.entries.getOrNull(vm.sel) as? Obj
         if (selObj != null && (!showPanel || containerWidth >= 700.dp)) {
             SelCard(vm, gl, selObj, Modifier.align(Alignment.BottomEnd).padding(end = 8.dp, bottom = 46.dp))
-            CameraPad(gl, Modifier.align(Alignment.CenterEnd).padding(end = 10.dp))
+            CameraPad(vm, gl, Modifier.align(Alignment.CenterEnd).padding(end = 10.dp))
         }
         if (showPanel) {
             Column(
@@ -119,6 +124,13 @@ fun Viewport(
     val density = LocalDensity.current.density
     val pm = rememberUpdatedState(panMode)
     val modeKey = vm.topDown to vm.selSet.toList()
+    // Mode Objek: kamera selalu berpusat di objek yang dipilih.
+    LaunchedEffect(vm.sel, vm.camMode) {
+        if (vm.camMode == 1) {
+            val o = vm.entries.getOrNull(vm.sel) as? Obj
+            if (o != null) { gl.tx = o.x; gl.ty = o.y; gl.tz = o.z; gl.requestRender() }
+        }
+    }
     val exScene = remember(vm.extra) { vm.extra.mapIndexed { i, o -> SceneObj(-(i + 2), o) } }
     var tick by remember { mutableIntStateOf(0) }
     LaunchedEffect(Unit) { while (true) { delay(800); tick++ } }
@@ -218,7 +230,7 @@ fun Viewport(
                                     c.consume()
                                 }
                             } else if (freeHit) {
-                                if (moved && c.uptimeMillis - down.uptimeMillis > 350L && Math.hypot((c.position.x - down.position.x).toDouble(), (c.position.y - down.position.y).toDouble()) > 24.0 * density) {
+                                if (moved && c.uptimeMillis - down.uptimeMillis > 500L && Math.hypot((c.position.x - down.position.x).toDouble(), (c.position.y - down.position.y).toDouble()) > 32.0 * density) {
                                     if (!started) {
                                         started = true; vm.beginEdit("Geser objek"); fdx = 0f; fdy = 0f
                                         for ((j, idx) in grp.withIndex()) {
@@ -557,11 +569,15 @@ fun ModelPicker(vm: EditorVM) {
                     Modifier.padding(top = 10.dp), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 LazyColumn(Modifier.heightIn(max = 320.dp)) {
                     items(res) { d ->
-                        Text("${d.first}   (${d.second})", Modifier.fillMaxWidth().clickable {
+                        Row(Modifier.fillMaxWidth().clickable {
                             val s = vm.gl
                             vm.sel = vm.add(d.first, d.second, s?.tx ?: 0f, s?.ty ?: 0f, s?.tz ?: 10f)
                             vm.picker = false
-                        }.padding(vertical = 12.dp))
+                        }.padding(vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+                            ModelThumb(vm.game, d.first)
+                            Spacer(Modifier.width(10.dp))
+                            Text("${d.first}   (${d.second})")
+                        }
                     }
                 }
             }
@@ -775,26 +791,49 @@ fun ExportCard(vm: EditorVM) {
     }
 }
 
-/** Tombol kamera: arah (naik, turun, maju, mundur, kiri, kanan), putar, dan kecepatan. */
+/** Tombol kamera. Mode Jelajah: kamera bergerak. Mode Objek: tombol arah menggeser objek yang dipilih. */
 @Composable
-fun CameraPad(gl: GlScene, modifier: Modifier) {
+fun CameraPad(vm: EditorVM, gl: GlScene, modifier: Modifier) {
     var speedLevel by remember { mutableIntStateOf(1) }
     val speeds = listOf(0.03f, 0.08f, 0.2f)
+    val cs0 = MaterialTheme.colorScheme
     fun move(dRight: Float, dFwd: Float, dUp: Float) {
         val step = maxOf(0.5f, gl.dist * speeds[speedLevel])
         val cs = cos(gl.yaw); val sn = sin(gl.yaw)
         // kanan = (cs, sn), depan = (-sn, cs)
-        gl.tx += (cs * dRight - sn * dFwd) * step
-        gl.ty += (sn * dRight + cs * dFwd) * step
-        gl.tz += dUp * step
+        val dx = (cs * dRight - sn * dFwd) * step
+        val dy = (sn * dRight + cs * dFwd) * step
+        val dz = dUp * step
+        if (vm.camMode == 1 && vm.sel >= 0) {
+            vm.shiftSel(dx, dy, dz)
+            val o = vm.entries.getOrNull(vm.sel) as? Obj
+            if (o != null) { gl.tx = o.x; gl.ty = o.y; gl.tz = o.z }
+        } else {
+            gl.tx += dx; gl.ty += dy; gl.tz += dz
+        }
         gl.requestRender()
     }
     fun rotate(dYaw: Float, dPitch: Float) {
-        gl.yaw += dYaw
-        if (!gl.topDown) gl.pitch = (gl.pitch + dPitch).coerceIn(0.05f, 1.5f)
+        if (vm.camMode == 1 && vm.sel >= 0) {
+            if (dYaw != 0f) vm.rotateSel(Math.toDegrees(dYaw.toDouble()).toFloat())
+        } else {
+            gl.yaw += dYaw
+            if (!gl.topDown) gl.pitch = (gl.pitch + dPitch).coerceIn(0.05f, 1.5f)
+        }
         gl.requestRender()
     }
     Column(modifier, horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        Surface(
+            modifier = Modifier.clickable { vm.camMode = 1 - vm.camMode },
+            shape = RoundedCornerShape(10.dp),
+            color = if (vm.camMode == 1) cs0.primary else cs0.surface.copy(alpha = 0.9f),
+            border = BorderStroke(1.dp, cs0.outline)
+        ) {
+            Text(if (vm.camMode == 1) I18n.t("Mode objek") else I18n.t("Mode jelajah"),
+                modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                style = MaterialTheme.typography.labelMedium,
+                color = if (vm.camMode == 1) cs0.onPrimary else cs0.onSurface)
+        }
         Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 CamBtn("\u2191") { move(0f, 0f, 1f) }
@@ -831,4 +870,36 @@ fun CamBtn(symbol: String, onClick: () -> Unit) {
             Text(symbol, fontSize = 15.sp, color = cs.onSurface)
         }
     }
+}
+
+/** Pratinjau texture model dari DFF (texture diambil dari texdb). Dimuat sekali lalu disimpan di cache. */
+@Composable
+fun ModelThumb(g: GameData?, name: String) {
+    val bmp by produceState<androidx.compose.ui.graphics.ImageBitmap?>(initialValue = null, g, name) {
+        value = withContext(Dispatchers.IO) {
+            g?.loadModel(name)?.parts?.firstOrNull { it.tex != null }?.tex?.let { texToBitmap(it) }
+        }
+    }
+    val b = bmp
+    Box(Modifier.size(44.dp).clip(RoundedCornerShape(8.dp)).background(MaterialTheme.colorScheme.surfaceVariant),
+        contentAlignment = Alignment.Center) {
+        if (b != null) Image(b, null, Modifier.fillMaxSize())
+        else Icon(Icons.Default.List, null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(18.dp))
+    }
+}
+
+fun texToBitmap(t: TexData): androidx.compose.ui.graphics.ImageBitmap? {
+    val n = t.w * t.h
+    if (t.w <= 0 || t.h <= 0 || t.rgba.size < n * 4) return null
+    val px = IntArray(n)
+    for (i in 0 until n) {
+        val o = i * 4
+        val r = t.rgba[o].toInt() and 0xff
+        val gg = t.rgba[o + 1].toInt() and 0xff
+        val b = t.rgba[o + 2].toInt() and 0xff
+        val a = t.rgba[o + 3].toInt() and 0xff
+        px[i] = (a shl 24) or (r shl 16) or (gg shl 8) or b
+    }
+    return android.graphics.Bitmap.createBitmap(px, t.w, t.h, android.graphics.Bitmap.Config.ARGB_8888)
+        .asImageBitmap()
 }
