@@ -2,6 +2,7 @@
 
 package com.smpe.mapeditor
 
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.material3.Icon
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.material3.Surface
@@ -167,8 +168,8 @@ fun Viewport(
             }.pointerInput(Unit) {
                 fun camMove(pan: Offset) {
                     if (!pm.value) {
-                        gl.yaw -= pan.x * 0.008f
-                        if (!gl.topDown) gl.pitch = (gl.pitch + pan.y * 0.008f).coerceIn(0.05f, 1.5f)
+                        gl.yaw -= pan.x * 0.004f
+                        if (!gl.topDown) gl.pitch = (gl.pitch + pan.y * 0.004f).coerceIn(0.05f, 1.5f)
                     } else {
                         val k = gl.dist / (minOf(size.width, size.height) * 1.1f)
                         val c = cos(gl.yaw); val s = sin(gl.yaw)
@@ -217,7 +218,7 @@ fun Viewport(
                                     c.consume()
                                 }
                             } else if (freeHit) {
-                                if (moved && Math.hypot((c.position.x - down.position.x).toDouble(), (c.position.y - down.position.y).toDouble()) > 24.0 * density) {
+                                if (moved && c.uptimeMillis - down.uptimeMillis > 350L && Math.hypot((c.position.x - down.position.x).toDouble(), (c.position.y - down.position.y).toDouble()) > 24.0 * density) {
                                     if (!started) {
                                         started = true; vm.beginEdit("Geser objek"); fdx = 0f; fdy = 0f
                                         for ((j, idx) in grp.withIndex()) {
@@ -774,11 +775,13 @@ fun ExportCard(vm: EditorVM) {
     }
 }
 
-/** Tombol arah kamera berbentuk panah: naik/turun di kiri, maju/mundur/kiri/kanan di kanan. */
+/** Tombol kamera: arah (naik, turun, maju, mundur, kiri, kanan), putar, dan kecepatan. */
 @Composable
 fun CameraPad(gl: GlScene, modifier: Modifier) {
+    var speedLevel by remember { mutableIntStateOf(1) }
+    val speeds = listOf(0.03f, 0.08f, 0.2f)
     fun move(dRight: Float, dFwd: Float, dUp: Float) {
-        val step = maxOf(1f, gl.dist * 0.08f)
+        val step = maxOf(0.5f, gl.dist * speeds[speedLevel])
         val cs = cos(gl.yaw); val sn = sin(gl.yaw)
         // kanan = (cs, sn), depan = (-sn, cs)
         gl.tx += (cs * dRight - sn * dFwd) * step
@@ -786,18 +789,32 @@ fun CameraPad(gl: GlScene, modifier: Modifier) {
         gl.tz += dUp * step
         gl.requestRender()
     }
-    Row(modifier, horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
-        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            CamBtn("\u2191") { move(0f, 0f, 1f) }
-            CamBtn("\u2193") { move(0f, 0f, -1f) }
-        }
-        Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            CamBtn("\u25B2") { move(0f, 1f, 0f) }
-            Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                CamBtn("\u25C0") { move(-1f, 0f, 0f) }
-                CamBtn("\u25B6") { move(1f, 0f, 0f) }
+    fun rotate(dYaw: Float, dPitch: Float) {
+        gl.yaw += dYaw
+        if (!gl.topDown) gl.pitch = (gl.pitch + dPitch).coerceIn(0.05f, 1.5f)
+        gl.requestRender()
+    }
+    Column(modifier, horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                CamBtn("\u2191") { move(0f, 0f, 1f) }
+                CamBtn("\u2193") { move(0f, 0f, -1f) }
             }
-            CamBtn("\u25BC") { move(0f, -1f, 0f) }
+            Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                CamBtn("\u25B2") { move(0f, 1f, 0f) }
+                Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                    CamBtn("\u25C0") { move(-1f, 0f, 0f) }
+                    CamBtn("\u25B6") { move(1f, 0f, 0f) }
+                }
+                CamBtn("\u25BC") { move(0f, -1f, 0f) }
+            }
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+            CamBtn("\u21BA") { rotate(-0.1f, 0f) }
+            CamBtn("\u21BB") { rotate(0.1f, 0f) }
+            CamBtn("\u2227") { rotate(0f, 0.06f) }
+            CamBtn("\u2228") { rotate(0f, -0.06f) }
+            CamBtn("${speedLevel + 1}x") { speedLevel = (speedLevel + 1) % speeds.size }
         }
     }
 }

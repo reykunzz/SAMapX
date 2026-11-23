@@ -40,6 +40,9 @@ Catatan: model impor hanya bisa dilihat dan ditempatkan di editor. Agar muncul d
 
 ## Changelog
 
+- **1.8.8**: Nama file APK rilis sekarang SanEditor-v<versi>.apk.
+- **1.8.7**: Rotasi kamera lebih halus. Geser objek perlu ditahan sebentar. Tombol kamera punya kecepatan dan tombol putar.
+- **1.8.6**: Pop-up update menampilkan catatan rilis.
 - **1.8.5**: Alamat update GitHub diperbarui ke akun reykunzz.
 - **1.8.4**: Cek update otomatis dari GitHub, dan tombol Cek update manual.
 - **1.8.3**: Kartu objek dibuat lebih kecil. Tombol kamera berbentuk panah.

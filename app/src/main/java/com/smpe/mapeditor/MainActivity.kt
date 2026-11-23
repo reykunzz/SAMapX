@@ -1,5 +1,6 @@
 package com.smpe.mapeditor
 
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.runtime.rememberCoroutineScope
 import android.widget.Toast
 import android.content.Intent
@@ -1222,7 +1223,9 @@ private val changelogItems = listOf(
     "Halaman awal baru dengan bahasa Indonesia dan English.",
     "Perbaikan: ID otomatis di bawah 20000, gta3.img di texdb terbaca.",
     "Kamera: tombol arah dan geser objek lebih aman.",
-    "Kartu objek lebih kecil dan tombol kamera berbentuk panah."
+    "Kartu objek lebih kecil dan tombol kamera berbentuk panah.",
+    "Pop-up update menampilkan catatan rilis.",
+    "Rotasi lebih halus, geser objek perlu ditahan sebentar, dan tombol kamera bisa diatur kecepatannya."
 )
 
 @Composable
@@ -1328,7 +1331,14 @@ fun UpdateDialog(ctx: Context, rel: UpdateChecker.Release, onClose: () -> Unit) 
     AlertDialog(
         onDismissRequest = onClose,
         title = { Text(I18n.t("Ada update baru") + " v" + rel.version) },
-        text = { Text(I18n.t("Versi terbaru tersedia di GitHub.")) },
+        text = {
+            val notes = rel.notes
+                .replace(Regex("(?m)^#+\\s*"), "").replace("**", "").replace("__", "").replace("`", "")
+                .replace(Regex("(?m)^\\s*[-*]\\s+"), "\u2022 ").trim()
+            Column(Modifier.heightIn(max = 320.dp).verticalScroll(rememberScrollState())) {
+                Text(if (notes.isBlank()) I18n.t("Versi terbaru tersedia di GitHub.") else notes, style = MaterialTheme.typography.bodySmall)
+            }
+        },
         confirmButton = {
             TextButton(onClick = {
                 ctx.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(rel.apkUrl ?: rel.pageUrl)))

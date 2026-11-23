@@ -11,7 +11,7 @@ object UpdateChecker {
     const val OWNER = "reykunzz"
     const val REPO = "SAMapX"
 
-    data class Release(val version: String, val pageUrl: String, val apkUrl: String?)
+    data class Release(val version: String, val pageUrl: String, val apkUrl: String?, val notes: String)
 
     fun currentVersion(ctx: Context): String =
         ctx.packageManager.getPackageInfo(ctx.packageName, 0).versionName ?: "0"
@@ -34,7 +34,7 @@ object UpdateChecker {
                     if (a.optString("name").endsWith(".apk")) { apk = a.optString("browser_download_url"); break }
                 }
             }
-            return Release(json.optString("tag_name").removePrefix("v"), json.optString("html_url"), apk)
+            return Release(json.optString("tag_name").removePrefix("v"), json.optString("html_url"), apk, json.optString("body"))
         } finally {
             conn.disconnect()
         }

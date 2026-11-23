@@ -71,6 +71,8 @@ class GlScene(private val game: GameData) : GLSurfaceView.Renderer {
     @Volatile var tz = 0f
     @Volatile var yaw = 0.5f
     @Volatile var pitch = 0.7f
+    /** Kecepatan gerak tombol arah kamera (pengali jarak). */
+    @Volatile var moveSpeed = 0.08f
     /** Tampilan atas: kamera tegak lurus, sudut vertikal dikunci. */
     @Volatile var topDown = false
     /** Indeks objek yang dipilih dalam mode Pilih banyak. */

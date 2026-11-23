@@ -21,6 +21,8 @@ object I18n {
     fun t(key: String): String = if (lang == "en") (en[key] ?: key) else key
 
     private val en: Map<String, String> = mapOf(
+        "Rotasi lebih halus, geser objek perlu ditahan sebentar, dan tombol kamera bisa diatur kecepatannya." to "Smoother rotation, objects need a short hold before moving, and camera buttons have adjustable speed.",
+        "Pop-up update menampilkan catatan rilis." to "Update pop-up shows the release notes.",
         "Cek update" to "Check for update",
         "Ada update baru" to "Update available",
         "Versi terbaru tersedia di GitHub." to "A newer version is available on GitHub.",
