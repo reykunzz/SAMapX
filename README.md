@@ -40,6 +40,7 @@ Catatan: model impor hanya bisa dilihat dan ditempatkan di editor. Agar muncul d
 
 ## Changelog
 
+- **1.9.12**: Objek yang hanya dipilih diberi kotak kuning. Kotak merah dan gizmo muncul setelah tombol Edit ditekan.
 - **1.9.11**: Tombol panah kamera dan rotasi objek bisa ditahan untuk berulang, tanpa ketuk berkali-kali.
 - **1.9.10**: Mode Objek: tombol ↺ ↻ untuk memutar objek 15° ke kiri atau kanan.
 - **1.9.9**: Tap objek hanya memilih. Geser hanya bisa setelah menekan tombol Edit (pensil).

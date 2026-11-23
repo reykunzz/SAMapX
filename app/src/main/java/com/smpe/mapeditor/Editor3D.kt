@@ -168,6 +168,7 @@ fun Viewport(
                 gl.selStream = vm.selStream
                 gl.topDown = vm.topDown
                 gl.multiSel = vm.selSet.toSet()
+                gl.editShow = vm.dragEdit
                 gl.gridOn = vm.gridOn
                 v.requestRender()
             }

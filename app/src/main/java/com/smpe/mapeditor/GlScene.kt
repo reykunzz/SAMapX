@@ -77,6 +77,8 @@ class GlScene(private val game: GameData) : GLSurfaceView.Renderer {
     @Volatile var topDown = false
     /** Indeks objek yang dipilih dalam mode Pilih banyak. */
     @Volatile var multiSel: Set<Int> = emptySet()
+    /** true = mode Edit aktif: kotak merah dan gizmo sumbu tampil. false = hanya kotak kuning. */
+    @Volatile var editShow = false
     /** Grid tanah biru: diatur tombol Grid di toolbar. */
     @Volatile var gridOn = true
     @Volatile var dist = 150f
@@ -357,13 +359,15 @@ class GlScene(private val game: GameData) : GLSurfaceView.Renderer {
             val edges = intArrayOf(0, 1, 2, 3, 4, 5, 6, 7, 0, 2, 1, 3, 4, 6, 5, 7, 0, 4, 1, 5, 2, 6, 3, 7)
             val pts = FloatArray(edges.size * 3)
             for ((k, e) in edges.withIndex()) { pts[k * 3] = c[e * 3]; pts[k * 3 + 1] = c[e * 3 + 1]; pts[k * 3 + 2] = c[e * 3 + 2] }
-            lines(pts, 1f, 0.15f, 0.15f)
+            if (editShow) lines(pts, 1f, 0.15f, 0.15f) else lines(pts, 1f, 0.9f, 0.2f)
             val ddx = o.x - cx; val ddy = o.y - cy; val ddz = o.z - cz
             val len = max(1.5f, sqrt(ddx * ddx + ddy * ddy + ddz * ddz) * 0.15f)
-            lines(floatArrayOf(o.x, o.y, o.z, o.x + len, o.y, o.z), 1f, 0.2f, 0.2f)
-            lines(floatArrayOf(o.x, o.y, o.z, o.x, o.y + len, o.z), 0.2f, 1f, 0.2f)
-            lines(floatArrayOf(o.x, o.y, o.z, o.x, o.y, o.z + len), 0.3f, 0.5f, 1f)
-            gzPos = floatArrayOf(o.x, o.y, o.z); gzLen = len; gzOn = so.idx >= 0 && multiSel.size <= 1
+            if (editShow) {
+                lines(floatArrayOf(o.x, o.y, o.z, o.x + len, o.y, o.z), 1f, 0.2f, 0.2f)
+                lines(floatArrayOf(o.x, o.y, o.z, o.x, o.y + len, o.z), 0.2f, 1f, 0.2f)
+                lines(floatArrayOf(o.x, o.y, o.z, o.x, o.y, o.z + len), 0.3f, 0.5f, 1f)
+                gzPos = floatArrayOf(o.x, o.y, o.z); gzLen = len; gzOn = so.idx >= 0 && multiSel.size <= 1
+            } else gzOn = false
         } else gzOn = false
         if (game.pending.get() > 0 || !ready.isEmpty()) view?.requestRender()
     }
