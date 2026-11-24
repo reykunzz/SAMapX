@@ -168,7 +168,7 @@ fun Viewport(
                 gl.selStream = vm.selStream
                 gl.topDown = vm.topDown
                 gl.multiSel = vm.selSet.toSet()
-                gl.editShow = vm.dragEdit
+                gl.editShow = true
                 gl.gridOn = vm.gridOn
                 v.requestRender()
             }
@@ -210,7 +210,7 @@ fun Viewport(
                     var startVal = 0f
                     var acc = 0f
                     var last = down.position
-                    val grp = if (axis < 0 && !pm.value && vm.dragEdit) vm.groupIdx().filter { (vm.entries.getOrNull(it) as? Obj)?.locked != true } else emptyList()
+                    val grp = if (axis < 0 && !pm.value) vm.groupIdx().filter { (vm.entries.getOrNull(it) as? Obj)?.locked != true } else emptyList()
                     val freeHit = grp.isNotEmpty() && gl.pick(down.position.x, down.position.y, 24f * density) in grp
                     val gx = FloatArray(grp.size); val gy = FloatArray(grp.size)
                     var fdx = 0f; var fdy = 0f
@@ -553,7 +553,6 @@ fun SelCard(vm: EditorVM, gl: GlScene, o: Obj, modifier: Modifier) {
             Spacer(Modifier.width(6.dp))
             Text("${o.id}", fontSize = 10.sp, fontFamily = FontFamily.Monospace, color = cs.primary)
             Spacer(Modifier.width(2.dp))
-            MiniBtn(Icons.Default.Edit, if (vm.dragEdit) cs.primary else cs.onSurfaceVariant) { vm.dragEdit = !vm.dragEdit; gl.requestRender() }
             MiniBtn(UiIcons.Copy, cs.onSurface) { vm.duplicate(vm.sel); gl.requestRender() }
             MiniBtn(Icons.Default.Delete, cs.error) { vm.remove(vm.sel); gl.requestRender() }
             MiniBtn(Icons.Default.Close, cs.onSurfaceVariant) { vm.clearSel(); gl.requestRender() }
@@ -850,7 +849,6 @@ fun CameraPad(vm: EditorVM, gl: GlScene, modifier: Modifier) {
             vm.savedCam = floatArrayOf(gl.tx, gl.ty, gl.tz, gl.dist, gl.yaw, gl.pitch)
         }
         vm.camMode = newMode
-        if (newMode == 1) vm.sel.let { }
         gl.requestRender()
     }
     fun backToExplore() {
@@ -859,7 +857,8 @@ fun CameraPad(vm: EditorVM, gl: GlScene, modifier: Modifier) {
         vm.camMode = 0
         gl.requestRender()
     }
-    Column(modifier, horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(6.dp)) {
+    Column(modifier, horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        // Pilihan mode
         Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
             listOf(2 to I18n.t("Kamera"), 1 to I18n.t("Objek")).forEach { (mode, label) ->
                 val on = vm.camMode == mode
@@ -875,6 +874,7 @@ fun CameraPad(vm: EditorVM, gl: GlScene, modifier: Modifier) {
                 }
             }
         }
+        // Tombol arah
         Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 CamBtn("\u2191") { move(0f, 0f, 1f) }
@@ -889,15 +889,16 @@ fun CameraPad(vm: EditorVM, gl: GlScene, modifier: Modifier) {
                 CamBtn("\u25BC") { move(0f, -1f, 0f) }
             }
         }
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+        // Rotasi objek (mode Objek), kembali, dan kecepatan
+        Row(horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.CenterVertically) {
             if (vm.camMode == 1) {
                 CamBtn("\u21BA") { vm.rotateSel(-15f) }
                 CamBtn("\u21BB") { vm.rotateSel(15f) }
             }
             if (vm.camMode != 0) CamBtn("\u2190", repeat = false) { backToExplore() }
             CamBtn("${speedLevel + 1}x", repeat = false) { speedLevel = (speedLevel + 1) % speeds.size }
-            Joystick { ax, ay -> orbit(ax * 0.035f, -ay * 0.025f) }
         }
+        Joystick { ax, ay -> orbit(ax * 0.035f, -ay * 0.025f) }
     }
 }
 

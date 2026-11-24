@@ -78,7 +78,7 @@ class GlScene(private val game: GameData) : GLSurfaceView.Renderer {
     /** Indeks objek yang dipilih dalam mode Pilih banyak. */
     @Volatile var multiSel: Set<Int> = emptySet()
     /** true = mode Edit aktif: kotak merah dan gizmo sumbu tampil. false = hanya kotak kuning. */
-    @Volatile var editShow = false
+    @Volatile var editShow = true
     /** Grid tanah biru: diatur tombol Grid di toolbar. */
     @Volatile var gridOn = true
     @Volatile var dist = 150f
