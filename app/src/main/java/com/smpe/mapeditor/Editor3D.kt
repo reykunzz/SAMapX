@@ -2,6 +2,7 @@
 
 package com.smpe.mapeditor
 
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.Path
 import androidx.compose.foundation.Canvas
 import androidx.compose.material.icons.filled.Edit
@@ -877,14 +878,14 @@ fun CameraPad(vm: EditorVM, gl: GlScene, modifier: Modifier) {
                 }
             }
         }
-        // Tombol arah: naik/turun di samping, maju/mundur/kiri/kanan dengan pad
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        // Tombol arah: pad gaya keyboard (maju di atas, kiri-mundur-kanan di bawah), lalu naik-turun berdempetan
+        Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            KeyPad(onUp = { move(0f, 1f, 0f) }, onDown = { move(0f, -1f, 0f) },
+                onLeft = { move(-1f, 0f, 0f) }, onRight = { move(1f, 0f, 0f) })
+            Row(horizontalArrangement = Arrangement.spacedBy(0.dp)) {
                 CamBtn("\u2191") { move(0f, 0f, 1f) }
                 CamBtn("\u2193") { move(0f, 0f, -1f) }
             }
-            DPad(onUp = { move(0f, 1f, 0f) }, onDown = { move(0f, -1f, 0f) },
-                onLeft = { move(-1f, 0f, 0f) }, onRight = { move(1f, 0f, 0f) })
         }
         // Rotasi objek (mode Objek), kembali, dan kecepatan
         Row(horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -895,7 +896,6 @@ fun CameraPad(vm: EditorVM, gl: GlScene, modifier: Modifier) {
             if (vm.camMode != 0) CamBtn("\u2190", repeat = false) { backToExplore() }
             CamBtn("${speedLevel + 1}x", repeat = false) { speedLevel = (speedLevel + 1) % speeds.size }
         }
-        Joystick { ax, ay -> orbit(ax * 0.035f, -ay * 0.025f) }
     }
 }
 
@@ -1098,6 +1098,61 @@ fun OrbitGizmo(gl: GlScene, modifier: Modifier) {
                 drawCircle(colors[i], dotRadius, e[i])
             }
             drawCircle(cs.onSurface, 4f, c)
+        }
+    }
+}
+
+/** Pad arah gaya keyboard: atas di tengah, kiri-bawah-kanan di baris bawah. */
+@Composable
+fun KeyPad(onUp: () -> Unit, onDown: () -> Unit, onLeft: () -> Unit, onRight: () -> Unit) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        KeyBtn(0, onUp)
+        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+            KeyBtn(1, onLeft)
+            KeyBtn(3, onDown)
+            KeyBtn(2, onRight)
+        }
+    }
+}
+
+/** Satu tombol keyboard: kotak gelap dengan bayangan dan panah putih. dir: 0 atas, 1 kiri, 2 kanan, 3 bawah. Tahan untuk berulang. */
+@Composable
+fun KeyBtn(dir: Int, onClick: () -> Unit) {
+    val scope = rememberCoroutineScope()
+    val curClick by rememberUpdatedState(onClick)
+    Box(
+        Modifier.size(46.dp).pointerInput(Unit) {
+            detectTapGestures(onPress = {
+                curClick()
+                val job = scope.launch {
+                    delay(300)
+                    while (true) { curClick(); delay(60) }
+                }
+                tryAwaitRelease()
+                job.cancel()
+            })
+        }
+    ) {
+        Box(Modifier.offset(2.dp, 3.dp).size(42.dp).clip(RoundedCornerShape(8.dp)).background(Color(0xFF0C0E10)))
+        Box(
+            Modifier.size(42.dp).clip(RoundedCornerShape(8.dp)).background(Color(0xFF2E353D))
+                .border(1.dp, Color(0xFF474F59), RoundedCornerShape(8.dp)),
+            contentAlignment = Alignment.Center
+        ) {
+            Canvas(Modifier.size(22.dp)) {
+                val dx = when (dir) { 1 -> -1f; 2 -> 1f; else -> 0f }
+                val dy = when (dir) { 0 -> -1f; 3 -> 1f; else -> 0f }
+                val cx = size.width / 2f; val cy = size.height / 2f
+                val half = size.width * 0.42f
+                val tip = Offset(cx + dx * half, cy + dy * half)
+                val back = Offset(cx - dx * half, cy - dy * half)
+                val white = Color(0xFFF2F4F7)
+                drawLine(white, back, tip, strokeWidth = 3.5f, cap = StrokeCap.Round)
+                val hl = size.width * 0.24f
+                val px = -dy; val py = dx
+                drawLine(white, tip, Offset(tip.x - dx * hl + px * hl, tip.y - dy * hl + py * hl), strokeWidth = 3.5f, cap = StrokeCap.Round)
+                drawLine(white, tip, Offset(tip.x - dx * hl - px * hl, tip.y - dy * hl - py * hl), strokeWidth = 3.5f, cap = StrokeCap.Round)
+            }
         }
     }
 }
