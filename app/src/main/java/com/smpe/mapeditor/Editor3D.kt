@@ -2,6 +2,8 @@
 
 package com.smpe.mapeditor
 
+import androidx.compose.ui.graphics.Path
+import androidx.compose.foundation.Canvas
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.text.style.TextOverflow
@@ -874,20 +876,14 @@ fun CameraPad(vm: EditorVM, gl: GlScene, modifier: Modifier) {
                 }
             }
         }
-        // Tombol arah
-        Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
-            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        // Tombol arah: naik/turun di samping, maju/mundur/kiri/kanan dengan pad
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 CamBtn("\u2191") { move(0f, 0f, 1f) }
                 CamBtn("\u2193") { move(0f, 0f, -1f) }
             }
-            Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                CamBtn("\u25B2") { move(0f, 1f, 0f) }
-                Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                    CamBtn("\u25C0") { move(-1f, 0f, 0f) }
-                    CamBtn("\u25B6") { move(1f, 0f, 0f) }
-                }
-                CamBtn("\u25BC") { move(0f, -1f, 0f) }
-            }
+            DPad(onUp = { move(0f, 1f, 0f) }, onDown = { move(0f, -1f, 0f) },
+                onLeft = { move(-1f, 0f, 0f) }, onRight = { move(1f, 0f, 0f) })
         }
         // Rotasi objek (mode Objek), kembali, dan kecepatan
         Row(horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -995,4 +991,53 @@ fun texToBitmap(t: TexData): androidx.compose.ui.graphics.ImageBitmap? {
     }
     return android.graphics.Bitmap.createBitmap(px, t.w, t.h, android.graphics.Bitmap.Config.ARGB_8888)
         .asImageBitmap()
+}
+
+/** Pad arah berbentuk D-pad: empat tombol bulat dengan segitiga dan titik di tengah. Tahan untuk berulang. */
+@Composable
+fun DPad(onUp: () -> Unit, onDown: () -> Unit, onLeft: () -> Unit, onRight: () -> Unit) {
+    val cs = MaterialTheme.colorScheme
+    Box(Modifier.size(136.dp)) {
+        DirBtn(0, Modifier.align(Alignment.TopCenter), onUp)
+        DirBtn(3, Modifier.align(Alignment.BottomCenter), onDown)
+        DirBtn(1, Modifier.align(Alignment.CenterStart), onLeft)
+        DirBtn(2, Modifier.align(Alignment.CenterEnd), onRight)
+        Box(Modifier.align(Alignment.Center).size(8.dp).clip(CircleShape).background(cs.onSurface))
+    }
+}
+
+/** dir: 0 = atas, 1 = kiri, 2 = kanan, 3 = bawah. */
+@Composable
+fun DirBtn(dir: Int, modifier: Modifier, onClick: () -> Unit) {
+    val cs = MaterialTheme.colorScheme
+    val scope = rememberCoroutineScope()
+    val curClick by rememberUpdatedState(onClick)
+    Box(
+        modifier.size(44.dp).clip(CircleShape).background(cs.surface.copy(alpha = 0.9f))
+            .border(2.dp, cs.onSurface, CircleShape)
+            .pointerInput(Unit) {
+                detectTapGestures(onPress = {
+                    curClick()
+                    val job = scope.launch {
+                        delay(300)
+                        while (true) { curClick(); delay(60) }
+                    }
+                    tryAwaitRelease()
+                    job.cancel()
+                })
+            },
+        contentAlignment = Alignment.Center
+    ) {
+        Canvas(Modifier.size(18.dp)) {
+            val path = Path().apply {
+                when (dir) {
+                    0 -> { moveTo(size.width / 2, 0f); lineTo(size.width, size.height); lineTo(0f, size.height); close() }
+                    3 -> { moveTo(0f, 0f); lineTo(size.width, 0f); lineTo(size.width / 2, size.height); close() }
+                    1 -> { moveTo(0f, size.height / 2); lineTo(size.width, 0f); lineTo(size.width, size.height); close() }
+                    else -> { moveTo(0f, 0f); lineTo(size.width, size.height / 2); lineTo(0f, size.height); close() }
+                }
+            }
+            drawPath(path, cs.onSurface)
+        }
+    }
 }

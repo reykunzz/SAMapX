@@ -40,6 +40,7 @@ Catatan: model impor hanya bisa dilihat dan ditempatkan di editor. Agar muncul d
 
 ## Changelog
 
+- **1.9.14**: Tombol arah memakai pad bergaya D-pad. Bahasa mengikuti sistem: Indonesia jika perangkat berbahasa Indonesia, selain itu English.
 - **1.9.13**: Gizmo dan kotak merah kembali seperti awal. Tombol Edit dihapus. Rotasi objek pindah ke bawah panel kamera.
 - **1.9.12**: Objek yang hanya dipilih diberi kotak kuning. Kotak merah dan gizmo muncul setelah tombol Edit ditekan.
 - **1.9.11**: Tombol panah kamera dan rotasi objek bisa ditahan untuk berulang, tanpa ketuk berkali-kali.

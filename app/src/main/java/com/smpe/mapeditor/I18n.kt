@@ -10,7 +10,13 @@ object I18n {
     var lang by mutableStateOf("id")
 
     fun load(ctx: Context) {
-        lang = ctx.getSharedPreferences("smpe", Context.MODE_PRIVATE).getString("lang", "id") ?: "id"
+        lang = ctx.getSharedPreferences("smpe", Context.MODE_PRIVATE).getString("lang", null) ?: detectLang()
+    }
+
+    /** Bahasa sistem: Indonesia jika perangkat berbahasa Indonesia, selain itu English. */
+    fun detectLang(): String {
+        val l = java.util.Locale.getDefault().language
+        return if (l == "in" || l == "id") "id" else "en"
     }
 
     fun set(ctx: Context, code: String) {
