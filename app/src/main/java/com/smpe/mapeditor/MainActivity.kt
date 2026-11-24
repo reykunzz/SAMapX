@@ -900,7 +900,6 @@ fun AppHeader(
                 Spacer(Modifier.width(6.dp))
             }
             if (hasFile) {
-                HeaderTab("Objek", tab == 0) { onTab(0) }
                 HeaderTab("3D", tab == 1) { onTab(1) }
             } else {
                 Text("San Editor", fontWeight = FontWeight.Black, color = cs.primary)
@@ -920,6 +919,7 @@ fun AppHeader(
                     Icon(Icons.Default.MoreVert, "Menu")
                 }
                 DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
+                    if (hasFile) DropdownMenuItem(text = { Text(I18n.t("Daftar objek")) }, onClick = { menuOpen = false; onTab(0) })
                     if (overlay) {
                         DropdownMenuItem(text = { Text("Buka") }, onClick = { menuOpen = false; onOpen() })
                         if (hasFile) DropdownMenuItem(text = { Text(if (dirty) "Simpan \u2022" else "Simpan") }, onClick = { menuOpen = false; onSave() })
@@ -1276,7 +1276,9 @@ private val changelogItems = listOf(
     "Tambah objek: pilih model dari gambar yang bisa digulir, tanpa mengetik ID.",
     "Tombol panah kiri untuk kembali ke mode Jelajah setelah mengedit objek.",
     "Di mode Jelajah, tap objek hanya memilihnya. Tekan Edit (pensil) untuk menggesernya.",
-    "Tombol arah memakai pad bergaya D-pad. Bahasa mengikuti sistem: Indonesia atau English."
+    "Tombol arah memakai pad bergaya D-pad. Bahasa mengikuti sistem: Indonesia atau English.",
+    "Tampilan 3D diperbarui: pad keyboard, gizmo sumbu, joystick dihapus.",
+    "Tab Objek dipindah ke menu ⋮ di samping tab 3D."
 )
 
 @Composable
