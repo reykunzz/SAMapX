@@ -99,6 +99,7 @@ fun GlEditor(vm: EditorVM, game: GameData) {
         if (selObj != null && (!showPanel || containerWidth >= 700.dp)) {
             SelCard(vm, gl, selObj, Modifier.align(Alignment.BottomEnd).padding(end = 8.dp, bottom = 46.dp))
             CameraPad(vm, gl, Modifier.align(Alignment.CenterEnd).padding(end = 10.dp))
+            OrbitGizmo(gl, Modifier.align(Alignment.TopEnd).statusBarsPadding().padding(end = 12.dp, top = 58.dp))
         }
         if (showPanel) {
             Column(
@@ -1038,6 +1039,65 @@ fun DirBtn(dir: Int, modifier: Modifier, onClick: () -> Unit) {
                 }
             }
             drawPath(path, cs.onSurface)
+        }
+    }
+}
+
+/** Gizmo sumbu ala Blender: seret untuk orbit, ketuk bola X/Y/Z untuk melihat dari sumbu itu. */
+@Composable
+fun OrbitGizmo(gl: GlScene, modifier: Modifier) {
+    val cs = MaterialTheme.colorScheme
+    var tick by remember { mutableIntStateOf(0) }
+    LaunchedEffect(Unit) { while (true) { delay(100); tick++ } }
+    val dotRadius = with(LocalDensity.current) { 7.dp.toPx() }
+    val rPx = with(LocalDensity.current) { 42.dp.toPx() }
+    fun ends(c: Offset): Array<Offset> {
+        val cy = cos(gl.yaw); val sy = sin(gl.yaw); val sp = sin(gl.pitch); val cp = cos(gl.pitch)
+        // proyeksi sumbu X, Y, Z ke layar
+        return arrayOf(
+            Offset(c.x + cy * rPx, c.y + sy * sp * rPx),
+            Offset(c.x + sy * rPx, c.y - cy * sp * rPx),
+            Offset(c.x, c.y - cp * rPx)
+        )
+    }
+    fun setView(axis: Int) {
+        when (axis) {
+            0 -> { gl.yaw = 0f; gl.pitch = 0.05f }
+            1 -> { gl.yaw = (Math.PI / 2).toFloat(); gl.pitch = 0.05f }
+            else -> { gl.pitch = 1.5f }
+        }
+        gl.requestRender()
+    }
+    Box(modifier.size(96.dp)) {
+        Canvas(
+            Modifier.fillMaxSize()
+                .pointerInput(Unit) {
+                    detectDragGestures { change, drag ->
+                        change.consume()
+                        gl.yaw += drag.x * 0.01f
+                        if (!gl.topDown) gl.pitch = (gl.pitch + drag.y * 0.008f).coerceIn(0.05f, 1.5f)
+                        gl.requestRender()
+                    }
+                }
+                .pointerInput(Unit) {
+                    detectTapGestures { p ->
+                        val c = Offset(size.width / 2f, size.height / 2f)
+                        val e = ends(c)
+                        for (i in e.indices) {
+                            if ((p - e[i]).getDistance() < dotRadius * 2.5f) { setView(i); break }
+                        }
+                    }
+                }
+        ) {
+            val c = Offset(size.width / 2f, size.height / 2f)
+            drawCircle(cs.surface.copy(alpha = 0.85f), rPx + 12f, c)
+            val e = ends(c)
+            val colors = listOf(Color(0xFFE06060), Color(0xFF6FBF73), Color(0xFF5A9BD5))
+            for (i in 0..2) {
+                drawLine(colors[i], c, e[i], strokeWidth = 3f)
+                drawCircle(colors[i], dotRadius, e[i])
+            }
+            drawCircle(cs.onSurface, 4f, c)
         }
     }
 }
