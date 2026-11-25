@@ -1,5 +1,7 @@
 package com.smpe.mapeditor
 
+import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.runtime.rememberCoroutineScope
 import android.widget.Toast
@@ -433,18 +435,18 @@ fun DrawScope.label(tm: TextMeasurer, text: String, x: Float, y: Float) {
 // ---------- Theme ----------
 // Deep Emerald: latar hijau-hitam, aksen zamrud gelap, teks putih kehijauan lembut.
 private val Scheme = darkColorScheme(
-    primary = Color(0xFFA9BFD6), onPrimary = Color(0xFF141A22),
-    primaryContainer = Color(0xFF2F3B4A), onPrimaryContainer = Color(0xFFE6EBF2),
-    secondary = Color(0xFF8A96A6), onSecondary = Color(0xFF141A22),
-    secondaryContainer = Color(0xFF2A323E), onSecondaryContainer = Color(0xFFE6EBF2),
-    tertiary = Color(0xFF7FB7C9),
-    background = Color(0xFF1A1F27), onBackground = Color(0xFFE6EBF2),
-    surface = Color(0xFF1F252E), onSurface = Color(0xFFE6EBF2),
-    surfaceVariant = Color(0xFF2A313B), onSurfaceVariant = Color(0xFF8A96A6),
-    surfaceContainerLowest = Color(0xFF151A21), surfaceContainerLow = Color(0xFF1C222A),
-    surfaceContainer = Color(0xFF232A34), surfaceContainerHigh = Color(0xFF2A313B),
-    surfaceContainerHighest = Color(0xFF333B47),
-    outline = Color(0xFF3B4553), outlineVariant = Color(0xFF3B4553), error = Color(0xFFD9797A)
+    primary = Color(0xFF4D9BFF), onPrimary = Color(0xFF06121F),
+    primaryContainer = Color(0xFF173A66), onPrimaryContainer = Color(0xFFE6F0FF),
+    secondary = Color(0xFF8FB4E8), onSecondary = Color(0xFF06121F),
+    secondaryContainer = Color(0xFF1A3350), onSecondaryContainer = Color(0xFFE6F0FF),
+    tertiary = Color(0xFF7FD3F2),
+    background = Color(0xFF08111E), onBackground = Color(0xFFE6F0FF),
+    surface = Color(0xFF0E1A2D), onSurface = Color(0xFFE6F0FF),
+    surfaceVariant = Color(0xB815243C), onSurfaceVariant = Color(0xFF8FA6C4),
+    surfaceContainerLowest = Color(0xFF0A1424), surfaceContainerLow = Color(0xFF0E1A2D),
+    surfaceContainer = Color(0xFF122139), surfaceContainerHigh = Color(0xFF15243C),
+    surfaceContainerHighest = Color(0xFF1B2D49),
+    outline = Color(0xFF2C4A72), outlineVariant = Color(0xFF2C4A72), error = Color(0xFFFF7A8A)
 )
 
 val RussoOne = FontFamily(Font(R.font.russo_one, FontWeight.Normal))
@@ -521,6 +523,17 @@ fun App(vm: EditorVM = viewModel()) {
     val ctx = LocalContext.current
     remember { I18n.load(ctx) }
     var updateRel by remember { mutableStateOf<UpdateChecker.Release?>(null) }
+    val homeScope = rememberCoroutineScope()
+    fun manualCheck() {
+        homeScope.launch {
+            val r = withContext(Dispatchers.IO) { runCatching { UpdateChecker.fetchLatest() }.getOrNull() }
+            when {
+                r == null -> Toast.makeText(ctx, I18n.t("Gagal cek update. Periksa koneksi."), Toast.LENGTH_SHORT).show()
+                UpdateChecker.isNewer(r.version, UpdateChecker.currentVersion(ctx)) -> updateRel = r
+                else -> Toast.makeText(ctx, I18n.t("Anda sudah memakai versi terbaru."), Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
     LaunchedEffect(Unit) {
         val r = withContext(Dispatchers.IO) { runCatching { UpdateChecker.fetchLatest() }.getOrNull() }
         val skip = ctx.getSharedPreferences("smpe", Context.MODE_PRIVATE).getString("skip_update", "")
@@ -544,12 +557,6 @@ fun App(vm: EditorVM = viewModel()) {
             }
             hasDraft = true
         }
-    }
-    LaunchedEffect(editorOpen) {
-        activity?.requestedOrientation = if (editorOpen)
-            ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
-        else
-            ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT
     }
     val scope = rememberCoroutineScope()
     var tab by remember { mutableIntStateOf(0) }
@@ -683,7 +690,8 @@ fun App(vm: EditorVM = viewModel()) {
                     onRecent = { r -> openUri(Uri.parse(r.uri)) },
                     onClearRecents = { recents.clear(); saveRecents() },
                     onNew = { vm.newFile(); tab = 0 },
-                    onBrowse = { browsing = true }
+                    onBrowse = { browsing = true },
+                    onCheckUpdate = { manualCheck() }
                 )
                 tab == 0 -> ListView(vm)
                 tab == 1 -> {
@@ -748,11 +756,18 @@ fun Empty(
     onRecent: (Recent) -> Unit,
     onClearRecents: () -> Unit,
     onNew: () -> Unit,
-    onBrowse: () -> Unit
+    onBrowse: () -> Unit,
+    onCheckUpdate: () -> Unit
 ) {
     val cs = MaterialTheme.colorScheme
+    Row(Modifier.fillMaxSize().padding(horizontal = 12.dp, vertical = 10.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+    HomeSidebar(
+        onGuide = { showGuide = true },
+        onChangelog = { showChangelog = true },
+        onCheckUpdate = onCheckUpdate
+    )
     Box(
-        Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 20.dp, vertical = 14.dp),
+        Modifier.weight(1f).fillMaxHeight().verticalScroll(rememberScrollState()).padding(horizontal = 8.dp, vertical = 4.dp),
         contentAlignment = Alignment.TopCenter
     ) {
         Column(
@@ -878,6 +893,7 @@ fun Empty(
             Text("Developed by ReyyXSA", style = MaterialTheme.typography.labelMedium, color = cs.onSurfaceVariant)
             Spacer(Modifier.height(4.dp))
         }
+    }
     }
 }
 
@@ -1411,4 +1427,52 @@ fun UpdateDialog(ctx: Context, rel: UpdateChecker.Release, onClose: () -> Unit) 
             }
         }
     )
+}
+
+/** Sidebar kiri ala aplikasi desktop: menu utama dengan gaya kaca biru. */
+@Composable
+fun HomeSidebar(onGuide: () -> Unit, onChangelog: () -> Unit, onCheckUpdate: () -> Unit) {
+    val ctx = LocalContext.current
+    val cs = MaterialTheme.colorScheme
+    val shape = RoundedCornerShape(20.dp)
+    Column(
+        Modifier.width(190.dp).fillMaxHeight()
+            .clip(shape).background(cs.surface.copy(alpha = 0.72f))
+            .border(1.dp, cs.primary.copy(alpha = 0.35f), shape)
+            .padding(10.dp),
+        verticalArrangement = Arrangement.spacedBy(4.dp)
+    ) {
+        Text("San Editor", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black,
+            color = cs.onSurface, modifier = Modifier.padding(start = 8.dp, top = 4.dp, bottom = 10.dp))
+        SideItem(I18n.t("Beranda"), selected = true) { }
+        SideItem(I18n.t("Panduan")) { onGuide() }
+        SideItem(I18n.t("Changelog")) { onChangelog() }
+        SideItem(I18n.t("Cek update")) { onCheckUpdate() }
+        SideItem(I18n.t("Dukung")) {
+            ctx.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://saweria.co/ReyyXSA")))
+        }
+        SideItem(I18n.t("Kritik & saran")) {
+            ctx.startActivity(Intent(Intent.ACTION_SENDTO, Uri.parse("mailto:reysaputra567@gmail.com?subject=" + Uri.encode("Kritik & saran San Editor"))))
+        }
+        SideItem(I18n.t("Bahasa")) {
+            I18n.set(ctx, if (I18n.lang == "id") "en" else "id")
+        }
+    }
+}
+
+@Composable
+fun SideItem(label: String, selected: Boolean = false, onClick: () -> Unit) {
+    val cs = MaterialTheme.colorScheme
+    val shape = RoundedCornerShape(14.dp)
+    Box(
+        Modifier.fillMaxWidth().clip(shape)
+            .background(if (selected) cs.primary.copy(alpha = 0.22f) else Color.Transparent)
+            .border(1.dp, if (selected) cs.primary.copy(alpha = 0.6f) else Color.Transparent, shape)
+            .clickable(onClick = onClick)
+            .padding(horizontal = 12.dp, vertical = 11.dp)
+    ) {
+        Text(label, style = MaterialTheme.typography.bodyMedium,
+            fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
+            color = if (selected) cs.onSurface else cs.onSurfaceVariant)
+    }
 }

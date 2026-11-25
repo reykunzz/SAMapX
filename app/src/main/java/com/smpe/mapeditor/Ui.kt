@@ -113,7 +113,7 @@ fun ViewToolbar(
     undoLabel: String = "", gridOn: Boolean = false, onGrid: () -> Unit = {}
 ) {
     var menuOpen by remember { mutableStateOf(false) }
-    Surface(modifier, shape = RoundedCornerShape(22.dp), color = Color(0xE6121714)) {
+    Surface(modifier, shape = RoundedCornerShape(22.dp), color = Color(0xD90E1A2D)) {
         Row(
             Modifier.padding(horizontal = 4.dp, vertical = 3.dp),
             horizontalArrangement = Arrangement.spacedBy(2.dp),

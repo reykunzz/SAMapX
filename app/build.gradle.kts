@@ -9,11 +9,11 @@ android {
     namespace = "com.smpe.mapeditor"
     compileSdk = 34
     defaultConfig {
-        applicationId = "com.smpe.mapeditor"
+        applicationId = "com.smpe.mapeditor.test"
         minSdk = 24
         targetSdk = 34
         versionCode = 61
-        versionName = "1.9.18"
+        versionName = "1.9.20-test"
     }
     buildTypes {
         release {
