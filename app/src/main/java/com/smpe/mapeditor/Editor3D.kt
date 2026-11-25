@@ -98,9 +98,13 @@ fun GlEditor(vm: EditorVM, game: GameData) {
             Modifier.fillMaxSize())
         val selObj = vm.entries.getOrNull(vm.sel) as? Obj
         if (selObj != null && (!showPanel || containerWidth >= 700.dp)) {
-            SelCard(vm, gl, selObj, Modifier.align(Alignment.BottomCenter).padding(bottom = 12.dp))
-            CameraPad(vm, gl, Modifier.align(Alignment.CenterEnd).padding(end = 10.dp))
-            OrbitGizmo(gl, Modifier.align(Alignment.BottomStart).padding(start = 12.dp, bottom = 12.dp))
+            SelCard(vm, gl, selObj, Modifier.align(Alignment.BottomStart).padding(start = 12.dp, bottom = 46.dp))
+            // Kanan bawah: gizmo di atas, lalu tombol kamera
+            Column(Modifier.align(Alignment.BottomEnd).padding(end = 10.dp, bottom = 10.dp),
+                horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                OrbitGizmo(gl, Modifier)
+                CameraPad(vm, gl, Modifier)
+            }
         }
         if (showPanel) {
             Column(
@@ -1050,7 +1054,7 @@ fun OrbitGizmo(gl: GlScene, modifier: Modifier) {
     var tick by remember { mutableIntStateOf(0) }
     LaunchedEffect(Unit) { while (true) { delay(100); tick++ } }
     val dotRadius = with(LocalDensity.current) { 7.dp.toPx() }
-    val rPx = with(LocalDensity.current) { 42.dp.toPx() }
+    val rPx = with(LocalDensity.current) { 30.dp.toPx() }
     fun ends(c: Offset): Array<Offset> {
         val cy = cos(gl.yaw); val sy = sin(gl.yaw); val sp = sin(gl.pitch); val cp = cos(gl.pitch)
         // proyeksi sumbu X, Y, Z ke layar
@@ -1068,7 +1072,7 @@ fun OrbitGizmo(gl: GlScene, modifier: Modifier) {
         }
         gl.requestRender()
     }
-    Box(modifier.size(96.dp)) {
+    Box(modifier.size(76.dp)) {
         Canvas(
             Modifier.fillMaxSize()
                 .pointerInput(Unit) {

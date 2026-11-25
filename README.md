@@ -40,6 +40,7 @@ Catatan: model impor hanya bisa dilihat dan ditempatkan di editor. Agar muncul d
 
 ## Changelog
 
+- **1.9.18**: Gizmo di atas tombol kamera di kanan bawah. Kartu objek di kiri bawah.
 - **1.9.17**: Toolbar atas dirapikan. Lima ikon utama, sisanya di menu ≡.
 - **1.9.16**: Tampilan 3D dirapikan. Panel kanan lebih kecil, gizmo di kiri bawah, kartu objek di tengah bawah.
 - **1.9.15**: Tampilan 3D diperbarui: pad keyboard untuk arah, gizmo sumbu untuk orbit, joystick dihapus. Tab Objek dipindah ke menu ⋮.
