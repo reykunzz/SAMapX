@@ -496,6 +496,11 @@ fun SmpeTheme(themeName: String, content: @Composable () -> Unit) =
     MaterialTheme(colorScheme = glassColorScheme(themeName), typography = appTypography(), content = content)
 
 class MainActivity : ComponentActivity() {
+    // Skala UI tetap: semua HP tampil seperti layar lebar (lihat UiScale.kt).
+    override fun attachBaseContext(newBase: Context) {
+        super.attachBaseContext(UiScale.wrap(newBase))
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()

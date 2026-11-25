@@ -152,7 +152,9 @@ fun Viewport(
     panMode: Boolean, setPan: (Boolean) -> Unit,
     panelVisible: Boolean, togglePanel: () -> Unit, modifier: Modifier
 ) {
-    val density = LocalDensity.current.density
+    // Toleransi sentuhan memakai densitas asli perangkat (bukan yang sudah diskalakan UiScale),
+    // supaya gizmo dan objek tetap mudah disentuh jari di HP kecil.
+    val density = UiScale.realDensity
     val pm = rememberUpdatedState(panMode)
     val modeKey = vm.topDown to vm.selSet.toList()
     // Mode Objek: kamera selalu berpusat di objek yang dipilih.
