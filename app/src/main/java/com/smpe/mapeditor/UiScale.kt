@@ -18,7 +18,7 @@ import kotlin.math.roundToInt
  */
 object UiScale {
     /** Sisi pendek layar acuan dalam dp. Perbesar = UI makin kecil, perkecil = UI makin besar. */
-    const val REF_SHORT_DP = 680f
+    const val REF_SHORT_DP = 600f
 
     /** Batas skala terkecil, supaya tombol di layar yang sangat kecil tidak terlalu mungil. */
     const val MIN_SCALE = 0.45f
