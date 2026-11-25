@@ -94,7 +94,7 @@ object I18n {
         "Changelog" to "Changelog",
         "Panduan penggunaan" to "How to use",
         "Tutup" to "Close",
-        "Donate" to "Donate",
+        "Dukung" to "Support",
         "Kritik & saran" to "Feedback",
         "Bahasa" to "Language",
         "Kirim kritik atau saran lewat email atau Facebook." to "Send feedback by email or Facebook.",
