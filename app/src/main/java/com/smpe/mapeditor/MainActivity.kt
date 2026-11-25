@@ -810,14 +810,8 @@ fun Empty(
                     }
                 }
             }
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                OutlinedButton(onClick = { showGuide = true }, modifier = Modifier.weight(1f), shape = RoundedCornerShape(14.dp)) { Text(I18n.t("Panduan")) }
-                OutlinedButton(onClick = { showChangelog = true }, modifier = Modifier.weight(1f), shape = RoundedCornerShape(14.dp)) { Text(I18n.t("Changelog")) }
-            }
             if (showGuide) GuideDialog { showGuide = false }
             if (showChangelog) ChangelogDialog { showChangelog = false }
-            SupportSection()
-
             val folderReady = gameStatus.isNotBlank() && !gameStatus.startsWith("Gagal")
             Card(Modifier.fillMaxWidth(), shape = RoundedCornerShape(20.dp),
                 colors = CardDefaults.cardColors(containerColor = Color(0x8820334D)),
@@ -1483,7 +1477,7 @@ fun HomeSidebar(onGuide: () -> Unit, onChangelog: () -> Unit, onCheckUpdate: () 
         SideItem(I18n.t("Panduan")) { onGuide() }
         SideItem(I18n.t("Changelog")) { onChangelog() }
         SideItem(I18n.t("Cek update")) { onCheckUpdate() }
-        SideItem(I18n.t("Dukung")) {
+        SideItem(I18n.t("Donate")) {
             ctx.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://saweria.co/ReyyXSA")))
         }
         SideItem(I18n.t("Kritik & saran")) {
