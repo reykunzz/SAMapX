@@ -982,7 +982,7 @@ fun AppHeader(
             }
             Box {
                 IconButton(onClick = { menuOpen = true }, modifier = Modifier.size(40.dp)) {
-                    Icon(Icons.Default.MoreVert, "Menu")
+                    Icon(Icons.Default.MoreVert, contentDescription = "Menu", tint = Color(0xFF6EE7B7))
                 }
                 DropdownMenu(
                     expanded = menuOpen, onDismissRequest = { menuOpen = false },
