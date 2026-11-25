@@ -760,6 +760,8 @@ fun Empty(
     onCheckUpdate: () -> Unit
 ) {
     val cs = MaterialTheme.colorScheme
+    var showGuide by remember { mutableStateOf(false) }
+    var showChangelog by remember { mutableStateOf(false) }
     Row(Modifier.fillMaxSize().padding(horizontal = 12.dp, vertical = 10.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
     HomeSidebar(
         onGuide = { showGuide = true },
@@ -788,9 +790,6 @@ fun Empty(
                     }
                 }
             }
-
-            var showGuide by remember { mutableStateOf(false) }
-            var showChangelog by remember { mutableStateOf(false) }
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 OutlinedButton(onClick = { showGuide = true }, modifier = Modifier.weight(1f), shape = RoundedCornerShape(14.dp)) { Text(I18n.t("Panduan")) }
                 OutlinedButton(onClick = { showChangelog = true }, modifier = Modifier.weight(1f), shape = RoundedCornerShape(14.dp)) { Text(I18n.t("Changelog")) }
