@@ -435,18 +435,18 @@ fun DrawScope.label(tm: TextMeasurer, text: String, x: Float, y: Float) {
 // ---------- Theme ----------
 // Deep Emerald: latar hijau-hitam, aksen zamrud gelap, teks putih kehijauan lembut.
 private val Scheme = darkColorScheme(
-    primary = Color(0xFF4D9BFF), onPrimary = Color(0xFF06121F),
-    primaryContainer = Color(0xFF173A66), onPrimaryContainer = Color(0xFFE6F0FF),
-    secondary = Color(0xFF8FB4E8), onSecondary = Color(0xFF06121F),
+    primary = Color(0xFF8CCBFF), onPrimary = Color(0xFF071526),
+    primaryContainer = Color(0xFF244D75), onPrimaryContainer = Color(0xFFEAF6FF),
+    secondary = Color(0xFFB7D7F4), onSecondary = Color(0xFF071526),
     secondaryContainer = Color(0xFF1A3350), onSecondaryContainer = Color(0xFFE6F0FF),
     tertiary = Color(0xFF7FD3F2),
-    background = Color(0xFF08111E), onBackground = Color(0xFFE6F0FF),
-    surface = Color(0xFF0E1A2D), onSurface = Color(0xFFE6F0FF),
-    surfaceVariant = Color(0xB815243C), onSurfaceVariant = Color(0xFF8FA6C4),
-    surfaceContainerLowest = Color(0xFF0A1424), surfaceContainerLow = Color(0xFF0E1A2D),
-    surfaceContainer = Color(0xFF122139), surfaceContainerHigh = Color(0xFF15243C),
-    surfaceContainerHighest = Color(0xFF1B2D49),
-    outline = Color(0xFF2C4A72), outlineVariant = Color(0xFF2C4A72), error = Color(0xFFFF7A8A)
+    background = Color(0xFF070E1A), onBackground = Color(0xFFF0F7FF),
+    surface = Color(0xCC14243A), onSurface = Color(0xFFF0F7FF),
+    surfaceVariant = Color(0x991D304A), onSurfaceVariant = Color(0xFFA9BCD2),
+    surfaceContainerLowest = Color(0xFF091321), surfaceContainerLow = Color(0xCC14243A),
+    surfaceContainer = Color(0xCC1A2C45), surfaceContainerHigh = Color(0xDD203650),
+    surfaceContainerHighest = Color(0xEE29435F),
+    outline = Color(0x668FC8F5), outlineVariant = Color(0x447BAED8), error = Color(0xFFFF7A8A)
 )
 
 val RussoOne = FontFamily(Font(R.font.russo_one, FontWeight.Normal))
@@ -680,7 +680,25 @@ fun App(vm: EditorVM = viewModel()) {
             )
         }
     ) { pad ->
-        Box(Modifier.padding(pad).fillMaxSize()) {
+        Box(
+            Modifier.padding(pad).fillMaxSize().background(
+                Brush.linearGradient(
+                    colors = listOf(Color(0xFF07111F), Color(0xFF101F35), Color(0xFF091321))
+                )
+            )
+        ) {
+            Box(Modifier.fillMaxSize().background(
+                Brush.radialGradient(
+                    colors = listOf(Color(0x553B8FD0), Color.Transparent),
+                    center = Offset(0.82f, 0.08f), radius = 900f
+                )
+            ))
+            Box(Modifier.fillMaxSize().background(
+                Brush.radialGradient(
+                    colors = listOf(Color(0x332D65A0), Color.Transparent),
+                    center = Offset(0.08f, 0.88f), radius = 760f
+                )
+            ))
             when {
                 vm.entries.isEmpty() -> Empty(
                     onOpen = { open.launch(arrayOf("*/*")) },
@@ -762,7 +780,7 @@ fun Empty(
     val cs = MaterialTheme.colorScheme
     var showGuide by remember { mutableStateOf(false) }
     var showChangelog by remember { mutableStateOf(false) }
-    Row(Modifier.fillMaxSize().padding(horizontal = 12.dp, vertical = 10.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+    Row(Modifier.fillMaxSize().padding(horizontal = 16.dp, vertical = 14.dp), horizontalArrangement = Arrangement.spacedBy(14.dp)) {
     HomeSidebar(
         onGuide = { showGuide = true },
         onChangelog = { showChangelog = true },
@@ -777,8 +795,10 @@ fun Empty(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Card(Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = Color(0xFF2F3945))) {
+            Card(Modifier.fillMaxWidth(), shape = RoundedCornerShape(24.dp),
+                colors = CardDefaults.cardColors(containerColor = Color(0x88334F6E)),
+                border = androidx.compose.foundation.BorderStroke(1.dp, Color(0x668CCBFF)),
+                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)) {
                 Row(Modifier.fillMaxWidth().padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
                     Image(painterResource(R.drawable.logo), null, Modifier.size(44.dp))
                     Spacer(Modifier.width(12.dp))
@@ -800,7 +820,9 @@ fun Empty(
 
             val folderReady = gameStatus.isNotBlank() && !gameStatus.startsWith("Gagal")
             Card(Modifier.fillMaxWidth(), shape = RoundedCornerShape(20.dp),
-                colors = CardDefaults.cardColors(containerColor = cs.surfaceVariant)) {
+                colors = CardDefaults.cardColors(containerColor = Color(0x8820334D)),
+                border = androidx.compose.foundation.BorderStroke(1.dp, Color(0x337FB8E8)),
+                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)) {
                 Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     Text(I18n.t("Langkah"), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
                     StepRow(folderReady, I18n.t("1. Pilih folder game"), I18n.t("Pilih folder files di kartu Folder GTA San Andreas."))
@@ -819,7 +841,9 @@ fun Empty(
             }
 
             Card(Modifier.fillMaxWidth(), shape = RoundedCornerShape(20.dp),
-                colors = CardDefaults.cardColors(containerColor = cs.surfaceVariant)) {
+                colors = CardDefaults.cardColors(containerColor = Color(0x8820334D)),
+                border = androidx.compose.foundation.BorderStroke(1.dp, Color(0x337FB8E8)),
+                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)) {
                 Row(Modifier.fillMaxWidth().padding(start = 18.dp, end = 10.dp, top = 12.dp, bottom = 12.dp),
                     verticalAlignment = Alignment.CenterVertically) {
                     Icon(Icons.Default.Place, null, tint = cs.primary)
@@ -839,7 +863,9 @@ fun Empty(
             }
 
             Card(Modifier.fillMaxWidth(), shape = RoundedCornerShape(20.dp),
-                colors = CardDefaults.cardColors(containerColor = cs.surfaceVariant)) {
+                colors = CardDefaults.cardColors(containerColor = Color(0x8820334D)),
+                border = androidx.compose.foundation.BorderStroke(1.dp, Color(0x337FB8E8)),
+                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)) {
                 Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(I18n.t("Pilih map"), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
                     Text(I18n.t("Pilih file map (.ipl) dari folder game. Dari sana Anda juga bisa mendaftarkan model dan membuat IPL baru."),
@@ -858,7 +884,9 @@ fun Empty(
             }
 
             if (recents.isEmpty()) Card(Modifier.fillMaxWidth(), shape = RoundedCornerShape(20.dp),
-                colors = CardDefaults.cardColors(containerColor = cs.surfaceVariant)) {
+                colors = CardDefaults.cardColors(containerColor = Color(0x8820334D)),
+                border = androidx.compose.foundation.BorderStroke(1.dp, Color(0x337FB8E8)),
+                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)) {
                 Column(Modifier.fillMaxWidth().padding(20.dp), horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     Icon(Icons.Default.List, null, tint = cs.onSurfaceVariant)
@@ -867,7 +895,9 @@ fun Empty(
                 }
             }
             if (recents.isNotEmpty()) Card(Modifier.fillMaxWidth(), shape = RoundedCornerShape(20.dp),
-                colors = CardDefaults.cardColors(containerColor = cs.surfaceVariant)) {
+                colors = CardDefaults.cardColors(containerColor = Color(0x8820334D)),
+                border = androidx.compose.foundation.BorderStroke(1.dp, Color(0x337FB8E8)),
+                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)) {
                 Column(Modifier.fillMaxWidth().padding(vertical = 8.dp)) {
                     Row(Modifier.fillMaxWidth().padding(start = 18.dp, end = 6.dp), verticalAlignment = Alignment.CenterVertically) {
                         Text(I18n.t("File terakhir"), Modifier.weight(1f), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
@@ -905,7 +935,11 @@ fun AppHeader(
 ) {
     val cs = MaterialTheme.colorScheme
     var menuOpen by remember { mutableStateOf(false) }
-    Surface(color = if (overlay) Color.Transparent else cs.background) {
+    Surface(
+        color = if (overlay) Color.Transparent else Color(0xAA102039),
+        tonalElevation = 0.dp,
+        shadowElevation = 0.dp
+    ) {
         Row(
             Modifier.statusBarsPadding().height(44.dp).padding(horizontal = 8.dp),
             verticalAlignment = Alignment.CenterVertically
@@ -1436,8 +1470,10 @@ fun HomeSidebar(onGuide: () -> Unit, onChangelog: () -> Unit, onCheckUpdate: () 
     val shape = RoundedCornerShape(20.dp)
     Column(
         Modifier.width(190.dp).fillMaxHeight()
-            .clip(shape).background(cs.surface.copy(alpha = 0.72f))
-            .border(1.dp, cs.primary.copy(alpha = 0.35f), shape)
+             .clip(shape).background(
+                Brush.linearGradient(listOf(Color(0xCC203A57), Color(0x9920334D), Color(0xAA101E32)))
+            )
+            .border(1.dp, Color(0x668CCBFF), shape)
             .padding(10.dp),
         verticalArrangement = Arrangement.spacedBy(4.dp)
     ) {
@@ -1465,8 +1501,11 @@ fun SideItem(label: String, selected: Boolean = false, onClick: () -> Unit) {
     val shape = RoundedCornerShape(14.dp)
     Box(
         Modifier.fillMaxWidth().clip(shape)
-            .background(if (selected) cs.primary.copy(alpha = 0.22f) else Color.Transparent)
-            .border(1.dp, if (selected) cs.primary.copy(alpha = 0.6f) else Color.Transparent, shape)
+             .background(
+                if (selected) Brush.linearGradient(listOf(Color(0x887FC8FF), Color(0x334A91C7)))
+                else Brush.linearGradient(listOf(Color.Transparent, Color.Transparent))
+            )
+            .border(1.dp, if (selected) Color(0xAA9ED7FF) else Color.Transparent, shape)
             .clickable(onClick = onClick)
             .padding(horizontal = 12.dp, vertical = 11.dp)
     ) {
