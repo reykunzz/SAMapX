@@ -87,3 +87,10 @@ Catatan: model impor hanya bisa dilihat dan ditempatkan di editor. Agar muncul d
 
 
 Update: background map kini dipasang pada root layout agar memenuhi seluruh area aplikasi, termasuk belakang header dan seluruh tab. Scaffold dan header dibuat transparan; gambar map diproses menjadi latar 16:9 blur dengan overlay navy.
+
+
+## Liquid Glass themes update
+- Improved contrast for text on translucent cards by explicitly using the theme foreground color.
+- Added persistent accent themes: Blue, Emerald Green, Amethyst Purple, Amber Orange, Rose Pink, and Teal Cyan.
+- Added the “Tema warna” option to the home sidebar. Theme selection is saved between launches.
+- Applied the selected accent palette to Material theme colors, sidebar glass, selected navigation item, borders, and action highlights.

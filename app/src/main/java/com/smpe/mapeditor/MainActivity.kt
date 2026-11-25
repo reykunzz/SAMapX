@@ -433,22 +433,38 @@ fun DrawScope.label(tm: TextMeasurer, text: String, x: Float, y: Float) {
     drawText(tm, text, Offset(x, y), TextStyle(color = Color.White, fontSize = 10.sp, background = Color(0xE6121714)))
 }
 
-// ---------- Theme ----------
-// Deep Emerald: latar hijau-hitam, aksen zamrud gelap, teks putih kehijauan lembut.
-private val Scheme = darkColorScheme(
-    primary = Color(0xFF4D9BFF), onPrimary = Color(0xFF06121F),
-    primaryContainer = Color(0xFF173A66), onPrimaryContainer = Color(0xFFE6F0FF),
-    secondary = Color(0xFF8FB4E8), onSecondary = Color(0xFF06121F),
-    secondaryContainer = Color(0xFF1A3350), onSecondaryContainer = Color(0xFFE6F0FF),
-    tertiary = Color(0xFF7FD3F2),
-    background = Color(0xFF08111E), onBackground = Color(0xFFE6F0FF),
-    surface = Color(0xFF0E1A2D), onSurface = Color(0xFFE6F0FF),
-    surfaceVariant = Color(0xB815243C), onSurfaceVariant = Color(0xFF8FA6C4),
-    surfaceContainerLowest = Color(0xFF0A1424), surfaceContainerLow = Color(0xFF0E1A2D),
-    surfaceContainer = Color(0xFF122139), surfaceContainerHigh = Color(0xFF15243C),
-    surfaceContainerHighest = Color(0xFF1B2D49),
-    outline = Color(0xFF2C4A72), outlineVariant = Color(0xFF2C4A72), error = Color(0xFFFF7A8A)
+// ---------- Liquid Glass themes ----------
+private data class GlassPalette(
+    val primary: Color, val secondary: Color, val tertiary: Color,
+    val primaryContainer: Color, val outline: Color
 )
+
+private fun glassPalette(name: String): GlassPalette = when (name.lowercase()) {
+    "emerald" -> GlassPalette(Color(0xFF55D99A), Color(0xFFA2E8C4), Color(0xFF7CE7B1), Color(0xFF174A36), Color(0xFF397D60))
+    "amethyst" -> GlassPalette(Color(0xFFB994FF), Color(0xFFD0B9FF), Color(0xFFD1A7FF), Color(0xFF3C285F), Color(0xFF70549A))
+    "amber" -> GlassPalette(Color(0xFFFFB45C), Color(0xFFFFD09A), Color(0xFFFFC477), Color(0xFF573719), Color(0xFF916333))
+    "rose" -> GlassPalette(Color(0xFFFF86B7), Color(0xFFFFB7D1), Color(0xFFFF9DC5), Color(0xFF55263D), Color(0xFF92516F))
+    "teal" -> GlassPalette(Color(0xFF55D9D5), Color(0xFFA0E9E6), Color(0xFF78E7E2), Color(0xFF164B4B), Color(0xFF397D7B))
+    else -> GlassPalette(Color(0xFF4D9BFF), Color(0xFFB3D1F7), Color(0xFF7FD3F2), Color(0xFF173A66), Color(0xFF3973A4))
+}
+
+private fun glassColorScheme(name: String) : ColorScheme {
+    val p = glassPalette(name)
+    return darkColorScheme(
+        primary = p.primary, onPrimary = Color(0xFF07121D),
+        primaryContainer = p.primaryContainer, onPrimaryContainer = Color(0xFFF4F8FF),
+        secondary = p.secondary, onSecondary = Color(0xFF07121D),
+        secondaryContainer = p.primaryContainer, onSecondaryContainer = Color(0xFFF4F8FF),
+        tertiary = p.tertiary,
+        background = Color(0xFF08111E), onBackground = Color(0xFFF1F5FB),
+        surface = Color(0xFF0E1A2D), onSurface = Color(0xFFF1F5FB),
+        surfaceVariant = Color(0xD91B304A), onSurfaceVariant = Color(0xFFD0DCEB),
+        surfaceContainerLowest = Color(0xFF0A1424), surfaceContainerLow = Color(0xFF0E1A2D),
+        surfaceContainer = Color(0xFF122139), surfaceContainerHigh = Color(0xFF15243C),
+        surfaceContainerHighest = Color(0xFF1B2D49),
+        outline = p.outline, outlineVariant = p.outline, error = Color(0xFFFF8794)
+    )
+}
 
 val RussoOne = FontFamily(Font(R.font.russo_one, FontWeight.Normal))
 
@@ -474,8 +490,8 @@ private fun appTypography(): Typography {
 }
 
 @Composable
-fun SmpeTheme(content: @Composable () -> Unit) =
-    MaterialTheme(colorScheme = Scheme, typography = appTypography(), content = content)
+fun SmpeTheme(themeName: String, content: @Composable () -> Unit) =
+    MaterialTheme(colorScheme = glassColorScheme(themeName), typography = appTypography(), content = content)
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -488,9 +504,14 @@ class MainActivity : ComponentActivity() {
             old?.uncaughtException(t, e)
         }
         setContent {
-            SmpeTheme {
+            val themePrefs = remember { getSharedPreferences("smpe", Context.MODE_PRIVATE) }
+            var selectedTheme by remember { mutableStateOf(themePrefs.getString("ui_theme", "blue") ?: "blue") }
+            SmpeTheme(selectedTheme) {
                 var crash by remember { mutableStateOf(if (crashFile.exists()) crashFile.readText() else null) }
-                App()
+                App(themeName = selectedTheme, onThemeChange = { name ->
+                    selectedTheme = name
+                    themePrefs.edit().putString("ui_theme", name).apply()
+                })
                 crash?.let { msg ->
                     AlertDialog(
                         onDismissRequest = { crashFile.delete(); crash = null },
@@ -520,7 +541,7 @@ fun nameOf(ctx: android.content.Context, u: Uri): String {
 
 // ---------- App ----------
 @Composable
-fun App(vm: EditorVM = viewModel()) {
+fun App(themeName: String = "blue", onThemeChange: (String) -> Unit = {}, vm: EditorVM = viewModel()) {
     val ctx = LocalContext.current
     remember { I18n.load(ctx) }
     var updateRel by remember { mutableStateOf<UpdateChecker.Release?>(null) }
@@ -706,7 +727,9 @@ fun App(vm: EditorVM = viewModel()) {
                     onClearRecents = { recents.clear(); saveRecents() },
                     onNew = { vm.newFile(); tab = 0 },
                     onBrowse = { browsing = true },
-                    onCheckUpdate = { manualCheck() }
+                    onCheckUpdate = { manualCheck() },
+                    themeName = themeName,
+                    onThemeChange = onThemeChange
                 )
                 tab == 0 -> ListView(vm)
                 tab == 1 -> {
@@ -773,17 +796,21 @@ fun Empty(
     onClearRecents: () -> Unit,
     onNew: () -> Unit,
     onBrowse: () -> Unit,
-    onCheckUpdate: () -> Unit
+    onCheckUpdate: () -> Unit,
+    themeName: String,
+    onThemeChange: (String) -> Unit
 ) {
     val cs = MaterialTheme.colorScheme
     var showGuide by remember { mutableStateOf(false) }
     var showChangelog by remember { mutableStateOf(false) }
+    var showThemePicker by remember { mutableStateOf(false) }
     Box(Modifier.fillMaxSize()) {
     Row(Modifier.fillMaxSize().padding(horizontal = 12.dp, vertical = 10.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
     HomeSidebar(
         onGuide = { showGuide = true },
         onChangelog = { showChangelog = true },
-        onCheckUpdate = onCheckUpdate
+        onCheckUpdate = onCheckUpdate,
+        onTheme = { showThemePicker = true }
     )
     Box(
         Modifier.weight(1f).fillMaxHeight().verticalScroll(rememberScrollState()).padding(horizontal = 8.dp, vertical = 4.dp),
@@ -794,25 +821,30 @@ fun Empty(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Card(Modifier.fillMaxWidth().border(1.dp, Color(0x7758BFFF), RoundedCornerShape(16.dp)), shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = Color(0xB30B2745))) {
+            Card(Modifier.fillMaxWidth().border(1.dp, cs.outline.copy(alpha = 0.82f), RoundedCornerShape(16.dp)), shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(containerColor = Color(0xB30B2745), contentColor = cs.onSurface)) {
                 Row(Modifier.fillMaxWidth().padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
                     Image(painterResource(R.drawable.logo), null, Modifier.size(44.dp))
                     Spacer(Modifier.width(12.dp))
                     Column {
                         Text("SAN EDITOR", fontFamily = RussoOne, fontWeight = FontWeight.Normal, fontSize = 26.sp,
-                            color = Color(0xFFE6EBF2), letterSpacing = 1.sp,
+                            color = cs.onSurface, letterSpacing = 1.sp,
                             style = TextStyle(shadow = Shadow(color = Color(0xFF0B0E13), offset = Offset(0f, 4f), blurRadius = 8f)))
-                        Text(I18n.t("Editor map GTA San Andreas"), style = MaterialTheme.typography.bodySmall, color = Color(0xFF8A96A6))
+                        Text(I18n.t("Editor map GTA San Andreas"), style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant)
                     }
                 }
             }
             if (showGuide) GuideDialog { showGuide = false }
             if (showChangelog) ChangelogDialog { showChangelog = false }
+            if (showThemePicker) ThemePickerDialog(
+                selected = themeName,
+                onSelect = { onThemeChange(it); showThemePicker = false },
+                onDismiss = { showThemePicker = false }
+            )
 
             val folderReady = gameStatus.isNotBlank() && !gameStatus.startsWith("Gagal")
-            Card(Modifier.fillMaxWidth().border(1.dp, Color(0x664CA9E8), RoundedCornerShape(20.dp)), shape = RoundedCornerShape(20.dp),
-                colors = CardDefaults.cardColors(containerColor = Color(0xB30B2540))) {
+            Card(Modifier.fillMaxWidth().border(1.dp, cs.outline.copy(alpha = 0.72f), RoundedCornerShape(20.dp)), shape = RoundedCornerShape(20.dp),
+                colors = CardDefaults.cardColors(containerColor = Color(0xC9102036), contentColor = cs.onSurface)) {
                 Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     Text(I18n.t("Langkah"), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
                     StepRow(folderReady, I18n.t("1. Pilih folder game"), I18n.t("Pilih folder files di kartu Folder GTA San Andreas."))
@@ -821,7 +853,7 @@ fun Empty(
                 }
             }
 
-            if (gameStatus.startsWith("Gagal")) Card(Modifier.fillMaxWidth().border(1.dp, Color(0x664CA9E8), RoundedCornerShape(20.dp)), shape = RoundedCornerShape(20.dp),
+            if (gameStatus.startsWith("Gagal")) Card(Modifier.fillMaxWidth().border(1.dp, cs.outline.copy(alpha = 0.72f), RoundedCornerShape(20.dp)), shape = RoundedCornerShape(20.dp),
                 colors = CardDefaults.cardColors(containerColor = cs.errorContainer)) {
                 Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(I18n.t("Folder belum benar"), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold, color = cs.onErrorContainer)
@@ -830,8 +862,8 @@ fun Empty(
                 }
             }
 
-            Card(Modifier.fillMaxWidth().border(1.dp, Color(0x664CA9E8), RoundedCornerShape(20.dp)), shape = RoundedCornerShape(20.dp),
-                colors = CardDefaults.cardColors(containerColor = Color(0xB30B2540))) {
+            Card(Modifier.fillMaxWidth().border(1.dp, cs.outline.copy(alpha = 0.72f), RoundedCornerShape(20.dp)), shape = RoundedCornerShape(20.dp),
+                colors = CardDefaults.cardColors(containerColor = Color(0xC9102036), contentColor = cs.onSurface)) {
                 Row(Modifier.fillMaxWidth().padding(start = 18.dp, end = 10.dp, top = 12.dp, bottom = 12.dp),
                     verticalAlignment = Alignment.CenterVertically) {
                     Icon(Icons.Default.Place, null, tint = cs.primary)
@@ -850,8 +882,8 @@ fun Empty(
                 }
             }
 
-            Card(Modifier.fillMaxWidth().border(1.dp, Color(0x664CA9E8), RoundedCornerShape(20.dp)), shape = RoundedCornerShape(20.dp),
-                colors = CardDefaults.cardColors(containerColor = Color(0xB30B2540))) {
+            Card(Modifier.fillMaxWidth().border(1.dp, cs.outline.copy(alpha = 0.72f), RoundedCornerShape(20.dp)), shape = RoundedCornerShape(20.dp),
+                colors = CardDefaults.cardColors(containerColor = Color(0xC9102036), contentColor = cs.onSurface)) {
                 Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(I18n.t("Pilih map"), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
                     Text(I18n.t("Pilih file map (.ipl) dari folder game. Dari sana Anda juga bisa mendaftarkan model dan membuat IPL baru."),
@@ -869,8 +901,8 @@ fun Empty(
                 }
             }
 
-            if (recents.isEmpty()) Card(Modifier.fillMaxWidth().border(1.dp, Color(0x664CA9E8), RoundedCornerShape(20.dp)), shape = RoundedCornerShape(20.dp),
-                colors = CardDefaults.cardColors(containerColor = Color(0xB30B2540))) {
+            if (recents.isEmpty()) Card(Modifier.fillMaxWidth().border(1.dp, cs.outline.copy(alpha = 0.72f), RoundedCornerShape(20.dp)), shape = RoundedCornerShape(20.dp),
+                colors = CardDefaults.cardColors(containerColor = Color(0xC9102036), contentColor = cs.onSurface)) {
                 Column(Modifier.fillMaxWidth().padding(20.dp), horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     Icon(Icons.Default.List, null, tint = cs.onSurfaceVariant)
@@ -878,8 +910,8 @@ fun Empty(
                     Text(I18n.t("File yang Anda buka akan muncul di sini."), style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant)
                 }
             }
-            if (recents.isNotEmpty()) Card(Modifier.fillMaxWidth().border(1.dp, Color(0x664CA9E8), RoundedCornerShape(20.dp)), shape = RoundedCornerShape(20.dp),
-                colors = CardDefaults.cardColors(containerColor = Color(0xB30B2540))) {
+            if (recents.isNotEmpty()) Card(Modifier.fillMaxWidth().border(1.dp, cs.outline.copy(alpha = 0.72f), RoundedCornerShape(20.dp)), shape = RoundedCornerShape(20.dp),
+                colors = CardDefaults.cardColors(containerColor = Color(0xC9102036), contentColor = cs.onSurface)) {
                 Column(Modifier.fillMaxWidth().padding(vertical = 8.dp)) {
                     Row(Modifier.fillMaxWidth().padding(start = 18.dp, end = 6.dp), verticalAlignment = Alignment.CenterVertically) {
                         Text(I18n.t("File terakhir"), Modifier.weight(1f), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
@@ -1443,16 +1475,16 @@ fun UpdateDialog(ctx: Context, rel: UpdateChecker.Release, onClose: () -> Unit) 
 
 /** Sidebar kiri ala aplikasi desktop: menu utama dengan gaya kaca biru. */
 @Composable
-fun HomeSidebar(onGuide: () -> Unit, onChangelog: () -> Unit, onCheckUpdate: () -> Unit) {
+fun HomeSidebar(onGuide: () -> Unit, onChangelog: () -> Unit, onCheckUpdate: () -> Unit, onTheme: () -> Unit) {
     val ctx = LocalContext.current
     val cs = MaterialTheme.colorScheme
     val shape = RoundedCornerShape(20.dp)
     Column(
-        Modifier.width(190.dp).fillMaxHeight()
+        Modifier.width(190.dp).fillMaxHeight().verticalScroll(rememberScrollState())
             .clip(shape).background(
-                Brush.linearGradient(listOf(Color(0xD51C5B88), Color(0xC20A2745), Color(0xD20B4C79)))
+                Brush.linearGradient(listOf(cs.primary.copy(alpha = 0.28f), Color(0xC20A1A2D), cs.primary.copy(alpha = 0.20f)))
             )
-            .border(1.dp, Color(0xAA55BFFF), shape)
+            .border(1.dp, cs.primary.copy(alpha = 0.72f), shape)
             .padding(10.dp),
         verticalArrangement = Arrangement.spacedBy(4.dp)
     ) {
@@ -1471,7 +1503,45 @@ fun HomeSidebar(onGuide: () -> Unit, onChangelog: () -> Unit, onCheckUpdate: () 
         SideItem(I18n.t("Bahasa")) {
             I18n.set(ctx, if (I18n.lang == "id") "en" else "id")
         }
+        SideItem("Tema warna", onClick = onTheme)
     }
+}
+
+@Composable
+private fun ThemePickerDialog(selected: String, onSelect: (String) -> Unit, onDismiss: () -> Unit) {
+    val options = listOf(
+        Triple("blue", "Biru", Color(0xFF4D9BFF)),
+        Triple("emerald", "Emerald Green", Color(0xFF55D99A)),
+        Triple("amethyst", "Amethyst Purple", Color(0xFFB994FF)),
+        Triple("amber", "Amber Orange", Color(0xFFFFB45C)),
+        Triple("rose", "Rose Pink", Color(0xFFFF86B7)),
+        Triple("teal", "Teal Cyan", Color(0xFF55D9D5))
+    )
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Pilih tema Liquid Glass", color = MaterialTheme.colorScheme.onSurface) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text("Warna aksen diterapkan ke sidebar, tombol, border, dan highlight.",
+                    color = MaterialTheme.colorScheme.onSurfaceVariant)
+                options.forEach { (key, label, color) ->
+                    Row(
+                        Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))
+                            .background(if (selected == key) color.copy(alpha = 0.18f) else Color.Transparent)
+                            .clickable { onSelect(key) }.padding(10.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Box(Modifier.size(22.dp).clip(CircleShape).background(color))
+                        Spacer(Modifier.width(12.dp))
+                        Text(label, Modifier.weight(1f), color = MaterialTheme.colorScheme.onSurface)
+                        if (selected == key) Text("✓", color = color, fontWeight = FontWeight.Bold)
+                    }
+                }
+            }
+        },
+        confirmButton = { TextButton(onClick = onDismiss) { Text("Tutup") } },
+        containerColor = MaterialTheme.colorScheme.surface
+    )
 }
 
 @Composable
@@ -1481,15 +1551,15 @@ fun SideItem(label: String, selected: Boolean = false, onClick: () -> Unit) {
     Box(
         Modifier.fillMaxWidth().clip(shape)
             .background(
-                if (selected) Brush.linearGradient(listOf(Color(0xDD1689E8), Color(0xBB1255A0)))
-                else Brush.linearGradient(listOf(Color(0x663B83B5), Color(0x44305C85)))
+                if (selected) Brush.linearGradient(listOf(cs.primary.copy(alpha = 0.88f), cs.primary.copy(alpha = 0.52f)))
+                else Brush.linearGradient(listOf(cs.primary.copy(alpha = 0.20f), cs.primary.copy(alpha = 0.12f)))
             )
-            .border(1.dp, if (selected) Color(0xFF75D1FF) else Color(0x554CA9E8), shape)
+            .border(1.dp, if (selected) cs.primary else cs.primary.copy(alpha = 0.38f), shape)
             .clickable(onClick = onClick)
             .padding(horizontal = 12.dp, vertical = 11.dp)
     ) {
         Text(label, style = MaterialTheme.typography.bodyMedium,
             fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
-            color = if (selected) cs.onSurface else cs.onSurfaceVariant)
+            color = cs.onSurface)
     }
 }
