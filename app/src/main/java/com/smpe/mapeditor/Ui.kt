@@ -44,7 +44,7 @@ import androidx.compose.ui.unit.dp
 // Ikon kecil (path Material) supaya tidak perlu dependensi material-icons-extended.
 private fun icon(name: String, path: String): ImageVector =
     ImageVector.Builder(name, 24.dp, 24.dp, 24f, 24f)
-        .addPath(PathParser().parsePathString(path).toNodes(), fill = SolidColor(Color.Black))
+        .addPath(PathParser().parsePathString(path).toNodes(), fill = SolidColor(Color.White))
         .build()
 
 object UiIcons {
@@ -86,8 +86,8 @@ fun TbBtn(
             icon, desc, Modifier.size(20.dp),
             tint = when {
                 selected -> cs.onPrimary
-                enabled -> tint ?: Color.White
-                else -> Color.White.copy(alpha = 0.3f)
+                enabled -> tint ?: cs.onSurface
+                else -> cs.onSurface.copy(alpha = 0.32f)
             }
         )
     }
@@ -95,7 +95,7 @@ fun TbBtn(
 
 @Composable
 private fun TbDivider() {
-    Box(Modifier.padding(horizontal = 3.dp).width(1.dp).height(18.dp).background(Color.White.copy(alpha = 0.18f)))
+    Box(Modifier.padding(horizontal = 3.dp).width(1.dp).height(18.dp).background(MaterialTheme.colorScheme.outline.copy(alpha = 0.42f)))
 }
 
 /** Toolbar viewport 3D: satu pil kecil berisi ikon saja. */
@@ -113,7 +113,13 @@ fun ViewToolbar(
     undoLabel: String = "", gridOn: Boolean = false, onGrid: () -> Unit = {}
 ) {
     var menuOpen by remember { mutableStateOf(false) }
-    Surface(modifier, shape = RoundedCornerShape(22.dp), color = Color(0xD90E1A2D)) {
+    Surface(
+        modifier = modifier,
+        shape = RoundedCornerShape(22.dp),
+        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.86f),
+        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.62f)),
+        shadowElevation = 8.dp
+    ) {
         Row(
             Modifier.padding(horizontal = 4.dp, vertical = 3.dp),
             horizontalArrangement = Arrangement.spacedBy(2.dp),
@@ -130,7 +136,10 @@ fun ViewToolbar(
             // Sisanya di menu
             Box {
                 TbBtn(Icons.Default.Menu, I18n.t("Menu")) { menuOpen = true }
-                DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
+                DropdownMenu(
+                    expanded = menuOpen, onDismissRequest = { menuOpen = false },
+                    modifier = Modifier.border(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.72f), RoundedCornerShape(14.dp))
+                ) {
                     DropdownMenuItem(text = { Text(I18n.t("Tampilkan semua")) },
                         onClick = { menuOpen = false; onAll() })
                     DropdownMenuItem(text = { Text((if (topDown) "\u2713 " else "") + I18n.t("Tampilan atas")) },

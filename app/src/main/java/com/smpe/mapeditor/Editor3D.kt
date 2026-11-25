@@ -116,9 +116,10 @@ fun GlEditor(vm: EditorVM, game: GameData) {
                     .background(
                         Brush.verticalGradient(
                             listOf(
-                                MaterialTheme.colorScheme.surface.copy(alpha = 0.86f),
-                                MaterialTheme.colorScheme.surface.copy(alpha = 0.72f),
-                                MaterialTheme.colorScheme.surface.copy(alpha = 0.80f)
+                                MaterialTheme.colorScheme.surface.copy(alpha = 0.78f),
+                                MaterialTheme.colorScheme.primary.copy(alpha = 0.16f),
+                                MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.76f),
+                                MaterialTheme.colorScheme.surface.copy(alpha = 0.82f)
                             )
                         ), RoundedCornerShape(18.dp)
                     )
@@ -373,13 +374,25 @@ fun SectionCard(title: String, content: @Composable ColumnScope.() -> Unit) {
     val cs = MaterialTheme.colorScheme
     val shape = RoundedCornerShape(16.dp)
     Card(
-        modifier = Modifier.border(1.dp, cs.outline.copy(alpha = 0.58f), shape),
+        modifier = Modifier.border(1.dp, cs.outline.copy(alpha = 0.66f), shape),
         shape = shape,
-        colors = CardDefaults.cardColors(containerColor = cs.surfaceVariant.copy(alpha = 0.66f)),
+        colors = CardDefaults.cardColors(
+            containerColor = cs.surface.copy(alpha = 0.66f),
+            contentColor = cs.onSurface
+        ),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
-        Column(Modifier.fillMaxWidth().padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Text(title, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
+        Column(
+            Modifier.fillMaxWidth()
+                .background(Brush.verticalGradient(listOf(
+                    cs.primary.copy(alpha = 0.105f),
+                    cs.surfaceVariant.copy(alpha = 0.24f),
+                    cs.surface.copy(alpha = 0.08f)
+                )))
+                .padding(12.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Text(title, style = MaterialTheme.typography.labelLarge, color = cs.primary, fontWeight = FontWeight.Bold)
             content()
         }
     }
@@ -536,8 +549,8 @@ fun PanelTabs(tab: Int, onTab: (Int) -> Unit) {
     Row(
         Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp)
             .clip(RoundedCornerShape(13.dp))
-            .background(cs.surfaceVariant.copy(alpha = 0.62f), RoundedCornerShape(13.dp))
-            .border(1.dp, cs.outline.copy(alpha = 0.48f), RoundedCornerShape(13.dp))
+            .background(Brush.verticalGradient(listOf(cs.primary.copy(alpha = 0.12f), cs.surface.copy(alpha = 0.86f))), RoundedCornerShape(13.dp))
+            .border(1.dp, cs.outline.copy(alpha = 0.62f), RoundedCornerShape(13.dp))
             .padding(3.dp),
         horizontalArrangement = Arrangement.spacedBy(3.dp)
     ) {
@@ -575,7 +588,8 @@ fun AxisBox(label: String, v: Float, modifier: Modifier) {
         .border(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.32f), RoundedCornerShape(8.dp))
         .padding(horizontal = 8.dp, vertical = 5.dp)) {
         Text(label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        Text(String.format(Locale.US, "%.2f", v), fontSize = 12.sp, fontFamily = FontFamily.Monospace, maxLines = 1)
+        Text(String.format(Locale.US, "%.2f", v), fontSize = 12.sp, fontFamily = FontFamily.Monospace,
+            color = MaterialTheme.colorScheme.onSurface, maxLines = 1)
     }
 }
 
@@ -586,7 +600,8 @@ fun SelCard(vm: EditorVM, gl: GlScene, o: Obj, modifier: Modifier) {
     Surface(modifier, shape = RoundedCornerShape(14.dp), color = cs.surface.copy(alpha = 0.76f),
         border = BorderStroke(1.dp, cs.outline.copy(alpha = 0.72f)), tonalElevation = 2.dp, shadowElevation = 4.dp) {
         Row(Modifier.padding(start = 10.dp, end = 2.dp, top = 3.dp, bottom = 3.dp), verticalAlignment = Alignment.CenterVertically) {
-            Text(o.model, fontWeight = FontWeight.SemiBold, fontSize = 12.sp, maxLines = 1, modifier = Modifier.widthIn(max = 120.dp))
+            Text(o.model, fontWeight = FontWeight.SemiBold, fontSize = 12.sp, color = cs.onSurface,
+                maxLines = 1, modifier = Modifier.widthIn(max = 120.dp))
             Spacer(Modifier.width(6.dp))
             Text("${o.id}", fontSize = 10.sp, fontFamily = FontFamily.Monospace, color = cs.primary)
             Spacer(Modifier.width(2.dp))
@@ -669,7 +684,10 @@ fun BoxScope.GamePrompt(vm: EditorVM, onPick: () -> Unit) {
     Card(
         Modifier.align(Alignment.BottomCenter).padding(16.dp).fillMaxWidth(),
         shape = RoundedCornerShape(18.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.78f),
+            contentColor = MaterialTheme.colorScheme.onSurface
+        )
     ) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(I18n.t("Tampilkan model GTA asli"), fontWeight = FontWeight.Bold)
@@ -1166,10 +1184,11 @@ fun KeyBtn(dir: Int, onClick: () -> Unit) {
             })
         }
     ) {
-        Box(Modifier.offset(2.dp, 3.dp).size(42.dp).clip(RoundedCornerShape(8.dp)).background(Color(0xFF0C0E10)))
+        val cs = MaterialTheme.colorScheme
+        Box(Modifier.offset(2.dp, 3.dp).size(42.dp).clip(RoundedCornerShape(8.dp)).background(cs.background.copy(alpha = 0.72f)))
         Box(
-            Modifier.size(34.dp).clip(RoundedCornerShape(8.dp)).background(Color(0xFF2E353D))
-                .border(1.dp, Color(0xFF474F59), RoundedCornerShape(8.dp)),
+            Modifier.size(34.dp).clip(RoundedCornerShape(8.dp)).background(cs.surfaceContainerHigh.copy(alpha = 0.94f))
+                .border(1.dp, cs.outline.copy(alpha = 0.82f), RoundedCornerShape(8.dp)),
             contentAlignment = Alignment.Center
         ) {
             Canvas(Modifier.size(18.dp)) {
@@ -1179,7 +1198,7 @@ fun KeyBtn(dir: Int, onClick: () -> Unit) {
                 val half = size.width * 0.42f
                 val tip = Offset(cx + dx * half, cy + dy * half)
                 val back = Offset(cx - dx * half, cy - dy * half)
-                val white = Color(0xFFF2F4F7)
+                val white = cs.onSurface
                 drawLine(white, back, tip, strokeWidth = 3.5f, cap = StrokeCap.Round)
                 val hl = size.width * 0.24f
                 val px = -dy; val py = dx

@@ -456,13 +456,15 @@ private fun glassColorScheme(name: String) : ColorScheme {
         secondary = p.secondary, onSecondary = Color(0xFF07121D),
         secondaryContainer = p.primaryContainer, onSecondaryContainer = Color(0xFFF4F8FF),
         tertiary = p.tertiary,
-        background = Color(0xFF08111E), onBackground = Color(0xFFF1F5FB),
-        surface = Color(0xFF0E1A2D), onSurface = Color(0xFFF1F5FB),
-        surfaceVariant = Color(0xD91B304A), onSurfaceVariant = Color(0xFFD0DCEB),
-        surfaceContainerLowest = Color(0xFF0A1424), surfaceContainerLow = Color(0xFF0E1A2D),
-        surfaceContainer = Color(0xFF122139), surfaceContainerHigh = Color(0xFF15243C),
-        surfaceContainerHighest = Color(0xFF1B2D49),
-        outline = p.outline, outlineVariant = p.outline, error = Color(0xFFFF8794)
+        background = Color(0xFF08111E), onBackground = Color(0xFFF4F7FC),
+        surface = androidx.compose.ui.graphics.lerp(Color(0xFF0A1220), p.primary, 0.10f), onSurface = Color(0xFFF4F7FC),
+        surfaceVariant = androidx.compose.ui.graphics.lerp(Color(0xFF142238), p.primary, 0.15f).copy(alpha = 0.94f), onSurfaceVariant = Color(0xFFD8E2EF),
+        surfaceContainerLowest = androidx.compose.ui.graphics.lerp(Color(0xFF091321), p.primary, 0.05f),
+        surfaceContainerLow = androidx.compose.ui.graphics.lerp(Color(0xFF101D30), p.primary, 0.09f),
+        surfaceContainer = androidx.compose.ui.graphics.lerp(Color(0xFF14243A), p.primary, 0.12f),
+        surfaceContainerHigh = androidx.compose.ui.graphics.lerp(Color(0xFF192B43), p.primary, 0.15f),
+        surfaceContainerHighest = androidx.compose.ui.graphics.lerp(Color(0xFF20334D), p.primary, 0.18f),
+        outline = p.outline, outlineVariant = p.outline.copy(alpha = 0.72f), error = Color(0xFFFF8794)
     )
 }
 
@@ -697,7 +699,11 @@ fun App(themeName: String = "blue", onThemeChange: (String) -> Unit = {}, vm: Ed
         Box(
             Modifier.fillMaxSize().background(
                 Brush.verticalGradient(
-                    listOf(Color(0x77030B18), Color(0x99071327), Color(0x88030B18))
+                    listOf(
+                        MaterialTheme.colorScheme.primary.copy(alpha = 0.30f),
+                        Color(0xE6071327),
+                        MaterialTheme.colorScheme.primary.copy(alpha = 0.26f)
+                    )
                 )
             )
         )
@@ -822,7 +828,7 @@ fun Empty(
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Card(Modifier.fillMaxWidth().border(1.dp, cs.outline.copy(alpha = 0.82f), RoundedCornerShape(16.dp)), shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = Color(0xB30B2745), contentColor = cs.onSurface)) {
+                colors = CardDefaults.cardColors(containerColor = cs.surface.copy(alpha = 0.72f), contentColor = cs.onSurface)) {
                 Row(Modifier.fillMaxWidth().padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
                     Image(painterResource(R.drawable.logo), null, Modifier.size(44.dp))
                     Spacer(Modifier.width(12.dp))
@@ -844,7 +850,7 @@ fun Empty(
 
             val folderReady = gameStatus.isNotBlank() && !gameStatus.startsWith("Gagal")
             Card(Modifier.fillMaxWidth().border(1.dp, cs.outline.copy(alpha = 0.72f), RoundedCornerShape(20.dp)), shape = RoundedCornerShape(20.dp),
-                colors = CardDefaults.cardColors(containerColor = Color(0xC9102036), contentColor = cs.onSurface)) {
+                colors = CardDefaults.cardColors(containerColor = cs.surfaceVariant.copy(alpha = 0.70f), contentColor = cs.onSurface)) {
                 Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     Text(I18n.t("Langkah"), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
                     StepRow(folderReady, I18n.t("1. Pilih folder game"), I18n.t("Pilih folder files di kartu Folder GTA San Andreas."))
@@ -863,7 +869,7 @@ fun Empty(
             }
 
             Card(Modifier.fillMaxWidth().border(1.dp, cs.outline.copy(alpha = 0.72f), RoundedCornerShape(20.dp)), shape = RoundedCornerShape(20.dp),
-                colors = CardDefaults.cardColors(containerColor = Color(0xC9102036), contentColor = cs.onSurface)) {
+                colors = CardDefaults.cardColors(containerColor = cs.surfaceVariant.copy(alpha = 0.70f), contentColor = cs.onSurface)) {
                 Row(Modifier.fillMaxWidth().padding(start = 18.dp, end = 10.dp, top = 12.dp, bottom = 12.dp),
                     verticalAlignment = Alignment.CenterVertically) {
                     Icon(Icons.Default.Place, null, tint = cs.primary)
@@ -883,7 +889,7 @@ fun Empty(
             }
 
             Card(Modifier.fillMaxWidth().border(1.dp, cs.outline.copy(alpha = 0.72f), RoundedCornerShape(20.dp)), shape = RoundedCornerShape(20.dp),
-                colors = CardDefaults.cardColors(containerColor = Color(0xC9102036), contentColor = cs.onSurface)) {
+                colors = CardDefaults.cardColors(containerColor = cs.surfaceVariant.copy(alpha = 0.70f), contentColor = cs.onSurface)) {
                 Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(I18n.t("Pilih map"), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
                     Text(I18n.t("Pilih file map (.ipl) dari folder game. Dari sana Anda juga bisa mendaftarkan model dan membuat IPL baru."),
@@ -902,7 +908,7 @@ fun Empty(
             }
 
             if (recents.isEmpty()) Card(Modifier.fillMaxWidth().border(1.dp, cs.outline.copy(alpha = 0.72f), RoundedCornerShape(20.dp)), shape = RoundedCornerShape(20.dp),
-                colors = CardDefaults.cardColors(containerColor = Color(0xC9102036), contentColor = cs.onSurface)) {
+                colors = CardDefaults.cardColors(containerColor = cs.surfaceVariant.copy(alpha = 0.70f), contentColor = cs.onSurface)) {
                 Column(Modifier.fillMaxWidth().padding(20.dp), horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     Icon(Icons.Default.List, null, tint = cs.onSurfaceVariant)
@@ -911,7 +917,7 @@ fun Empty(
                 }
             }
             if (recents.isNotEmpty()) Card(Modifier.fillMaxWidth().border(1.dp, cs.outline.copy(alpha = 0.72f), RoundedCornerShape(20.dp)), shape = RoundedCornerShape(20.dp),
-                colors = CardDefaults.cardColors(containerColor = Color(0xC9102036), contentColor = cs.onSurface)) {
+                colors = CardDefaults.cardColors(containerColor = cs.surfaceVariant.copy(alpha = 0.70f), contentColor = cs.onSurface)) {
                 Column(Modifier.fillMaxWidth().padding(vertical = 8.dp)) {
                     Row(Modifier.fillMaxWidth().padding(start = 18.dp, end = 6.dp), verticalAlignment = Alignment.CenterVertically) {
                         Text(I18n.t("File terakhir"), Modifier.weight(1f), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
@@ -978,7 +984,10 @@ fun AppHeader(
                 IconButton(onClick = { menuOpen = true }, modifier = Modifier.size(40.dp)) {
                     Icon(Icons.Default.MoreVert, "Menu")
                 }
-                DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
+                DropdownMenu(
+                    expanded = menuOpen, onDismissRequest = { menuOpen = false },
+                    modifier = Modifier.border(1.dp, cs.outline.copy(alpha = 0.72f), RoundedCornerShape(14.dp))
+                ) {
                     if (hasFile) DropdownMenuItem(text = { Text(I18n.t("Daftar objek")) }, onClick = { menuOpen = false; onTab(0) })
                     if (overlay) {
                         DropdownMenuItem(text = { Text("Buka") }, onClick = { menuOpen = false; onOpen() })
@@ -1245,6 +1254,15 @@ fun Field(label: String, v: String, mod: Modifier = Modifier, num: Boolean = tru
     OutlinedTextField(
         value = v, onValueChange = onChange, modifier = mod, label = { Text(label) },
         singleLine = true, shape = RoundedCornerShape(12.dp),
+        colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
+            focusedTextColor = MaterialTheme.colorScheme.onSurface,
+            unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+            focusedLabelColor = MaterialTheme.colorScheme.primary,
+            unfocusedLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+            cursorColor = MaterialTheme.colorScheme.primary,
+            focusedBorderColor = MaterialTheme.colorScheme.primary,
+            unfocusedBorderColor = MaterialTheme.colorScheme.outline
+        ),
         keyboardOptions = KeyboardOptions(keyboardType = if (num) KeyboardType.Decimal else KeyboardType.Text)
     )
 }
@@ -1482,9 +1500,9 @@ fun HomeSidebar(onGuide: () -> Unit, onChangelog: () -> Unit, onCheckUpdate: () 
     Column(
         Modifier.width(190.dp).fillMaxHeight().verticalScroll(rememberScrollState())
             .clip(shape).background(
-                Brush.linearGradient(listOf(cs.primary.copy(alpha = 0.28f), Color(0xC20A1A2D), cs.primary.copy(alpha = 0.20f)))
+                Brush.linearGradient(listOf(cs.primary.copy(alpha = 0.36f), cs.surface.copy(alpha = 0.76f), cs.primary.copy(alpha = 0.30f)))
             )
-            .border(1.dp, cs.primary.copy(alpha = 0.72f), shape)
+            .border(1.dp, cs.primary.copy(alpha = 0.88f), shape)
             .padding(10.dp),
         verticalArrangement = Arrangement.spacedBy(4.dp)
     ) {
