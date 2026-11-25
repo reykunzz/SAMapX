@@ -98,9 +98,9 @@ fun GlEditor(vm: EditorVM, game: GameData) {
             Modifier.fillMaxSize())
         val selObj = vm.entries.getOrNull(vm.sel) as? Obj
         if (selObj != null && (!showPanel || containerWidth >= 700.dp)) {
-            SelCard(vm, gl, selObj, Modifier.align(Alignment.BottomEnd).padding(end = 8.dp, bottom = 46.dp))
+            SelCard(vm, gl, selObj, Modifier.align(Alignment.BottomCenter).padding(bottom = 12.dp))
             CameraPad(vm, gl, Modifier.align(Alignment.CenterEnd).padding(end = 10.dp))
-            OrbitGizmo(gl, Modifier.align(Alignment.TopEnd).statusBarsPadding().padding(end = 12.dp, top = 58.dp))
+            OrbitGizmo(gl, Modifier.align(Alignment.BottomStart).padding(start = 12.dp, bottom = 12.dp))
         }
         if (showPanel) {
             Column(
@@ -942,7 +942,7 @@ fun CamBtn(symbol: String, repeat: Boolean = true, onClick: () -> Unit) {
     val scope = rememberCoroutineScope()
     val curClick by rememberUpdatedState(onClick)
     Surface(
-        modifier = Modifier.size(40.dp).pointerInput(repeat) {
+        modifier = Modifier.size(36.dp).pointerInput(repeat) {
             detectTapGestures(onPress = {
                 curClick()
                 val job = if (repeat) scope.launch {
@@ -1121,7 +1121,7 @@ fun KeyBtn(dir: Int, onClick: () -> Unit) {
     val scope = rememberCoroutineScope()
     val curClick by rememberUpdatedState(onClick)
     Box(
-        Modifier.size(46.dp).pointerInput(Unit) {
+        Modifier.size(38.dp).pointerInput(Unit) {
             detectTapGestures(onPress = {
                 curClick()
                 val job = scope.launch {
@@ -1135,11 +1135,11 @@ fun KeyBtn(dir: Int, onClick: () -> Unit) {
     ) {
         Box(Modifier.offset(2.dp, 3.dp).size(42.dp).clip(RoundedCornerShape(8.dp)).background(Color(0xFF0C0E10)))
         Box(
-            Modifier.size(42.dp).clip(RoundedCornerShape(8.dp)).background(Color(0xFF2E353D))
+            Modifier.size(34.dp).clip(RoundedCornerShape(8.dp)).background(Color(0xFF2E353D))
                 .border(1.dp, Color(0xFF474F59), RoundedCornerShape(8.dp)),
             contentAlignment = Alignment.Center
         ) {
-            Canvas(Modifier.size(22.dp)) {
+            Canvas(Modifier.size(18.dp)) {
                 val dx = when (dir) { 1 -> -1f; 2 -> 1f; else -> 0f }
                 val dy = when (dir) { 0 -> -1f; 3 -> 1f; else -> 0f }
                 val cx = size.width / 2f; val cy = size.height / 2f

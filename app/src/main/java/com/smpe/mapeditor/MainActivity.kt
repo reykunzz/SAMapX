@@ -1278,7 +1278,8 @@ private val changelogItems = listOf(
     "Di mode Jelajah, tap objek hanya memilihnya. Tekan Edit (pensil) untuk menggesernya.",
     "Tombol arah memakai pad bergaya D-pad. Bahasa mengikuti sistem: Indonesia atau English.",
     "Tampilan 3D diperbarui: pad keyboard, gizmo sumbu, joystick dihapus.",
-    "Tab Objek dipindah ke menu ⋮ di samping tab 3D."
+    "Tab Objek dipindah ke menu ⋮ di samping tab 3D.",
+    "Tampilan 3D dirapikan: panel kanan lebih kecil, gizmo di kiri bawah, kartu objek di tengah bawah."
 )
 
 @Composable

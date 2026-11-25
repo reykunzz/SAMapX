@@ -27,6 +27,7 @@ object I18n {
     fun t(key: String): String = if (lang == "en") (en[key] ?: key) else key
 
     private val en: Map<String, String> = mapOf(
+        "Tampilan 3D dirapikan: panel kanan lebih kecil, gizmo di kiri bawah, kartu objek di tengah bawah." to "3D view tidied up: smaller right panel, gizmo at bottom-left, object card at bottom-center.",
         "Daftar objek" to "Object list",
         "Tampilan 3D diperbarui: pad keyboard, gizmo sumbu, joystick dihapus." to "3D view updated: keyboard pad, axis gizmo, joystick removed.",
         "Tab Objek dipindah ke menu ⋮ di samping tab 3D." to "Objek tab moved into the ⋮ menu next to the 3D tab.",

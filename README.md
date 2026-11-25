@@ -40,6 +40,7 @@ Catatan: model impor hanya bisa dilihat dan ditempatkan di editor. Agar muncul d
 
 ## Changelog
 
+- **1.9.16**: Tampilan 3D dirapikan. Panel kanan lebih kecil, gizmo di kiri bawah, kartu objek di tengah bawah.
 - **1.9.15**: Tampilan 3D diperbarui: pad keyboard untuk arah, gizmo sumbu untuk orbit, joystick dihapus. Tab Objek dipindah ke menu ⋮.
 - **1.9.14**: Tombol arah memakai pad bergaya D-pad. Bahasa mengikuti sistem: Indonesia jika perangkat berbahasa Indonesia, selain itu English.
 - **1.9.13**: Gizmo dan kotak merah kembali seperti awal. Tombol Edit dihapus. Rotasi objek pindah ke bawah panel kamera.
