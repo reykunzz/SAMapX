@@ -492,6 +492,10 @@ class MainActivity : ComponentActivity() {
                 App()
                 crash?.let { msg ->
                     AlertDialog(
+                        modifier = Modifier.border(1.dp, Color(0x886CCBFF), RoundedCornerShape(24.dp)),
+                        shape = RoundedCornerShape(24.dp),
+                        containerColor = Color(0xEE102B49),
+                        tonalElevation = 0.dp,
                         onDismissRequest = { crashFile.delete(); crash = null },
                         confirmButton = { TextButton(onClick = { crashFile.delete(); crash = null }) { Text("Tutup") } },
                         title = { Text("Laporan crash terakhir") },
@@ -707,6 +711,10 @@ fun App(vm: EditorVM = viewModel()) {
         }
         if (vm.sel in vm.entries.indices && vm.entries[vm.sel] is Obj && !(tab == 1 && vm.game != null)) EditSheet(vm)
         if (hasDraft && vm.entries.isEmpty()) AlertDialog(
+            modifier = Modifier.border(1.dp, Color(0x886CCBFF), RoundedCornerShape(24.dp)),
+            shape = RoundedCornerShape(24.dp),
+            containerColor = Color(0xEE102B49),
+            tonalElevation = 0.dp,
             onDismissRequest = { },
             title = { Text("Draf belum disimpan") },
             text = { Text("Ada perubahan dari sesi sebelumnya yang belum disimpan. Pulihkan?") },
@@ -733,6 +741,10 @@ fun App(vm: EditorVM = viewModel()) {
             }
         }
         if (showExitConfirm) AlertDialog(
+            modifier = Modifier.border(1.dp, Color(0x886CCBFF), RoundedCornerShape(24.dp)),
+            shape = RoundedCornerShape(24.dp),
+            containerColor = Color(0xEE102B49),
+            tonalElevation = 0.dp,
             onDismissRequest = { showExitConfirm = false },
             title = { Text("Ada perubahan belum disimpan") },
             text = { Text("Keluar sekarang akan membuang perubahan yang belum disimpan. Gunakan Simpan di menu atas dulu jika ingin menyimpannya.") },
@@ -777,8 +789,8 @@ fun Empty(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Card(Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = Color(0xFF2F3945))) {
+            Card(Modifier.fillMaxWidth().border(1.dp, Color(0x664DAAFF), RoundedCornerShape(16.dp)), shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(containerColor = Color(0xB3183558))) {
                 Row(Modifier.fillMaxWidth().padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
                     Image(painterResource(R.drawable.logo), null, Modifier.size(44.dp))
                     Spacer(Modifier.width(12.dp))
@@ -790,17 +802,14 @@ fun Empty(
                     }
                 }
             }
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                OutlinedButton(onClick = { showGuide = true }, modifier = Modifier.weight(1f), shape = RoundedCornerShape(14.dp)) { Text(I18n.t("Panduan")) }
-                OutlinedButton(onClick = { showChangelog = true }, modifier = Modifier.weight(1f), shape = RoundedCornerShape(14.dp)) { Text(I18n.t("Changelog")) }
-            }
+            // Navigasi Panduan, Changelog, update, Donate, kritik, dan bahasa
+            // hanya tersedia di sidebar agar tidak muncul dua kali di bawah header.
             if (showGuide) GuideDialog { showGuide = false }
             if (showChangelog) ChangelogDialog { showChangelog = false }
-            SupportSection()
 
             val folderReady = gameStatus.isNotBlank() && !gameStatus.startsWith("Gagal")
-            Card(Modifier.fillMaxWidth(), shape = RoundedCornerShape(20.dp),
-                colors = CardDefaults.cardColors(containerColor = cs.surfaceVariant)) {
+            Card(Modifier.fillMaxWidth().border(1.dp, Color(0x554DAAFF), RoundedCornerShape(20.dp)), shape = RoundedCornerShape(20.dp),
+                colors = CardDefaults.cardColors(containerColor = Color(0xA9152F4D))) {
                 Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     Text(I18n.t("Langkah"), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
                     StepRow(folderReady, I18n.t("1. Pilih folder game"), I18n.t("Pilih folder files di kartu Folder GTA San Andreas."))
@@ -809,8 +818,8 @@ fun Empty(
                 }
             }
 
-            if (gameStatus.startsWith("Gagal")) Card(Modifier.fillMaxWidth(), shape = RoundedCornerShape(20.dp),
-                colors = CardDefaults.cardColors(containerColor = cs.errorContainer)) {
+            if (gameStatus.startsWith("Gagal")) Card(Modifier.fillMaxWidth().border(1.dp, cs.error.copy(alpha = 0.45f), RoundedCornerShape(20.dp)), shape = RoundedCornerShape(20.dp),
+                colors = CardDefaults.cardColors(containerColor = cs.errorContainer.copy(alpha = 0.78f))) {
                 Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(I18n.t("Folder belum benar"), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold, color = cs.onErrorContainer)
                     Text(I18n.t("Pilih folder files yang berisi data, models, dan texdb."), style = MaterialTheme.typography.bodySmall, color = cs.onErrorContainer)
@@ -818,8 +827,8 @@ fun Empty(
                 }
             }
 
-            Card(Modifier.fillMaxWidth(), shape = RoundedCornerShape(20.dp),
-                colors = CardDefaults.cardColors(containerColor = cs.surfaceVariant)) {
+            Card(Modifier.fillMaxWidth().border(1.dp, Color(0x554DAAFF), RoundedCornerShape(20.dp)), shape = RoundedCornerShape(20.dp),
+                colors = CardDefaults.cardColors(containerColor = Color(0xA9152F4D))) {
                 Row(Modifier.fillMaxWidth().padding(start = 18.dp, end = 10.dp, top = 12.dp, bottom = 12.dp),
                     verticalAlignment = Alignment.CenterVertically) {
                     Icon(Icons.Default.Place, null, tint = cs.primary)
@@ -838,8 +847,8 @@ fun Empty(
                 }
             }
 
-            Card(Modifier.fillMaxWidth(), shape = RoundedCornerShape(20.dp),
-                colors = CardDefaults.cardColors(containerColor = cs.surfaceVariant)) {
+            Card(Modifier.fillMaxWidth().border(1.dp, Color(0x554DAAFF), RoundedCornerShape(20.dp)), shape = RoundedCornerShape(20.dp),
+                colors = CardDefaults.cardColors(containerColor = Color(0xA9152F4D))) {
                 Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(I18n.t("Pilih map"), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
                     Text(I18n.t("Pilih file map (.ipl) dari folder game. Dari sana Anda juga bisa mendaftarkan model dan membuat IPL baru."),
@@ -857,8 +866,8 @@ fun Empty(
                 }
             }
 
-            if (recents.isEmpty()) Card(Modifier.fillMaxWidth(), shape = RoundedCornerShape(20.dp),
-                colors = CardDefaults.cardColors(containerColor = cs.surfaceVariant)) {
+            if (recents.isEmpty()) Card(Modifier.fillMaxWidth().border(1.dp, Color(0x554DAAFF), RoundedCornerShape(20.dp)), shape = RoundedCornerShape(20.dp),
+                colors = CardDefaults.cardColors(containerColor = Color(0xA9152F4D))) {
                 Column(Modifier.fillMaxWidth().padding(20.dp), horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     Icon(Icons.Default.List, null, tint = cs.onSurfaceVariant)
@@ -866,8 +875,8 @@ fun Empty(
                     Text(I18n.t("File yang Anda buka akan muncul di sini."), style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant)
                 }
             }
-            if (recents.isNotEmpty()) Card(Modifier.fillMaxWidth(), shape = RoundedCornerShape(20.dp),
-                colors = CardDefaults.cardColors(containerColor = cs.surfaceVariant)) {
+            if (recents.isNotEmpty()) Card(Modifier.fillMaxWidth().border(1.dp, Color(0x554DAAFF), RoundedCornerShape(20.dp)), shape = RoundedCornerShape(20.dp),
+                colors = CardDefaults.cardColors(containerColor = Color(0xA9152F4D))) {
                 Column(Modifier.fillMaxWidth().padding(vertical = 8.dp)) {
                     Row(Modifier.fillMaxWidth().padding(start = 18.dp, end = 6.dp), verticalAlignment = Alignment.CenterVertically) {
                         Text(I18n.t("File terakhir"), Modifier.weight(1f), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
@@ -1302,6 +1311,10 @@ private val changelogItems = listOf(
 @Composable
 fun GuideDialog(onClose: () -> Unit) {
     AlertDialog(
+        modifier = Modifier.border(1.dp, Color(0x886CCBFF), RoundedCornerShape(24.dp)),
+        shape = RoundedCornerShape(24.dp),
+        containerColor = Color(0xEE102B49),
+        tonalElevation = 0.dp,
         onDismissRequest = onClose,
         title = { Text(I18n.t("Panduan penggunaan")) },
         text = {
@@ -1319,6 +1332,10 @@ fun GuideDialog(onClose: () -> Unit) {
 @Composable
 fun ChangelogDialog(onClose: () -> Unit) {
     AlertDialog(
+        modifier = Modifier.border(1.dp, Color(0x886CCBFF), RoundedCornerShape(24.dp)),
+        shape = RoundedCornerShape(24.dp),
+        containerColor = Color(0xEE102B49),
+        tonalElevation = 0.dp,
         onDismissRequest = onClose,
         title = { Text(I18n.t("Changelog")) },
         text = {
@@ -1331,36 +1348,12 @@ fun ChangelogDialog(onClose: () -> Unit) {
 }
 
 @Composable
-fun SupportSection() {
-    val ctx = LocalContext.current
-    var showCritic by remember { mutableStateOf(false) }
-    var showLang by remember { mutableStateOf(false) }
-    val scope = rememberCoroutineScope()
-    var manualRel by remember { mutableStateOf<UpdateChecker.Release?>(null) }
-    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-        OutlinedButton(onClick = {
-            scope.launch {
-                val r = withContext(Dispatchers.IO) { runCatching { UpdateChecker.fetchLatest() }.getOrNull() }
-                when {
-                    r == null -> Toast.makeText(ctx, I18n.t("Gagal cek update. Periksa koneksi."), Toast.LENGTH_SHORT).show()
-                    UpdateChecker.isNewer(r.version, UpdateChecker.currentVersion(ctx)) -> manualRel = r
-                    else -> Toast.makeText(ctx, I18n.t("Anda sudah memakai versi terbaru."), Toast.LENGTH_SHORT).show()
-                }
-            }
-        }, modifier = Modifier.weight(1f), shape = RoundedCornerShape(14.dp)) { Text(I18n.t("Cek update")) }
-        OutlinedButton(onClick = { ctx.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://saweria.co/ReyyXSA"))) },
-            modifier = Modifier.weight(1f), shape = RoundedCornerShape(14.dp)) { Text(I18n.t("Dukung")) }
-        OutlinedButton(onClick = { showCritic = true }, modifier = Modifier.weight(1f), shape = RoundedCornerShape(14.dp)) { Text(I18n.t("Kritik & saran")) }
-        OutlinedButton(onClick = { showLang = true }, modifier = Modifier.weight(1f), shape = RoundedCornerShape(14.dp)) { Text(I18n.t("Bahasa")) }
-    }
-    if (showCritic) CriticDialog(ctx) { showCritic = false }
-    manualRel?.let { UpdateDialog(ctx, it) { manualRel = null } }
-    if (showLang) LanguageDialog(ctx) { showLang = false }
-}
-
-@Composable
 fun CriticDialog(ctx: Context, onClose: () -> Unit) {
     AlertDialog(
+        modifier = Modifier.border(1.dp, Color(0x886CCBFF), RoundedCornerShape(24.dp)),
+        shape = RoundedCornerShape(24.dp),
+        containerColor = Color(0xEE102B49),
+        tonalElevation = 0.dp,
         onDismissRequest = onClose,
         title = { Text(I18n.t("Kritik & saran")) },
         text = { Text(I18n.t("Kirim kritik atau saran lewat email atau Facebook.")) },
@@ -1382,6 +1375,10 @@ fun CriticDialog(ctx: Context, onClose: () -> Unit) {
 fun LanguageDialog(ctx: Context, onClose: () -> Unit) {
     val options = listOf("id" to "Bahasa Indonesia", "en" to "English")
     AlertDialog(
+        modifier = Modifier.border(1.dp, Color(0x886CCBFF), RoundedCornerShape(24.dp)),
+        shape = RoundedCornerShape(24.dp),
+        containerColor = Color(0xEE102B49),
+        tonalElevation = 0.dp,
         onDismissRequest = onClose,
         title = { Text(I18n.t("Bahasa")) },
         text = {
@@ -1400,6 +1397,10 @@ fun LanguageDialog(ctx: Context, onClose: () -> Unit) {
 @Composable
 fun UpdateDialog(ctx: Context, rel: UpdateChecker.Release, onClose: () -> Unit) {
     AlertDialog(
+        modifier = Modifier.border(1.dp, Color(0x886CCBFF), RoundedCornerShape(24.dp)),
+        shape = RoundedCornerShape(24.dp),
+        containerColor = Color(0xEE102B49),
+        tonalElevation = 0.dp,
         onDismissRequest = onClose,
         title = { Text(I18n.t("Ada update baru") + " v" + rel.version) },
         text = {
@@ -1428,110 +1429,59 @@ fun UpdateDialog(ctx: Context, rel: UpdateChecker.Release, onClose: () -> Unit) 
     )
 }
 
-/** Sidebar navigasi Liquid Glass: efek kaca dibuat dengan beberapa lapis gradien,
- * sehingga tetap kompatibel dengan Android 10 yang belum mendukung RenderEffect blur. */
+/** Sidebar kiri ala aplikasi desktop: menu utama dengan gaya kaca biru. */
 @Composable
 fun HomeSidebar(onGuide: () -> Unit, onChangelog: () -> Unit, onCheckUpdate: () -> Unit) {
     val ctx = LocalContext.current
-    val shape = RoundedCornerShape(22.dp)
-    Box(
+    val cs = MaterialTheme.colorScheme
+    val shape = RoundedCornerShape(20.dp)
+    Column(
         Modifier.width(190.dp).fillMaxHeight()
             .clip(shape)
-            .background(
-                Brush.linearGradient(
-                    colors = listOf(
-                        Color(0xD93478B8),
-                        Color(0xC91B4778),
-                        Color(0xD9112948),
-                        Color(0xE60B1C34)
-                    )
-                )
-            )
-            .border(
-                width = 1.2.dp,
-                brush = Brush.linearGradient(
-                    colors = listOf(
-                        Color(0xFF9CEBFF),
-                        Color(0xAA55BFFF),
-                        Color(0x6686CFFF),
-                        Color(0xCCB6E8FF)
-                    )
-                ),
-                shape = shape
-            )
+            .background(Brush.linearGradient(listOf(Color(0xD91B5A91), Color(0xB30B2443), Color(0xCC123B65))))
+            .border(1.2.dp, Brush.linearGradient(listOf(Color(0xCC83D8FF), Color(0x6655AFFF), Color(0xAA2C83D9))), shape)
+            .padding(10.dp),
+        verticalArrangement = Arrangement.spacedBy(4.dp)
     ) {
-        // Pantulan cahaya di sisi atas/kiri memberi kesan kaca tanpa blur API 31+.
-        Box(
-            Modifier.fillMaxSize().background(
-                Brush.radialGradient(
-                    colors = listOf(Color(0x5548BFFF), Color.Transparent),
-                    radius = 520f
-                )
-            )
-        )
-        Column(
-            Modifier.fillMaxSize().padding(10.dp),
-            verticalArrangement = Arrangement.spacedBy(5.dp)
-        ) {
-            Text(
-                "San Editor",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Black,
-                color = Color(0xFFF1F8FF),
-                modifier = Modifier.padding(start = 9.dp, top = 5.dp, bottom = 12.dp)
-            )
-            SideItem(I18n.t("Beranda"), selected = true) { }
-            SideItem(I18n.t("Panduan")) { onGuide() }
-            SideItem(I18n.t("Changelog")) { onChangelog() }
-            SideItem(I18n.t("Cek update")) { onCheckUpdate() }
-            SideItem("Donate") {
-                ctx.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://saweria.co/ReyyXSA")))
-            }
-            SideItem(I18n.t("Kritik & saran")) {
-                ctx.startActivity(Intent(Intent.ACTION_SENDTO, Uri.parse("mailto:reysaputra567@gmail.com?subject=" + Uri.encode("Kritik & saran San Editor"))))
-            }
-            SideItem(I18n.t("Bahasa")) {
-                I18n.set(ctx, if (I18n.lang == "id") "en" else "id")
-            }
+        Text("San Editor", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black,
+            color = cs.onSurface, modifier = Modifier.padding(start = 8.dp, top = 4.dp, bottom = 10.dp))
+        SideItem(I18n.t("Beranda"), selected = true) { }
+        SideItem(I18n.t("Panduan")) { onGuide() }
+        SideItem(I18n.t("Changelog")) { onChangelog() }
+        SideItem(I18n.t("Cek update")) { onCheckUpdate() }
+        SideItem("Donate") {
+            ctx.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://saweria.co/ReyyXSA")))
+        }
+        SideItem(I18n.t("Kritik & saran")) {
+            ctx.startActivity(Intent(Intent.ACTION_SENDTO, Uri.parse("mailto:reysaputra567@gmail.com?subject=" + Uri.encode("Kritik & saran San Editor"))))
+        }
+        SideItem(I18n.t("Bahasa")) {
+            I18n.set(ctx, if (I18n.lang == "id") "en" else "id")
         }
     }
 }
 
 @Composable
 fun SideItem(label: String, selected: Boolean = false, onClick: () -> Unit) {
-    val shape = RoundedCornerShape(15.dp)
+    val cs = MaterialTheme.colorScheme
+    val shape = RoundedCornerShape(14.dp)
     Box(
-        Modifier.fillMaxWidth()
-            .clip(shape)
-            .then(
-                if (selected) Modifier.background(
-                    Brush.linearGradient(
-                        colors = listOf(
-                            Color(0xD94AAEFF),
-                            Color(0xB82C7FD0),
-                            Color(0x9946C5F5)
-                        )
-                    )
-                ) else Modifier.background(Color(0x14D8F1FF))
+        Modifier.fillMaxWidth().clip(shape)
+            .background(
+                if (selected) Brush.linearGradient(listOf(Color(0xE52C91F0), Color(0xC51B5BA8), Color(0xB31B416C)))
+                else Brush.linearGradient(listOf(Color(0x663C83B9), Color(0x44234F7B), Color(0x553A78A8)))
             )
             .border(
-                width = if (selected) 1.dp else 0.6.dp,
-                brush = Brush.linearGradient(
-                    colors = if (selected)
-                        listOf(Color(0xFFE0FAFF), Color(0xAA75D5FF), Color(0x667ABEFF))
-                    else
-                        listOf(Color(0x337ECFFF), Color(0x1AFFFFFF))
-                ),
-                shape = shape
+                1.dp,
+                if (selected) Brush.linearGradient(listOf(Color(0xFFE1F7FF), Color(0xAA65C8FF), Color(0xCC2D91E8)))
+                else Brush.linearGradient(listOf(Color(0x887ECFFF), Color(0x443B91D0), Color(0x6657A7DB))),
+                shape
             )
             .clickable(onClick = onClick)
             .padding(horizontal = 12.dp, vertical = 12.dp)
     ) {
-        Text(
-            label,
-            style = MaterialTheme.typography.bodyMedium,
-            fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
-            color = Color(0xFFF0F7FF)
-        )
+        Text(label, style = MaterialTheme.typography.bodyMedium,
+            fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium,
+            color = Color(0xFFF1F7FF))
     }
 }
