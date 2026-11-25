@@ -3,6 +3,7 @@
 package com.smpe.mapeditor
 
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Path
 import androidx.compose.foundation.Canvas
 import androidx.compose.material.icons.filled.Edit
@@ -111,7 +112,17 @@ fun GlEditor(vm: EditorVM, game: GameData) {
                 Modifier.align(Alignment.TopStart).statusBarsPadding().padding(start = 8.dp, top = 58.dp, bottom = 8.dp)
                     .width(panelWidth)
                     .heightIn(max = containerHeight - 76.dp)
-                    .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.97f), RoundedCornerShape(16.dp))
+                    .clip(RoundedCornerShape(18.dp))
+                    .background(
+                        Brush.verticalGradient(
+                            listOf(
+                                MaterialTheme.colorScheme.surface.copy(alpha = 0.86f),
+                                MaterialTheme.colorScheme.surface.copy(alpha = 0.72f),
+                                MaterialTheme.colorScheme.surface.copy(alpha = 0.80f)
+                            )
+                        ), RoundedCornerShape(18.dp)
+                    )
+                    .border(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.78f), RoundedCornerShape(18.dp))
             ) {
                 Row(
                     Modifier.fillMaxWidth()
@@ -359,7 +370,14 @@ fun Nudge(label: String, mod: Modifier, onClick: () -> Unit) {
 
 @Composable
 fun SectionCard(title: String, content: @Composable ColumnScope.() -> Unit) {
-    Card(shape = RoundedCornerShape(16.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)) {
+    val cs = MaterialTheme.colorScheme
+    val shape = RoundedCornerShape(16.dp)
+    Card(
+        modifier = Modifier.border(1.dp, cs.outline.copy(alpha = 0.58f), shape),
+        shape = shape,
+        colors = CardDefaults.cardColors(containerColor = cs.surfaceVariant.copy(alpha = 0.66f)),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+    ) {
         Column(Modifier.fillMaxWidth().padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(title, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
             content()
@@ -390,7 +408,7 @@ fun Panel(vm: EditorVM, gl: GlScene, st: FloatArray, modifier: Modifier) {
     }
     var tab by remember { mutableIntStateOf(0) }
     LaunchedEffect(vm.sel, vm.selStream, vm.selSet.size) { if (vm.sel >= 0 || vm.selStream >= 0 || vm.selSet.size > 1) tab = 0 }
-    Column(modifier.background(MaterialTheme.colorScheme.surface)) {
+    Column(modifier) {
     PanelTabs(tab) { tab = it }
     Column(
         Modifier.weight(1f, fill = false).verticalScroll(rememberScrollState()).padding(12.dp),
@@ -517,14 +535,21 @@ fun PanelTabs(tab: Int, onTab: (Int) -> Unit) {
     val cs = MaterialTheme.colorScheme
     Row(
         Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp)
-            .background(cs.surfaceVariant, RoundedCornerShape(12.dp)).padding(3.dp),
+            .clip(RoundedCornerShape(13.dp))
+            .background(cs.surfaceVariant.copy(alpha = 0.62f), RoundedCornerShape(13.dp))
+            .border(1.dp, cs.outline.copy(alpha = 0.48f), RoundedCornerShape(13.dp))
+            .padding(3.dp),
         horizontalArrangement = Arrangement.spacedBy(3.dp)
     ) {
         listOf("Objek", "Stream", "Adegan").forEachIndexed { i, label ->
             val on = tab == i
             Box(
                 Modifier.weight(1f).clip(RoundedCornerShape(9.dp))
-                    .background(if (on) cs.primary else Color.Transparent)
+                    .background(
+                        if (on) Brush.verticalGradient(listOf(cs.primary.copy(alpha = 0.96f), cs.primary.copy(alpha = 0.76f)))
+                        else Brush.verticalGradient(listOf(Color.White.copy(alpha = 0.035f), Color.Transparent))
+                    )
+                    .then(if (on) Modifier.border(1.dp, cs.secondary.copy(alpha = 0.72f), RoundedCornerShape(9.dp)) else Modifier)
                     .clickable { onTab(i) }.padding(vertical = 7.dp),
                 contentAlignment = Alignment.Center
             ) {
@@ -544,7 +569,11 @@ fun AxisRow(x: Float, y: Float, z: Float) {
 
 @Composable
 fun AxisBox(label: String, v: Float, modifier: Modifier) {
-    Column(modifier.background(MaterialTheme.colorScheme.background, RoundedCornerShape(8.dp)).padding(horizontal = 8.dp, vertical = 5.dp)) {
+    Column(modifier
+        .clip(RoundedCornerShape(8.dp))
+        .background(MaterialTheme.colorScheme.background.copy(alpha = 0.48f), RoundedCornerShape(8.dp))
+        .border(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.32f), RoundedCornerShape(8.dp))
+        .padding(horizontal = 8.dp, vertical = 5.dp)) {
         Text(label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         Text(String.format(Locale.US, "%.2f", v), fontSize = 12.sp, fontFamily = FontFamily.Monospace, maxLines = 1)
     }
@@ -554,8 +583,8 @@ fun AxisBox(label: String, v: Float, modifier: Modifier) {
 @Composable
 fun SelCard(vm: EditorVM, gl: GlScene, o: Obj, modifier: Modifier) {
     val cs = MaterialTheme.colorScheme
-    Surface(modifier, shape = RoundedCornerShape(12.dp), color = cs.surface.copy(alpha = 0.92f),
-        border = BorderStroke(1.dp, cs.outline)) {
+    Surface(modifier, shape = RoundedCornerShape(14.dp), color = cs.surface.copy(alpha = 0.76f),
+        border = BorderStroke(1.dp, cs.outline.copy(alpha = 0.72f)), tonalElevation = 2.dp, shadowElevation = 4.dp) {
         Row(Modifier.padding(start = 10.dp, end = 2.dp, top = 3.dp, bottom = 3.dp), verticalAlignment = Alignment.CenterVertically) {
             Text(o.model, fontWeight = FontWeight.SemiBold, fontSize = 12.sp, maxLines = 1, modifier = Modifier.widthIn(max = 120.dp))
             Spacer(Modifier.width(6.dp))
