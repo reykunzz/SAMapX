@@ -84,3 +84,6 @@ Catatan: model impor hanya bisa dilihat dan ditempatkan di editor. Agar muncul d
 - Kartu konten dan sidebar memakai warna glass biru semi-transparan.
 - Tombol Panduan/Changelog dan baris SupportSection duplikat di bawah header dihapus; akses tetap melalui sidebar.
 - Label Dukung pada sidebar diganti menjadi Donate.
+
+
+Update: background map kini dipasang pada root layout agar memenuhi seluruh area aplikasi, termasuk belakang header dan seluruh tab. Scaffold dan header dibuat transparan; gambar map diproses menjadi latar 16:9 blur dengan overlay navy.

@@ -666,8 +666,22 @@ fun App(vm: EditorVM = viewModel()) {
                 overlay = ov
             )
     }
+    Box(Modifier.fillMaxSize()) {
+        Image(
+            painter = painterResource(R.drawable.map_background),
+            contentDescription = null,
+            modifier = Modifier.fillMaxSize(),
+            contentScale = ContentScale.Crop
+        )
+        Box(
+            Modifier.fillMaxSize().background(
+                Brush.verticalGradient(
+                    listOf(Color(0x77030B18), Color(0x99071327), Color(0x88030B18))
+                )
+            )
+        )
     Scaffold(
-        containerColor = MaterialTheme.colorScheme.background,
+        containerColor = Color.Transparent,
         snackbarHost = { SnackbarHost(snack) },
         topBar = {
             if (!(tab == 1 && vm.game != null && vm.entries.isNotEmpty())) headerFn(false)
@@ -746,6 +760,7 @@ fun App(vm: EditorVM = viewModel()) {
         if (vm.picker) ModelPicker(vm)
         vm.diag?.let { DiagDialog(vm, it) }
     }
+    }
 }
 
 @Composable
@@ -764,17 +779,6 @@ fun Empty(
     var showGuide by remember { mutableStateOf(false) }
     var showChangelog by remember { mutableStateOf(false) }
     Box(Modifier.fillMaxSize()) {
-    Image(
-        painter = painterResource(R.drawable.map_background),
-        contentDescription = null,
-        modifier = Modifier.fillMaxSize(),
-        contentScale = ContentScale.Crop
-    )
-    Box(
-        Modifier.fillMaxSize().background(
-            Brush.verticalGradient(listOf(Color(0x55040F20), Color(0x88071327), Color(0x66030D1C)))
-        )
-    )
     Row(Modifier.fillMaxSize().padding(horizontal = 12.dp, vertical = 10.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
     HomeSidebar(
         onGuide = { showGuide = true },
@@ -914,7 +918,7 @@ fun AppHeader(
 ) {
     val cs = MaterialTheme.colorScheme
     var menuOpen by remember { mutableStateOf(false) }
-    Surface(color = if (overlay) Color.Transparent else cs.background) {
+    Surface(color = Color.Transparent) {
         Row(
             Modifier.statusBarsPadding().height(44.dp).padding(horizontal = 8.dp),
             verticalAlignment = Alignment.CenterVertically
