@@ -1,5 +1,11 @@
 package com.smpe.mapeditor
 
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.DropdownMenu
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
@@ -106,51 +112,40 @@ fun ViewToolbar(
     multi: Boolean = false, onMulti: () -> Unit = {},
     undoLabel: String = "", gridOn: Boolean = false, onGrid: () -> Unit = {}
 ) {
+    var menuOpen by remember { mutableStateOf(false) }
     Surface(modifier, shape = RoundedCornerShape(22.dp), color = Color(0xE6121714)) {
         Row(
-            Modifier.horizontalScroll(rememberScrollState()).padding(horizontal = 4.dp, vertical = 3.dp),
+            Modifier.padding(horizontal = 4.dp, vertical = 3.dp),
             horizontalArrangement = Arrangement.spacedBy(2.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
+            // Lima ikon utama
             TbBtn(UiIcons.Rotate, I18n.t("Putar"), selected = !panMode) { setPan(false) }
             TbBtn(UiIcons.Pan, I18n.t("Geser"), selected = panMode) { setPan(true) }
-            TbDivider()
             TbBtn(UiIcons.Focus, I18n.t("Fokus ke objek"), onClick = onFocus)
-            TbBtn(UiIcons.FitAll, I18n.t("Tampilkan semua"), onClick = onAll)
-            TbBtn(Icons.Default.KeyboardArrowUp, I18n.t("Tampilan atas"), selected = topDown, onClick = onTopDown)
-            TbBtn(Icons.Default.Done, I18n.t("Pilih banyak"), selected = multi, onClick = onMulti)
             TbDivider()
             TbBtn(UiIcons.Undo, I18n.t("Urungkan"), enabled = canUndo, onClick = onUndo)
-            if (canUndo && undoLabel.isNotEmpty()) Text("Batalkan: $undoLabel", fontSize = 11.sp, maxLines = 1,
-                color = Color.White.copy(alpha = 0.85f), modifier = Modifier.padding(horizontal = 4.dp))
             TbBtn(UiIcons.Redo, I18n.t("Ulangi"), enabled = canRedo, onClick = onRedo)
             TbDivider()
-            Box(
-                Modifier.height(30.dp).clip(RoundedCornerShape(15.dp))
-                    .background(if (gridOn) MaterialTheme.colorScheme.primary else Color.Transparent)
-                    .clickable(role = Role.Button, onClick = onGrid).padding(horizontal = 10.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(I18n.t("Grid"), fontSize = 12.sp, fontWeight = FontWeight.Medium,
-                    color = if (gridOn) MaterialTheme.colorScheme.onPrimary else Color.White.copy(alpha = 0.85f), maxLines = 1)
-            }
-            if (snap != null) {
-                TbDivider()
-                val cs = MaterialTheme.colorScheme
-                Box(
-                    Modifier.height(30.dp).clip(RoundedCornerShape(15.dp))
-                        .background(if (snap > 0f) cs.primary else Color.Transparent)
-                        .clickable(role = Role.Button, onClick = onSnap).padding(horizontal = 10.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    val v = if (snap == snap.toInt().toFloat()) snap.toInt().toString() else snap.toString()
-                    Text(if (snap == 0f) I18n.t("Snap off") else "Snap $v", fontSize = 12.sp, fontWeight = FontWeight.Medium,
-                        color = if (snap > 0f) cs.onPrimary else Color.White.copy(alpha = 0.85f), maxLines = 1)
+            // Sisanya di menu
+            Box {
+                TbBtn(Icons.Default.Menu, I18n.t("Menu")) { menuOpen = true }
+                DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
+                    DropdownMenuItem(text = { Text(I18n.t("Tampilkan semua")) },
+                        onClick = { menuOpen = false; onAll() })
+                    DropdownMenuItem(text = { Text((if (topDown) "\u2713 " else "") + I18n.t("Tampilan atas")) },
+                        onClick = { menuOpen = false; onTopDown() })
+                    DropdownMenuItem(text = { Text((if (multi) "\u2713 " else "") + I18n.t("Pilih banyak")) },
+                        onClick = { menuOpen = false; onMulti() })
+                    DropdownMenuItem(text = { Text((if (gridOn) "\u2713 " else "") + I18n.t("Grid")) },
+                        onClick = { menuOpen = false; onGrid() })
+                    if (snap != null) DropdownMenuItem(
+                        text = { Text("Snap: " + (if (snap == 0f) I18n.t("Off") else snap.toString())) },
+                        onClick = { menuOpen = false; onSnap() })
+                    if (panelVisible != null) DropdownMenuItem(
+                        text = { Text((if (panelVisible) "\u2713 " else "") + I18n.t("Inspector")) },
+                        onClick = { menuOpen = false; onTogglePanel() })
                 }
-            }
-            if (panelVisible != null) {
-                TbDivider()
-                TbBtn(UiIcons.Panel, I18n.t("Inspector"), selected = panelVisible, onClick = onTogglePanel)
             }
         }
     }

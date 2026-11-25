@@ -12,8 +12,8 @@ android {
         applicationId = "com.smpe.mapeditor"
         minSdk = 24
         targetSdk = 34
-        versionCode = 59
-        versionName = "1.9.16"
+        versionCode = 60
+        versionName = "1.9.17"
     }
     buildTypes {
         release {
