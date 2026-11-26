@@ -1364,7 +1364,11 @@ private val changelogItems = listOf(
     "Tab Objek dipindah ke menu ⋮ di samping tab 3D.",
     "Tampilan 3D dirapikan: panel kanan lebih kecil, gizmo di kiri bawah, kartu objek di tengah bawah.",
     "Toolbar atas dirapikan: lima ikon utama, sisanya di menu ≡.",
-    "Gizmo di atas tombol kamera di kanan bawah. Kartu objek di kiri bawah."
+    "Gizmo di atas tombol kamera di kanan bawah. Kartu objek di kiri bawah.",
+    "Tampilan landscape permanen dengan sidebar di halaman awal.",
+    "Tema kaca biru di seluruh aplikasi, termasuk panel 3D.",
+    "Penskalaan UI agar tampilan sama di berbagai perangkat.",
+    "Mode Kamera dan Objek, pad arah, gizmo sumbu, dan tab Objek di menu ⋮."
 )
 
 @Composable

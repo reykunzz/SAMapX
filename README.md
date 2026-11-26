@@ -40,6 +40,7 @@ Catatan: model impor hanya bisa dilihat dan ditempatkan di editor. Agar muncul d
 
 ## Changelog
 
+- **1.9.21**: Tampilan landscape permanen dengan sidebar, tema kaca biru, penskalaan UI, dan Inspector bertema kaca.
 - **1.9.18**: Gizmo di atas tombol kamera di kanan bawah. Kartu objek di kiri bawah.
 - **1.9.17**: Toolbar atas dirapikan. Lima ikon utama, sisanya di menu ≡.
 - **1.9.16**: Tampilan 3D dirapikan. Panel kanan lebih kecil, gizmo di kiri bawah, kartu objek di tengah bawah.
@@ -75,22 +76,3 @@ Catatan: model impor hanya bisa dilihat dan ditempatkan di editor. Agar muncul d
 - **1.6.0**: Export paket mod.
 - **1.5.0**: Grid, kunci objek, pilih banyak, dan ganti model.
 - **1.4.0**: Tampilan atas dan pilih banyak objek.
-
-
-## Liquid Glass map background update
-
-- Background peta GTA San Andreas dipasang di halaman utama di belakang sidebar dan konten.
-- Peta dibuat blur dan diberi overlay navy agar teks tetap terbaca.
-- Kartu konten dan sidebar memakai warna glass biru semi-transparan.
-- Tombol Panduan/Changelog dan baris SupportSection duplikat di bawah header dihapus; akses tetap melalui sidebar.
-- Label Dukung pada sidebar diganti menjadi Donate.
-
-
-Update: background map kini dipasang pada root layout agar memenuhi seluruh area aplikasi, termasuk belakang header dan seluruh tab. Scaffold dan header dibuat transparan; gambar map diproses menjadi latar 16:9 blur dengan overlay navy.
-
-
-## Liquid Glass themes update
-- Improved contrast for text on translucent cards by explicitly using the theme foreground color.
-- Added persistent accent themes: Blue, Emerald Green, Amethyst Purple, Amber Orange, Rose Pink, and Teal Cyan.
-- Added the “Tema warna” option to the home sidebar. Theme selection is saved between launches.
-- Applied the selected accent palette to Material theme colors, sidebar glass, selected navigation item, borders, and action highlights.

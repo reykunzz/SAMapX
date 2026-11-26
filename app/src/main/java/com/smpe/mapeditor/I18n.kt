@@ -27,6 +27,10 @@ object I18n {
     fun t(key: String): String = if (lang == "en") (en[key] ?: key) else key
 
     private val en: Map<String, String> = mapOf(
+        "Tampilan landscape permanen dengan sidebar di halaman awal." to "Permanent landscape layout with a sidebar on the home screen.",
+        "Tema kaca biru di seluruh aplikasi, termasuk panel 3D." to "Blue glass theme across the app, including 3D panels.",
+        "Penskalaan UI agar tampilan sama di berbagai perangkat." to "UI scaling so the layout matches across devices.",
+        "Mode Kamera dan Objek, pad arah, gizmo sumbu, dan tab Objek di menu ⋮." to "Camera and Object modes, direction pad, axis gizmo, and the Object tab in the ⋮ menu.",
         "Beranda" to "Home",
         "Gizmo kini di atas tombol kamera. Kartu objek di kiri bawah." to "Gizmo now sits above the camera buttons. Object card at bottom-left.",
         "Toolbar atas dirapikan: lima ikon utama, sisanya di menu ≡." to "Top toolbar tidied up: five main icons, the rest in the ≡ menu.",
