@@ -101,10 +101,12 @@ fun GlEditor(vm: EditorVM, game: GameData) {
         if (selObj != null && (!showPanel || containerWidth >= 700.dp)) {
             SelCard(vm, gl, selObj, Modifier.align(Alignment.BottomStart).padding(start = 12.dp, bottom = 46.dp))
             // Kanan bawah: gizmo di atas, lalu tombol kamera
-            Column(Modifier.align(Alignment.BottomEnd).padding(end = 10.dp, bottom = 10.dp),
-                horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                OrbitGizmo(gl, Modifier)
-                CameraPad(vm, gl, Modifier)
+            ControlBoost {
+                Column(Modifier.align(Alignment.BottomEnd).padding(end = 10.dp, bottom = 10.dp),
+                    horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    OrbitGizmo(gl, Modifier)
+                    CameraPad(vm, gl, Modifier)
+                }
             }
         }
         if (showPanel) {
