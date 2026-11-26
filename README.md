@@ -40,6 +40,7 @@ Catatan: model impor hanya bisa dilihat dan ditempatkan di editor. Agar muncul d
 
 ## Changelog
 
+- **1.9.22**: Perbaikan: daftar model di Pilih map bisa digulir sampai tombol Daftarkan.
 - **1.9.21**: Tampilan landscape permanen dengan sidebar, tema kaca biru, penskalaan UI, dan Inspector bertema kaca.
 - **1.9.18**: Gizmo di atas tombol kamera di kanan bawah. Kartu objek di kiri bawah.
 - **1.9.17**: Toolbar atas dirapikan. Lima ikon utama, sisanya di menu ≡.

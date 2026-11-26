@@ -27,6 +27,7 @@ object I18n {
     fun t(key: String): String = if (lang == "en") (en[key] ?: key) else key
 
     private val en: Map<String, String> = mapOf(
+        "Perbaikan: daftar model di Pilih map bisa digulir sampai tombol Daftarkan." to "Fix: the model list in Pick map can be scrolled down to the Register button.",
         "Tampilan landscape permanen dengan sidebar di halaman awal." to "Permanent landscape layout with a sidebar on the home screen.",
         "Tema kaca biru di seluruh aplikasi, termasuk panel 3D." to "Blue glass theme across the app, including 3D panels.",
         "Penskalaan UI agar tampilan sama di berbagai perangkat." to "UI scaling so the layout matches across devices.",

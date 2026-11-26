@@ -1,5 +1,6 @@
 package com.smpe.mapeditor
 
+import androidx.compose.foundation.layout.heightIn
 import android.content.Context
 import android.net.Uri
 import android.provider.DocumentsContract
@@ -96,7 +97,7 @@ fun MapBrowser(vm: EditorVM, tree: Uri, onOpen: (Uri) -> Unit, onClose: () -> Un
     val cur = path.last().first
     LaunchedEffect(cur) { items = withContext(Dispatchers.IO) { listChildren(ctx, tree, cur) } }
 
-    Column(Modifier.fillMaxSize().padding(16.dp)) {
+    Column(Modifier.fillMaxSize().padding(16.dp).verticalScroll(rememberScrollState())) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text("files" + path.drop(1).joinToString("") { "/" + it.second }, Modifier.weight(1f),
                 style = MaterialTheme.typography.titleSmall, maxLines = 1)
@@ -106,7 +107,7 @@ fun MapBrowser(vm: EditorVM, tree: Uri, onOpen: (Uri) -> Unit, onClose: () -> Un
         OutlinedTextField(value = q, onValueChange = { q = it }, label = { Text("Cari file") },
             singleLine = true, modifier = Modifier.fillMaxWidth())
         if (path.size > 1) TextButton(onClick = { path = path.dropLast(1); ideSel = null; msg = "" }) { Text("Naik") }
-        Column(Modifier.weight(1f).verticalScroll(rememberScrollState())) {
+        Column(Modifier.heightIn(max = 240.dp).verticalScroll(rememberScrollState())) {
             for (item in items.filter { it.isDir || it.name.contains(q, ignoreCase = true) }) {
                 val show = item.isDir || item.name.endsWith(".ide", true) || item.name.endsWith(".ipl", true)
                 if (show) {

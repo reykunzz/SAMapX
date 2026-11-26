@@ -1368,7 +1368,8 @@ private val changelogItems = listOf(
     "Tampilan landscape permanen dengan sidebar di halaman awal.",
     "Tema kaca biru di seluruh aplikasi, termasuk panel 3D.",
     "Penskalaan UI agar tampilan sama di berbagai perangkat.",
-    "Mode Kamera dan Objek, pad arah, gizmo sumbu, dan tab Objek di menu ⋮."
+    "Mode Kamera dan Objek, pad arah, gizmo sumbu, dan tab Objek di menu ⋮.",
+    "Perbaikan: daftar model di Pilih map bisa digulir sampai tombol Daftarkan."
 )
 
 @Composable
